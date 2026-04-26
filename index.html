@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purple Stage Spin</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app" aria-labelledby="game-title">
+      <section class="machine" aria-label="Slot machine game">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Web Slot</p>
+            <h1 id="game-title">Purple Stage Spin</h1>
+          </div>
+          <div class="top-actions">
+            <button id="guideButton" class="icon-button" type="button" aria-label="Open paytable and game rules">
+              <span aria-hidden="true">?</span>
+            </button>
+            <button id="soundButton" class="icon-button" type="button" aria-label="Sound on">
+              <span aria-hidden="true">♪</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="bonus-chests" aria-label="Vault bonus meters">
+          <div class="chest-card" data-chest="0">
+            <div class="chest-art" aria-hidden="true">
+              <div class="chest-lid"></div>
+              <div class="chest-gold"></div>
+              <div class="chest-base"></div>
+            </div>
+            <span>10 Free Games</span>
+            <strong id="chestProgress0">0%</strong>
+          </div>
+          <div class="chest-card" data-chest="1">
+            <div class="chest-art" aria-hidden="true">
+              <div class="chest-lid"></div>
+              <div class="chest-gold"></div>
+              <div class="chest-base"></div>
+            </div>
+            <span>Scratch Jackpot</span>
+            <strong id="chestProgress1">0%</strong>
+          </div>
+          <div class="chest-card" data-chest="2">
+            <div class="chest-art" aria-hidden="true">
+              <div class="chest-lid"></div>
+              <div class="chest-gold"></div>
+              <div class="chest-base"></div>
+            </div>
+            <span>Expand Reels</span>
+            <strong id="chestProgress2">0%</strong>
+          </div>
+        </div>
+
+        <div class="jackpot-strip" aria-label="Progressive jackpot values">
+          <div><span>MINI</span><strong id="miniJackpot">$3.00</strong></div>
+          <div><span>MINOR</span><strong id="minorJackpot">$10.00</strong></div>
+          <div><span>MAJOR</span><strong id="majorJackpot">$50.00</strong></div>
+          <div><span>GRAND</span><strong id="grandJackpot">$100.00</strong></div>
+        </div>
+
+        <div class="reel-window" aria-live="polite">
+          <div class="reels" id="reels">
+            <div class="reel" data-index="0">
+              <span>🎟️</span>
+              <span>🎤</span>
+              <span>🎧</span>
+            </div>
+            <div class="reel" data-index="1">
+              <span>🎧</span>
+              <span>🎟️</span>
+              <span>💜</span>
+            </div>
+            <div class="reel" data-index="2">
+              <span>🎵</span>
+              <span>🪩</span>
+              <span>🎤</span>
+            </div>
+            <div class="reel" data-index="3">
+              <span>💜</span>
+              <span>🎤</span>
+              <span>🎧</span>
+            </div>
+            <div class="reel" data-index="4">
+              <span>👑</span>
+              <span>🎵</span>
+              <span>✨</span>
+            </div>
+          </div>
+          <div id="freeWinOverlay" class="free-win-overlay message-only" role="status" aria-hidden="true">
+            <strong id="freeWinTitle">BIG WIN</strong>
+            <span id="freeWinTotal">$0.00</span>
+            <p id="freeWinCaption">Free Games Total Win</p>
+          </div>
+          <div id="vaultBonusIntro" class="vault-bonus-intro" aria-hidden="true">
+            <div class="vault-eruption" aria-hidden="true"></div>
+            <div id="vaultIntroChest" class="vault-intro-chest" data-chest="0" aria-hidden="true">
+              <div id="vaultIntroGems" class="vault-intro-gems"></div>
+              <div class="vault-intro-lid"></div>
+              <div class="vault-intro-base"></div>
+            </div>
+            <strong id="vaultIntroTitle">VAULT BONUS</strong>
+          </div>
+        </div>
+
+        <div class="meters" aria-label="Game meters">
+          <div id="creditsMeter" class="meter meter-action" role="button" tabindex="0" aria-label="Toggle credit display">
+            <span>Credit Meter</span>
+            <strong id="credits">$0.00</strong>
+          </div>
+          <div class="meter">
+            <span>Total Bet</span>
+            <strong id="bet">25</strong>
+          </div>
+          <div class="meter">
+            <span>Ways</span>
+            <strong id="ways">243</strong>
+          </div>
+          <div class="meter">
+            <span>Bet Multiplier</span>
+            <strong id="multiplier">x1</strong>
+          </div>
+          <div class="meter">
+            <span>Denom</span>
+            <strong id="denom">$0.01</strong>
+          </div>
+          <div class="meter">
+            <span>Game RTP</span>
+            <strong id="rtp">88%</strong>
+          </div>
+          <div class="meter">
+            <span>Last Win</span>
+            <strong id="lastWin">0</strong>
+          </div>
+          <div class="meter">
+            <span>Free Games</span>
+            <strong id="bonusSpins">0</strong>
+          </div>
+        </div>
+
+        <div class="options" aria-label="Bet options">
+          <div class="option-group">
+            <span>Bet Multiplier</span>
+            <div class="option-buttons" id="multiplierOptions">
+              <button type="button" data-multiplier="1">x1</button>
+              <button type="button" data-multiplier="2">x2</button>
+              <button type="button" data-multiplier="3">x3</button>
+              <button type="button" data-multiplier="5">x5</button>
+              <button type="button" data-multiplier="10">x10</button>
+            </div>
+          </div>
+          <div class="option-group wide">
+            <span>Bet Level</span>
+            <div class="option-buttons bet-options" id="betOptions">
+              <button type="button" data-bet-index="0">8</button>
+              <button type="button" data-bet-index="1">16</button>
+              <button type="button" data-bet-index="2">40</button>
+              <button type="button" data-bet-index="3">88</button>
+              <button type="button" data-bet-index="4">176</button>
+            </div>
+          </div>
+          <div class="option-group wide denom-picker" id="denomPicker">
+            <span>Denomination</span>
+            <button id="denomToggle" class="denom-toggle" type="button" aria-expanded="false" aria-controls="denomOptions">1¢</button>
+            <div class="option-buttons denom-options" id="denomOptions" hidden>
+              <button type="button" data-denom="1">1¢</button>
+              <button type="button" data-denom="2">2¢</button>
+              <button type="button" data-denom="5">5¢</button>
+              <button type="button" data-denom="10">10¢</button>
+              <button type="button" data-denom="20">20¢</button>
+              <button type="button" data-denom="50">50¢</button>
+              <button type="button" data-denom="100">$1</button>
+            </div>
+          </div>
+        </div>
+
+        <p id="message" class="message" aria-live="polite">Enter cash and press DROP to load credits.</p>
+
+        <div class="controls no-start" aria-label="Bet controls">
+          <button id="decreaseBet" class="round-button" type="button" aria-label="Decrease bet">−</button>
+          <button id="increaseBet" class="round-button" type="button" aria-label="Increase bet">+</button>
+        </div>
+
+        <button id="spinButton" class="spin-button" type="button">SPIN</button>
+
+        <div class="quick-actions">
+          <label class="drop-box" aria-label="Cash in amount">
+            <input id="dropAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Cash" />
+          </label>
+          <button id="dropButton" type="button">DROP</button>
+          <button id="maxBet" type="button">MAX BET</button>
+          <button id="autoSpin" type="button">AUTO PLAY</button>
+          <button id="cashOut" type="button">CASH OUT</button>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="guideOverlay" class="guide-overlay" aria-hidden="true">
+      <section class="guide-panel" aria-label="Paytable and game rules" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <p>Game Guide</p>
+            <h2>Paytable & Rules</h2>
+          </div>
+          <button id="guideClose" class="icon-button close-guide" type="button" aria-label="Close paytable">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <div class="guide-section">
+          <h3>Base Game</h3>
+          <div class="guide-cards">
+            <article class="guide-card">
+              <span class="guide-image">🎰</span>
+              <div>
+                <strong>Ways By Bet Level</strong>
+                <p>Bet level activates 3, 4, or 5 reels. Inactive reels are dimmed on the cabinet.</p>
+              </div>
+            </article>
+            <article class="guide-card">
+              <span class="guide-image">8 · 16 · 40</span>
+              <div>
+                <strong>Preset Bet Levels</strong>
+                <p>8/16 play 27 ways, 40 plays 81 ways, and 88 or higher plays the full 243 ways.</p>
+              </div>
+            </article>
+            <article class="guide-card">
+              <span class="guide-image">1¢</span>
+              <div>
+                <strong>Denom RTP</strong>
+                <p>Changing denomination applies that denom's configured target RTP.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Symbols</h3>
+          <div class="symbol-guide">
+            <article><span>🎟️</span><strong>Scatter</strong><p>Scatter on reels 1 and 2 plus at least one scatter on reels 3, 4, or 5 triggers the bonus.</p></article>
+            <article><span>🪩</span><strong>Wild</strong><p>Substitutes for regular paying symbols and increases volatility.</p></article>
+            <article><span>👑</span><strong>Top Award Symbol</strong><p>The highest base-game payout when connected across 5 reels.</p></article>
+            <article><span>✨</span><strong>Premium Symbol</strong><p>Pays larger awards on 4 or more connected reels.</p></article>
+            <article><span>💜</span><strong>Mid Symbol</strong><p>Pays from 3 connected reels and anchors frequent line hits.</p></article>
+            <article><span>🎤 🎧 🎵</span><strong>Low Symbols</strong><p>Pay on 4 or more connected reels.</p></article>
+          </div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Bonus Features</h3>
+          <div class="bonus-guide">
+            <article><span>🏆</span><strong>10 Free Games</strong><p>The first vault awards 10 free games. Bonus scatters may retrigger additional free games.</p></article>
+            <article><span>🎫</span><strong>Scratch Jackpot</strong><p>Pick cards on a 4x3 scratch board. Match 3 MINI, MINOR, MAJOR, or GRAND symbols to collect the jackpot.</p></article>
+            <article><span>📈</span><strong>Expanded Reels</strong><p>Reels 1 and 5 stay at 3 rows while reels 2-4 expand randomly from 5 to 10 rows for 5 bonus games.</p></article>
+          </div>
+        </div>
+
+        <p class="guide-note">Demo game only. No real-money wagering or payout.</p>
+      </section>
+    </div>
+
+    <div id="scratchOverlay" class="scratch-overlay" aria-hidden="true">
+      <section class="scratch-panel" aria-label="Scratch jackpot bonus">
+        <header>
+          <div>
+            <p>Scratch Jackpot</p>
+            <h2>Match 3 Jackpot Symbols</h2>
+          </div>
+          <strong id="scratchStatus">0 / 3</strong>
+        </header>
+        <div id="scratchGrid" class="scratch-grid"></div>
+        <p id="scratchMessage" class="scratch-message">Pick a card.</p>
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
