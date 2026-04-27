@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Hit note symbol">
+  <defs>
+    <linearGradient id="bg" x1="26" y1="10" x2="216" y2="166" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7a5d9a"/>
+      <stop offset=".5" stop-color="#332047"/>
+      <stop offset="1" stop-color="#17101f"/>
+    </linearGradient>
+    <linearGradient id="note" x1="77" y1="26" x2="155" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff1ff"/>
+      <stop offset=".35" stop-color="#c189ff"/>
+      <stop offset=".72" stop-color="#7a3ed7"/>
+      <stop offset="1" stop-color="#35106c"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M29 28h111c38 0 64 17 74 48-70-24-124-28-185-14Z" fill="#fff" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M130 35v78c0 22-17 39-39 39-19 0-32-10-32-25 0-18 18-31 40-29 7 1 13 3 18 6V53Z" fill="url(#note)"/>
+    <path d="M130 35c22 17 46 20 64 11v31c-21 8-44 3-64-13Z" fill="#d9b1ff"/>
+    <path d="M134 49c19 12 37 15 54 8" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".42"/>
+    <ellipse cx="91" cy="125" rx="25" ry="17" transform="rotate(-16 91 125)" fill="#edd3ff" opacity=".38"/>
+  </g>
+  <circle cx="55" cy="57" r="5" fill="#f4d2ff" opacity=".72"/>
+  <circle cx="190" cy="118" r="7" fill="#c189ff" opacity=".42"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Crown symbol">
+  <defs>
+    <linearGradient id="bg" x1="26" y1="12" x2="214" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9b6d25"/>
+      <stop offset=".5" stop-color="#3b1b07"/>
+      <stop offset="1" stop-color="#140904"/>
+    </linearGradient>
+    <linearGradient id="crown" x1="52" y1="34" x2="188" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff8b8"/>
+      <stop offset=".32" stop-color="#ffd34d"/>
+      <stop offset=".68" stop-color="#d77a17"/>
+      <stop offset="1" stop-color="#69300a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="13" stdDeviation="8" flood-color="#000" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M27 30c60-18 128-13 186 17v31c-56-27-121-31-186-15Z" fill="#fff" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M54 73 85 104l35-65 35 65 31-31-16 72H70Z" fill="url(#crown)"/>
+    <path d="M68 129h104v22H68z" rx="8" fill="#ffd34d"/>
+    <circle cx="54" cy="72" r="13" fill="#fff0a0"/>
+    <circle cx="120" cy="39" r="14" fill="#fff0a0"/>
+    <circle cx="186" cy="72" r="13" fill="#fff0a0"/>
+    <path d="m85 98 35-55 35 55" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".32"/>
+    <rect x="93" y="116" width="54" height="13" rx="7" fill="#7a3208" opacity=".42"/>
+  </g>
+</svg>

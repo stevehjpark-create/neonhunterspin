@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Wild symbol">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="12" x2="216" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#217c8a"/>
+      <stop offset=".5" stop-color="#122d50"/>
+      <stop offset="1" stop-color="#0a1024"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="42%" cy="30%" r="70%">
+      <stop stop-color="#ffffff"/>
+      <stop offset=".22" stop-color="#8ef6ff"/>
+      <stop offset=".52" stop-color="#5c7dff"/>
+      <stop offset=".78" stop-color="#8147f5"/>
+      <stop offset="1" stop-color="#25105c"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="13" stdDeviation="8" flood-color="#000" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M26 30c62-18 128-11 188 19v28c-58-26-122-30-188-15Z" fill="#fff" opacity=".11"/>
+  <g filter="url(#shadow)">
+    <circle cx="120" cy="85" r="54" fill="url(#ball)"/>
+    <path d="M73 84h94M83 57c24 13 50 13 74 0M83 113c24-13 50-13 74 0" stroke="#fff" stroke-width="5" opacity=".45"/>
+    <path d="M120 31v108M94 39c16 33 16 61 0 92M146 39c-16 33-16 61 0 92" stroke="#fff" stroke-width="5" opacity=".38"/>
+    <path d="M74 145h92" stroke="#8ef6ff" stroke-width="10" stroke-linecap="round"/>
+    <text x="120" y="158" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="23" fill="#e9fdff">WILD</text>
+  </g>
+</svg>

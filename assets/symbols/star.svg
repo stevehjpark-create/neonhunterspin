@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Stage star symbol">
+  <defs>
+    <linearGradient id="bg" x1="26" y1="12" x2="214" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#876526"/>
+      <stop offset=".54" stop-color="#35210b"/>
+      <stop offset="1" stop-color="#130b04"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="72" y1="25" x2="168" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff6b2"/>
+      <stop offset=".33" stop-color="#ffd84e"/>
+      <stop offset=".7" stop-color="#ff9c20"/>
+      <stop offset="1" stop-color="#7d3308"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="13" stdDeviation="8" flood-color="#000" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M27 29c59-18 130-14 186 16v30c-58-24-120-28-186-13Z" fill="#fff" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="m120 28 21 43 48 7-35 34 9 48-43-23-43 23 9-48-35-34 48-7Z" fill="url(#gold)"/>
+    <path d="m120 44 14 30 33 5-24 23 6 34-29-16-30 16 6-34-23-23 32-5Z" fill="#fff4a8" opacity=".2"/>
+    <path d="M100 73 120 36l18 38" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".36"/>
+  </g>
+  <path d="M40 139c52 13 108 13 160 0" stroke="#ffd84e" stroke-width="4" opacity=".24"/>
+</svg>

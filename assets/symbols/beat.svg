@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Studio beat symbol">
+  <defs>
+    <linearGradient id="bg" x1="28" y1="12" x2="214" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5d8b8c"/>
+      <stop offset=".5" stop-color="#22434a"/>
+      <stop offset="1" stop-color="#102028"/>
+    </linearGradient>
+    <linearGradient id="aqua" x1="72" y1="38" x2="168" y2="139" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#68fff0"/>
+      <stop offset=".45" stop-color="#20b6b3"/>
+      <stop offset="1" stop-color="#07566a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M26 31c62-18 126-13 188 14v31c-51-30-114-33-188-15Z" fill="#fff" opacity=".11"/>
+  <g filter="url(#shadow)">
+    <path d="M62 99c0-41 24-69 58-69s58 28 58 69" fill="none" stroke="#d8fff9" stroke-width="15" stroke-linecap="round"/>
+    <path d="M62 103c0-43 24-74 58-74s58 31 58 74" fill="none" stroke="#063948" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+    <rect x="47" y="84" width="38" height="58" rx="15" fill="url(#aqua)"/>
+    <rect x="155" y="84" width="38" height="58" rx="15" fill="url(#aqua)"/>
+    <rect x="86" y="113" width="68" height="15" rx="8" fill="#d8fff9"/>
+    <circle cx="120" cy="121" r="23" fill="url(#aqua)"/>
+    <circle cx="120" cy="121" r="10" fill="#eaffff"/>
+  </g>
+  <path d="M30 145c56 17 121 17 181-5" stroke="#68fff0" stroke-width="4" opacity=".32"/>
+</svg>

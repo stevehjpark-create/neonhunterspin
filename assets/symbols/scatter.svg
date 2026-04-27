@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Vault scatter symbol">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="12" x2="216" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#955327"/>
+      <stop offset=".52" stop-color="#331706"/>
+      <stop offset="1" stop-color="#120804"/>
+    </linearGradient>
+    <linearGradient id="ticket" x1="56" y1="42" x2="184" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff3b1"/>
+      <stop offset=".38" stop-color="#ffc84c"/>
+      <stop offset=".72" stop-color="#e46d24"/>
+      <stop offset="1" stop-color="#74300a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="13" stdDeviation="8" flood-color="#000" flood-opacity=".52"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M26 30c62-18 128-11 188 19v28c-58-26-122-30-188-15Z" fill="#fff" opacity=".11"/>
+  <g filter="url(#shadow)">
+    <path d="M57 58c14 0 22-7 22-18h82c0 11 8 18 22 18v72c-14 0-22 7-22 18H79c0-11-8-18-22-18Z" fill="url(#ticket)"/>
+    <rect x="82" y="68" width="76" height="50" rx="10" fill="#3a1706" opacity=".68"/>
+    <path d="M93 103V83h54v20" fill="none" stroke="#ffe78b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="120" cy="99" r="8" fill="#ffe78b"/>
+    <path d="M72 58h96" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".3"/>
+    <text x="120" y="139" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="20" fill="#fff4a7">VAULT</text>
+  </g>
+</svg>

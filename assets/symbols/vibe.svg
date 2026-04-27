@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Purple vibe symbol">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="12" x2="215" y2="168" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8a477f"/>
+      <stop offset=".52" stop-color="#3a153b"/>
+      <stop offset="1" stop-color="#170817"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="70" y1="32" x2="169" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffd7ff"/>
+      <stop offset=".36" stop-color="#ff65c8"/>
+      <stop offset=".72" stop-color="#9b35e8"/>
+      <stop offset="1" stop-color="#4d1278"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-25%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="13" stdDeviation="8" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect x="14" y="12" width="212" height="156" rx="24" fill="url(#bg)"/>
+  <path d="M29 29c62-16 124-12 183 18v27c-56-25-116-29-183-13Z" fill="#fff" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M120 150C72 115 51 87 57 58c4-20 19-32 38-32 13 0 22 6 25 14 5-8 14-14 27-14 20 0 35 13 38 33 5 31-18 58-65 91Z" fill="url(#gem)"/>
+    <path d="M77 57c6-14 27-16 37 2" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".36"/>
+    <path d="M120 52v88" stroke="#fff" stroke-width="3" opacity=".18"/>
+    <path d="m72 80 48 60 49-60" fill="none" stroke="#4c0e64" stroke-width="5" opacity=".32"/>
+  </g>
+  <circle cx="58" cy="126" r="6" fill="#ff8cdc" opacity=".52"/>
+  <circle cx="184" cy="47" r="5" fill="#ffd7ff" opacity=".58"/>
+</svg>

@@ -2,14 +2,14 @@ const scatterSymbol = "🎟️";
 const wildSymbol = "🪩";
 const symbols = ["🎤", "🎧", "🎵", "💜", "✨", "👑", wildSymbol, scatterSymbol];
 const symbolDisplay = new Map([
-  ["🎤", { className: "symbol-mic", icon: "MIC", label: "Stage Mic", tier: "LOW" }],
-  ["🎧", { className: "symbol-beat", icon: "BEAT", label: "Studio Beat", tier: "LOW" }],
-  ["🎵", { className: "symbol-note", icon: "NOTE", label: "Hit Note", tier: "LOW" }],
-  ["💜", { className: "symbol-vibe", icon: "VIBE", label: "Purple Vibe", tier: "MID" }],
-  ["✨", { className: "symbol-star", icon: "STAR", label: "Stage Star", tier: "PREMIUM" }],
-  ["👑", { className: "symbol-crown", icon: "CROWN", label: "Crown", tier: "TOP" }],
-  [wildSymbol, { className: "symbol-wild", icon: "WILD", label: "Wild", tier: "WILD" }],
-  [scatterSymbol, { className: "symbol-scatter", icon: "VAULT", label: "Scatter", tier: "SCATTER" }],
+  ["🎤", { className: "symbol-mic", asset: "assets/symbols/mic.svg", label: "Stage Mic", tier: "LOW" }],
+  ["🎧", { className: "symbol-beat", asset: "assets/symbols/beat.svg", label: "Studio Beat", tier: "LOW" }],
+  ["🎵", { className: "symbol-note", asset: "assets/symbols/note.svg", label: "Hit Note", tier: "LOW" }],
+  ["💜", { className: "symbol-vibe", asset: "assets/symbols/vibe.svg", label: "Purple Vibe", tier: "MID" }],
+  ["✨", { className: "symbol-star", asset: "assets/symbols/star.svg", label: "Stage Star", tier: "PREMIUM" }],
+  ["👑", { className: "symbol-crown", asset: "assets/symbols/crown.svg", label: "Crown", tier: "TOP" }],
+  [wildSymbol, { className: "symbol-wild", asset: "assets/symbols/wild.svg", label: "Wild", tier: "WILD" }],
+  [scatterSymbol, { className: "symbol-scatter", asset: "assets/symbols/scatter.svg", label: "Scatter", tier: "SCATTER" }],
 ]);
 const reelWeights = [
   [30, 27, 21, 12, 5, 3, 1, 16],
@@ -1171,7 +1171,7 @@ function renderReel(reel, symbolsForReel) {
   symbolsForReel.forEach((symbol) => {
     const display = symbolDisplay.get(symbol) || {
       className: "symbol-default",
-      icon: symbol,
+      asset: "",
       label: "Symbol",
       tier: "",
     };
@@ -1180,14 +1180,16 @@ function renderReel(reel, symbolsForReel) {
     cell.dataset.symbol = symbol;
     cell.setAttribute("aria-label", display.label);
 
-    const icon = document.createElement("b");
-    icon.className = "symbol-icon";
-    icon.textContent = display.icon;
+    const image = document.createElement("img");
+    image.className = "symbol-image";
+    image.src = display.asset;
+    image.alt = "";
+    image.draggable = false;
 
     const label = document.createElement("small");
     label.textContent = display.tier;
 
-    cell.append(icon, label);
+    cell.append(image, label);
     reel.appendChild(cell);
   });
 }
