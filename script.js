@@ -2,14 +2,14 @@ const scatterSymbol = "🎟️";
 const wildSymbol = "🪩";
 const symbols = ["🎤", "🎧", "🎵", "💜", "✨", "👑", wildSymbol, scatterSymbol];
 const symbolDisplay = new Map([
-  ["🎤", { className: "symbol-mic", asset: "assets/symbols/mic.svg", label: "Stage Mic", tier: "LOW" }],
-  ["🎧", { className: "symbol-beat", asset: "assets/symbols/beat.svg", label: "Studio Beat", tier: "LOW" }],
-  ["🎵", { className: "symbol-note", asset: "assets/symbols/note.svg", label: "Hit Note", tier: "LOW" }],
-  ["💜", { className: "symbol-vibe", asset: "assets/symbols/vibe.svg", label: "Purple Vibe", tier: "MID" }],
-  ["✨", { className: "symbol-star", asset: "assets/symbols/star.svg", label: "Stage Star", tier: "PREMIUM" }],
-  ["👑", { className: "symbol-crown", asset: "assets/symbols/crown.svg", label: "Crown", tier: "TOP" }],
-  [wildSymbol, { className: "symbol-wild", asset: "assets/symbols/wild.svg", label: "Wild", tier: "WILD" }],
-  [scatterSymbol, { className: "symbol-scatter", asset: "assets/symbols/scatter.svg", label: "Scatter", tier: "SCATTER" }],
+  ["🎤", { className: "symbol-mic", asset: "assets/symbols/mic.webp", label: "Stage Mic", tier: "LOW" }],
+  ["🎧", { className: "symbol-beat", asset: "assets/symbols/beat.webp", label: "Studio Beat", tier: "LOW" }],
+  ["🎵", { className: "symbol-note", asset: "assets/symbols/note.webp", label: "Hit Note", tier: "LOW" }],
+  ["💜", { className: "symbol-vibe", asset: "assets/symbols/vibe.webp", label: "Purple Vibe", tier: "MID" }],
+  ["✨", { className: "symbol-star", asset: "assets/symbols/star.webp", label: "Stage Star", tier: "PREMIUM" }],
+  ["👑", { className: "symbol-crown", asset: "assets/symbols/crown.webp", label: "Crown", tier: "TOP" }],
+  [wildSymbol, { className: "symbol-wild", asset: "assets/symbols/wild.webp", label: "Wild", tier: "WILD" }],
+  [scatterSymbol, { className: "symbol-scatter", asset: "assets/symbols/scatter.webp", label: "Scatter", tier: "SCATTER" }],
 ]);
 const reelWeights = [
   [30, 27, 21, 12, 5, 3, 1, 16],
@@ -76,7 +76,8 @@ const state = {
   bonusSpins: 0,
   expandedBonusSpins: 0,
   chests: createInitialChests(),
-  jackpots: createInitialJackpots(),
+  jackpotBanksByDenom: createInitialJackpotBanks(),
+  jackpots: null,
   scratchActive: false,
   scratchResolve: null,
   scratchSequence: [],
@@ -86,8 +87,11 @@ const state = {
   spinning: false,
   sound: true,
   currentOverlay: null,
+  overlaySequenceId: 0,
   autoPlayStopRequested: false,
 };
+
+state.jackpots = jackpotBankForDenom(state.selectedDenomCents);
 
 const els = {
   creditsMeter: document.querySelector("#creditsMeter"),
@@ -163,6 +167,21 @@ function createInitialJackpots() {
     MAJOR: createJackpotState("MAJOR"),
     GRAND: createJackpotState("GRAND"),
   };
+}
+
+function createInitialJackpotBanks() {
+  return Object.fromEntries(denomSteps.map((denomCents) => [denomCents, createInitialJackpots()]));
+}
+
+function jackpotBankForDenom(denomCents) {
+  if (!state.jackpotBanksByDenom[denomCents]) {
+    state.jackpotBanksByDenom[denomCents] = createInitialJackpots();
+  }
+  return state.jackpotBanksByDenom[denomCents];
+}
+
+function switchJackpotBankForDenom(denomCents) {
+  state.jackpots = jackpotBankForDenom(denomCents);
 }
 
 function createJackpotState(label) {
@@ -253,6 +272,26 @@ function fixedRtpForDenom(denomCents) {
 
 function applyDenomRtpRule() {
   state.selectedTotalRtp = fixedRtpForDenom(state.selectedDenomCents);
+}
+
+function convertCreditAmountForDenom(amount, oldDenomCents, newDenomCents) {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  return (amount * oldDenomCents) / newDenomCents;
+}
+
+function preserveCashValueForDenomChange(oldDenomCents, newDenomCents) {
+  state.credits = convertCreditAmountForDenom(state.credits, oldDenomCents, newDenomCents);
+  state.displayCredits = convertCreditAmountForDenom(
+    state.displayCredits,
+    oldDenomCents,
+    newDenomCents,
+  );
+  state.lastWin = convertCreditAmountForDenom(state.lastWin, oldDenomCents, newDenomCents);
+  state.freeSpinWinTotal = convertCreditAmountForDenom(
+    state.freeSpinWinTotal,
+    oldDenomCents,
+    newDenomCents,
+  );
 }
 
 function formatMoney(credits) {
@@ -465,6 +504,7 @@ function splitMessageAmount(text) {
 }
 
 function showReelMessageOverlay(text, isWin = false) {
+  state.overlaySequenceId += 1;
   state.currentOverlay = {
     type: "message",
     text,
@@ -474,6 +514,7 @@ function showReelMessageOverlay(text, isWin = false) {
 }
 
 function showReelAmountOverlay(title, amount, caption, isWin = true, captionAmount = null) {
+  state.overlaySequenceId += 1;
   state.currentOverlay = {
     type: "amount",
     title,
@@ -487,6 +528,21 @@ function showReelAmountOverlay(title, amount, caption, isWin = true, captionAmou
 
 function renderReelOverlay() {
   if (!state.currentOverlay) return;
+
+  els.freeWinOverlay.classList.remove("formula-mode", "formula-blink");
+
+  if (state.currentOverlay.type === "formula") {
+    const { formula, caption, isWin } = state.currentOverlay;
+    els.freeWinTitle.textContent = "WAYS PAY";
+    els.freeWinTotal.textContent = formula;
+    els.freeWinCaption.textContent = caption;
+    els.freeWinOverlay.classList.add("show", "formula-mode", "formula-blink");
+    els.freeWinOverlay.classList.toggle("win", isWin);
+    els.freeWinOverlay.classList.remove("message-only");
+    els.freeWinOverlay.classList.add("has-amount");
+    els.freeWinOverlay.setAttribute("aria-hidden", "false");
+    return;
+  }
 
   if (state.currentOverlay.type === "amount") {
     const { title, amount, caption, isWin, captionAmount } = state.currentOverlay;
@@ -706,6 +762,116 @@ function calculateRawWin(grid, bet, activeReelCount = state.selectedReels) {
     const multiplier = payouts[matchedReels] || 0;
     return totalWin + bet * multiplier * ways;
   }, 0);
+}
+
+function calculateWaysWinDetails(grid, bet, activeReelCount = state.selectedReels) {
+  const activeGrid = grid.slice(0, activeReelCount);
+
+  return Object.entries(paytable)
+    .map(([symbol, payouts]) => {
+      const counts = [];
+      let ways = 1;
+
+      for (const reel of activeGrid) {
+        const symbolCount = reel.filter((cell) => cell === symbol || cell === wildSymbol).length;
+        if (symbolCount === 0) break;
+
+        counts.push(symbolCount);
+        ways *= symbolCount;
+      }
+
+      const matchedReels = counts.length;
+      const multiplier = payouts[matchedReels] || 0;
+      const rawAmount = bet * multiplier * ways;
+      const display = symbolDisplay.get(symbol);
+
+      return {
+        symbol,
+        symbolName: display?.label || "Symbol",
+        counts,
+        matchedReels,
+        ways,
+        multiplier,
+        rawAmount,
+      };
+    })
+    .filter((detail) => detail.rawAmount > 0);
+}
+
+function distributeAdjustedWin(details, rawWin, adjustedWin) {
+  if (rawWin <= 0 || adjustedWin <= 0) return [];
+
+  const distributed = details.map((detail) => {
+    const exactAmount = (detail.rawAmount / rawWin) * adjustedWin;
+    return {
+      ...detail,
+      amount: Math.floor(exactAmount),
+      remainder: exactAmount - Math.floor(exactAmount),
+    };
+  });
+  let remaining = adjustedWin - distributed.reduce((sum, detail) => sum + detail.amount, 0);
+
+  distributed
+    .slice()
+    .sort((a, b) => b.remainder - a.remainder)
+    .forEach((detail) => {
+      if (remaining <= 0) return;
+      detail.amount += 1;
+      remaining -= 1;
+    });
+
+  return distributed.filter((detail) => detail.amount > 0);
+}
+
+function formatFormulaMoney(credits) {
+  const cents = credits * state.selectedDenomCents;
+  if (cents < 100) {
+    const roundedCents = Number(cents.toFixed(cents < 1 ? 3 : 2));
+    const unit = Math.abs(roundedCents) === 1 ? "cent" : "cents";
+    return `${roundedCents.toLocaleString("en-US", { maximumFractionDigits: 3 })} ${unit}`;
+  }
+
+  return (cents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
+  return distributeAdjustedWin(
+    calculateWaysWinDetails(grid, bet, activeReelCount),
+    rawWin,
+    adjustedWin,
+  ).map((detail) => {
+    const unitAmount = detail.amount / detail.ways;
+    return {
+      formula: `${detail.counts.join("x")} WAYS x ${formatFormulaMoney(unitAmount)} = ${formatFormulaMoney(detail.amount)}`,
+      caption: `${detail.symbolName} · ${detail.matchedReels} reels · ${detail.ways} ways`,
+    };
+  });
+}
+
+async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
+  if (!formulas.length) return;
+
+  const sequenceId = (state.overlaySequenceId += 1);
+  for (const item of formulas) {
+    if (sequenceId !== state.overlaySequenceId) return;
+    state.currentOverlay = {
+      type: "formula",
+      formula: item.formula,
+      caption: item.caption,
+      isWin: true,
+    };
+    renderReelOverlay();
+    await wait(1500);
+  }
+
+  if (sequenceId !== state.overlaySequenceId) return;
+  state.currentOverlay = restoreOverlay;
+  renderReelOverlay();
 }
 
 function hasScatter(reel) {
@@ -1234,9 +1400,10 @@ function hideTeaseOverlay() {
 }
 
 function hideReelWinOverlay() {
+  state.overlaySequenceId += 1;
   state.currentOverlay = null;
   els.freeWinOverlay.classList.remove("show");
-  els.freeWinOverlay.classList.remove("win", "has-amount");
+  els.freeWinOverlay.classList.remove("win", "has-amount", "formula-mode", "formula-blink");
   els.freeWinOverlay.classList.add("message-only");
   els.freeWinOverlay.setAttribute("aria-hidden", "true");
 }
@@ -1340,6 +1507,7 @@ async function spin() {
   }
   const rawWin = calculateRawWin(result, bet, activeReelCount);
   const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts);
+  const waysWinFormulas = buildWaysWinFormulas(result, bet, activeReelCount, rawWin, win);
   state.lastWin = win;
   if (isFreeSpin) {
     state.freeSpinWinTotal += win;
@@ -1364,11 +1532,20 @@ async function spin() {
   }
 
   if (isFreeSpin && bonusTriggered && win > 0) {
+    const restoreOverlay = {
+      type: "amount",
+      title: "Retrigger",
+      amount: win,
+      caption: `+${bonusSpinAward} Free Games`,
+      isWin: true,
+      captionAmount: state.freeSpinWinTotal,
+    };
     setMessage(
       `Retrigger! +${bonusSpinAward} Free Games and ${formatDisplayAmount(win)} added to bonus bank!`,
       true,
     );
     showReelAmountOverlay("Retrigger", win, `+${bonusSpinAward} Free Games`, true, state.freeSpinWinTotal);
+    showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playBonusStartSound();
   } else if (isFreeSpin && bonusTriggered) {
@@ -1376,23 +1553,53 @@ async function spin() {
     els.machine.classList.add("celebrate");
     playBonusStartSound();
   } else if (bonusTriggered && win > 0) {
+    const title = winPresentationTitle(win, bet);
+    const restoreOverlay = {
+      type: "amount",
+      title,
+      amount: win,
+      caption: "Ways Award",
+      isWin: true,
+      captionAmount: null,
+    };
     setMessage(`Vault Bonus triggered! ${formatDisplayAmount(win)} ways win!`, true);
-    showReelWinOverlay(winPresentationTitle(win, bet), win, "Ways Award");
+    showReelWinOverlay(title, win, "Ways Award");
+    showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
   } else if (bonusTriggered) {
     setMessage("Vault Bonus triggered!", true);
     els.machine.classList.add("celebrate");
   } else if (isFreeSpin && win > 0) {
+    const title = winPresentationTitle(win, bet, true);
+    const restoreOverlay = {
+      type: "amount",
+      title,
+      amount: win,
+      caption: "This Spin",
+      isWin: true,
+      captionAmount: state.freeSpinWinTotal,
+    };
     setMessage(
       `${formatDisplayAmount(win)} bonus win added. Bonus bank ${formatDisplayAmount(state.freeSpinWinTotal)}.`,
       true,
     );
-    showReelAmountOverlay(winPresentationTitle(win, bet, true), win, "This Spin", true, state.freeSpinWinTotal);
+    showReelAmountOverlay(title, win, "This Spin", true, state.freeSpinWinTotal);
+    showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
   } else if (win > 0) {
+    const title = winPresentationTitle(win, bet);
+    const restoreOverlay = {
+      type: "amount",
+      title,
+      amount: win,
+      caption: "Ways Award",
+      isWin: true,
+      captionAmount: null,
+    };
     setMessage(`${formatDisplayAmount(win)} ways win!`, true);
-    showReelWinOverlay(winPresentationTitle(win, bet), win, "Ways Award");
+    showReelWinOverlay(title, win, "Ways Award");
+    showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
   } else if (!isFreeSpin && shouldAnticipateBonus && scatterCount(result, activeReelCount) === 2) {
@@ -1468,12 +1675,15 @@ function dropCredits() {
   }
 
   if (dropAmount > maxDropAmount) {
-    setMessage(`Cash-in limit exceeded. Maximum DROP is ${maxDropAmount.toLocaleString("en-US", {
+    const maxDropText = maxDropAmount.toLocaleString("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })}.`);
+    });
+    const maxDropCredits = (maxDropAmount * 100) / state.selectedDenomCents;
+    setHiddenMessage(`Cash-in limit exceeded. Maximum DROP is ${maxDropText}.`);
+    showReelAmountOverlay("DROP LIMIT", maxDropCredits, "Cash-in limit exceeded", false);
     updateUi();
     return;
   }
@@ -1513,17 +1723,61 @@ function selectMultiplier(value) {
 function selectDenom(value) {
   if (state.spinning || bonusModeActive()) return;
   stopAutoSpin();
+  settleCreditAnimation();
   setDenomPickerOpen(false);
+  const oldDenomCents = state.selectedDenomCents;
+  if (oldDenomCents === value) return;
+  preserveCashValueForDenomChange(oldDenomCents, value);
   state.selectedDenomCents = value;
   applyDenomRtpRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
-  state.jackpots = createInitialJackpots();
-  setAmountMessage(
-    1,
-    `denomination selected. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%. Press SPIN.`,
+  switchJackpotBankForDenom(value);
+  setMessage(
+    `Denomination ${denomLabel(value)} selected. Credit meter and jackpot meter preserved for this denom. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%.`,
   );
   updateUi();
+}
+
+function debugHooksEnabled() {
+  return window.location.protocol === "file:" || new URLSearchParams(window.location.search).has("debug");
+}
+
+function setupDebugHooks() {
+  if (!debugHooksEnabled()) return;
+
+  window.slotDebug = {
+    async triggerVaultBonus(index = 0) {
+      if (state.spinning || state.scratchActive || bonusModeActive()) return false;
+      stopAutoSpin();
+      await handleChestBonus(Math.min(2, Math.max(0, Number(index) || 0)));
+      return true;
+    },
+    awardCash(amount = 100) {
+      if (state.spinning || state.scratchActive) return false;
+      const cashAmount = Math.max(0, Number(amount) || 0);
+      setCredits((cashAmount * 100) / state.selectedDenomCents, false);
+      setAmountMessage(state.credits, "debug cash loaded.");
+      updateUi();
+      return true;
+    },
+    setChestReady(index = 0) {
+      const chestIndex = Math.min(2, Math.max(0, Number(index) || 0));
+      state.chests[chestIndex].progress = state.chests[chestIndex].threshold;
+      updateChestUi(chestIndex);
+      return true;
+    },
+    snapshot() {
+      return {
+        credits: state.credits,
+        denomCents: state.selectedDenomCents,
+        cashValue: (state.credits * state.selectedDenomCents) / 100,
+        bonusSpins: state.bonusSpins,
+        expandedBonusSpins: state.expandedBonusSpins,
+        jackpots: structuredClone(state.jackpots),
+      };
+    },
+  };
 }
 
 els.spinButton.addEventListener("click", spin);
@@ -1627,5 +1881,6 @@ document.addEventListener("keydown", (event) => {
 });
 
 initializeReels();
+setupDebugHooks();
 setMessage(els.message.textContent);
 updateUi();

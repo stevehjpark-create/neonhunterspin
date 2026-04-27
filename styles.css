@@ -407,6 +407,36 @@ h1 {
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
+.free-win-overlay.formula-mode {
+  min-width: min(430px, calc(100% - 32px));
+  background:
+    linear-gradient(180deg, rgba(255, 206, 85, 0.22), rgba(85, 183, 255, 0.1)),
+    rgba(8, 10, 15, 0.9);
+}
+
+.free-win-overlay.formula-mode strong {
+  display: block;
+  color: var(--gold);
+  font-size: clamp(0.82rem, 2.8vw, 1.2rem);
+}
+
+.free-win-overlay.formula-mode span {
+  min-width: 0;
+  color: #fff6bf;
+  font-size: clamp(1rem, 4.5vw, 1.72rem);
+  line-height: 1.08;
+}
+
+.free-win-overlay.formula-mode p {
+  display: block;
+  color: var(--muted);
+  font-size: clamp(0.64rem, 2.4vw, 0.82rem);
+}
+
+.free-win-overlay.formula-blink span {
+  animation: formulaBlink 0.5s ease-in-out 3;
+}
+
 .tease-overlay {
   position: absolute;
   left: 50%;
@@ -1647,6 +1677,18 @@ h1 {
   }
   45% {
     transform: scale(1.035);
+  }
+}
+
+@keyframes formulaBlink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scale(0.98);
   }
 }
 
