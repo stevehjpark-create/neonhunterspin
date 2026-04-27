@@ -11,7 +11,7 @@
       <section class="machine" aria-label="Slot machine game">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Web Slot</p>
+            <p class="eyebrow">243 Ways Video Slot</p>
             <h1 id="game-title">Purple Stage Spin</h1>
           </div>
           <div class="top-actions">
@@ -23,6 +23,12 @@
             </button>
           </div>
         </header>
+
+        <div class="cabinet-marquee" aria-hidden="true">
+          <span>Progressive Vaults</span>
+          <strong>Live Stage Cabinet</strong>
+          <span>High Volatility</span>
+        </div>
 
         <div class="bonus-chests" aria-label="Vault bonus meters">
           <div class="chest-card" data-chest="0">
@@ -62,6 +68,9 @@
         </div>
 
         <div class="reel-window" aria-live="polite">
+          <div class="reel-lamps reel-lamps-top" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
           <div class="reels" id="reels">
             <div class="reel" data-index="0">
               <span>🎟️</span>
@@ -94,6 +103,10 @@
             <span id="freeWinTotal">$0.00</span>
             <p id="freeWinCaption">Free Games Total Win</p>
           </div>
+          <div id="teaseOverlay" class="tease-overlay" aria-hidden="true">
+            <strong id="teaseTitle"></strong>
+            <span id="teaseCaption"></span>
+          </div>
           <div id="vaultBonusIntro" class="vault-bonus-intro" aria-hidden="true">
             <div class="vault-eruption" aria-hidden="true"></div>
             <div id="vaultIntroChest" class="vault-intro-chest" data-chest="0" aria-hidden="true">
@@ -102,6 +115,9 @@
               <div class="vault-intro-base"></div>
             </div>
             <strong id="vaultIntroTitle">VAULT BONUS</strong>
+          </div>
+          <div class="reel-lamps reel-lamps-bottom" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
           </div>
         </div>
 
@@ -140,6 +156,27 @@
           </div>
         </div>
 
+        <p id="message" class="message" aria-live="polite">Enter cash and press DROP to load credits.</p>
+
+        <div class="play-deck" aria-label="Primary play controls">
+          <div class="controls no-start" aria-label="Bet controls">
+            <button id="decreaseBet" class="round-button" type="button" aria-label="Decrease bet">−</button>
+            <button id="increaseBet" class="round-button" type="button" aria-label="Increase bet">+</button>
+          </div>
+
+          <button id="spinButton" class="spin-button" type="button">SPIN</button>
+        </div>
+
+        <div class="quick-actions">
+          <label class="drop-box" aria-label="Cash in amount">
+            <input id="dropAmount" type="number" min="0" max="999999.99" step="0.01" inputmode="decimal" placeholder="Cash" />
+          </label>
+          <button id="dropButton" type="button">DROP</button>
+          <button id="maxBet" type="button">MAX BET</button>
+          <button id="autoSpin" type="button">AUTO PLAY</button>
+          <button id="cashOut" type="button">CASH OUT</button>
+        </div>
+
         <div class="options" aria-label="Bet options">
           <div class="option-group">
             <span>Bet Multiplier</span>
@@ -174,25 +211,6 @@
               <button type="button" data-denom="100">$1</button>
             </div>
           </div>
-        </div>
-
-        <p id="message" class="message" aria-live="polite">Enter cash and press DROP to load credits.</p>
-
-        <div class="controls no-start" aria-label="Bet controls">
-          <button id="decreaseBet" class="round-button" type="button" aria-label="Decrease bet">−</button>
-          <button id="increaseBet" class="round-button" type="button" aria-label="Increase bet">+</button>
-        </div>
-
-        <button id="spinButton" class="spin-button" type="button">SPIN</button>
-
-        <div class="quick-actions">
-          <label class="drop-box" aria-label="Cash in amount">
-            <input id="dropAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Cash" />
-          </label>
-          <button id="dropButton" type="button">DROP</button>
-          <button id="maxBet" type="button">MAX BET</button>
-          <button id="autoSpin" type="button">AUTO PLAY</button>
-          <button id="cashOut" type="button">CASH OUT</button>
         </div>
       </section>
 
@@ -240,12 +258,12 @@
         <div class="guide-section">
           <h3>Symbols</h3>
           <div class="symbol-guide">
-            <article><span>🎟️</span><strong>Scatter</strong><p>Scatter on reels 1 and 2 plus at least one scatter on reels 3, 4, or 5 triggers the bonus.</p></article>
-            <article><span>🪩</span><strong>Wild</strong><p>Substitutes for regular paying symbols and increases volatility.</p></article>
-            <article><span>👑</span><strong>Top Award Symbol</strong><p>The highest base-game payout when connected across 5 reels.</p></article>
-            <article><span>✨</span><strong>Premium Symbol</strong><p>Pays larger awards on 4 or more connected reels.</p></article>
-            <article><span>💜</span><strong>Mid Symbol</strong><p>Pays from 3 connected reels and anchors frequent line hits.</p></article>
-            <article><span>🎤 🎧 🎵</span><strong>Low Symbols</strong><p>Pay on 4 or more connected reels.</p></article>
+            <article><span>VAULT</span><strong>Scatter</strong><p>Scatter on reels 1 and 2 plus at least one scatter on reels 3, 4, or 5 triggers the bonus.</p></article>
+            <article><span>WILD</span><strong>Wild</strong><p>Substitutes for regular paying symbols and increases volatility.</p></article>
+            <article><span>CROWN</span><strong>Top Award Symbol</strong><p>The highest base-game payout when connected across 5 reels.</p></article>
+            <article><span>STAR</span><strong>Premium Symbol</strong><p>Pays larger awards on 4 or more connected reels.</p></article>
+            <article><span>VIBE</span><strong>Mid Symbol</strong><p>Pays from 3 connected reels and anchors frequent line hits.</p></article>
+            <article><span>MIC BEAT NOTE</span><strong>Low Symbols</strong><p>Pay on 4 or more connected reels.</p></article>
           </div>
         </div>
 

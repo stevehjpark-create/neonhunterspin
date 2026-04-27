@@ -24,7 +24,7 @@ body {
   margin: 0;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: clamp(8px, 1.8vw, 16px);
   background:
     linear-gradient(180deg, rgba(19, 24, 38, 0.96) 0%, rgba(8, 10, 17, 1) 54%, rgba(5, 6, 10, 1) 100%),
     linear-gradient(110deg, rgba(85, 183, 255, 0.16), transparent 34%, rgba(255, 206, 85, 0.12) 72%, transparent),
@@ -88,10 +88,10 @@ button:disabled {
 }
 
 .machine {
-  min-height: 620px;
+  min-height: min(720px, calc(100vh - 24px));
   display: flex;
   flex-direction: column;
-  padding: clamp(18px, 4vw, 34px);
+  padding: clamp(12px, 2.4vw, 24px);
   border-radius: 8px;
 }
 
@@ -139,7 +139,7 @@ button:disabled {
 }
 
 .eyebrow {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   color: var(--gold);
   font-size: 0.78rem;
   font-weight: 800;
@@ -154,8 +154,8 @@ p {
 }
 
 h1 {
-  font-size: clamp(2.2rem, 7vw, 4.8rem);
-  line-height: 0.92;
+  font-size: clamp(1.55rem, 4.6vw, 3.4rem);
+  line-height: 0.96;
   text-shadow:
     0 2px 0 rgba(0, 0, 0, 0.38),
     0 14px 26px rgba(0, 0, 0, 0.42);
@@ -163,8 +163,8 @@ h1 {
 
 .icon-button,
 .round-button {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -193,38 +193,61 @@ h1 {
 
 .meters {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin: 16px 0 12px;
+  grid-template-columns: minmax(116px, 1.55fr) repeat(7, minmax(62px, 1fr));
+  gap: 5px;
+  margin: 8px 0 8px;
+  padding: 5px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    rgba(6, 8, 13, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .meter {
   min-width: 0;
-  padding: 14px 12px;
-  border-radius: 8px;
+  padding: 6px 7px;
+  border-radius: 6px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
-    rgba(12, 15, 23, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(12, 15, 23, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 9px 0 rgba(5, 7, 12, 0.7),
-    0 16px 26px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .meter span {
   display: block;
   color: var(--muted);
-  font-size: clamp(0.72rem, 2.5vw, 0.82rem);
+  font-size: clamp(0.56rem, 1.45vw, 0.68rem);
   white-space: nowrap;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .meter strong {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
+  min-width: 10ch;
   overflow-wrap: anywhere;
-  font-size: clamp(1.25rem, 4.6vw, 2rem);
+  font-size: clamp(0.84rem, 2vw, 1.16rem);
   line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+#credits,
+#bet,
+#lastWin {
+  min-width: 14ch;
+}
+
+#ways,
+#multiplier,
+#denom,
+#rtp,
+#bonusSpins {
+  min-width: 6ch;
 }
 
 .meter-action {
@@ -254,10 +277,10 @@ h1 {
 .reel-window {
   position: relative;
   flex: 1;
-  min-height: 300px;
+  min-height: clamp(230px, 38vh, 340px);
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: clamp(10px, 1.8vw, 16px);
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid rgba(255, 206, 85, 0.38);
@@ -343,12 +366,14 @@ h1 {
 
 .free-win-overlay span {
   color: var(--text);
+  min-width: min(14ch, calc(100vw - 72px));
   max-width: 100%;
   overflow-wrap: anywhere;
   font-size: clamp(1.65rem, 6.6vw, 3.35rem);
   font-weight: 950;
   line-height: 1;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .free-win-overlay p {
@@ -380,6 +405,76 @@ h1 {
     0 18px 42px rgba(0, 0, 0, 0.5),
     0 0 40px rgba(255, 206, 85, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.tease-overlay {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  z-index: 6;
+  min-width: min(320px, calc(100% - 28px));
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 206, 85, 0.52);
+  background:
+    linear-gradient(180deg, rgba(255, 206, 85, 0.2), rgba(255, 79, 139, 0.1)),
+    rgba(6, 8, 13, 0.72);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.36),
+    0 0 30px rgba(255, 206, 85, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -10px) scale(0.96);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.tease-overlay.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.tease-overlay.pulse {
+  animation: teasePulse 0.62s ease-in-out infinite alternate;
+}
+
+.tease-overlay strong {
+  color: var(--gold);
+  font-size: clamp(0.8rem, 2.6vw, 1.28rem);
+  line-height: 1;
+  font-weight: 950;
+  text-align: center;
+  text-shadow: 0 0 18px rgba(255, 206, 85, 0.42);
+}
+
+.tease-overlay span {
+  color: var(--text);
+  font-size: clamp(0.62rem, 1.8vw, 0.82rem);
+  line-height: 1.1;
+  font-weight: 800;
+  text-align: center;
+}
+
+@keyframes teasePulse {
+  from {
+    border-color: rgba(255, 206, 85, 0.42);
+    box-shadow:
+      0 10px 28px rgba(0, 0, 0, 0.36),
+      0 0 20px rgba(255, 206, 85, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  to {
+    border-color: rgba(255, 206, 85, 0.9);
+    box-shadow:
+      0 10px 28px rgba(0, 0, 0, 0.36),
+      0 0 40px rgba(255, 206, 85, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
 }
 
 .vault-bonus-intro {
@@ -700,7 +795,7 @@ h1 {
 
 .reels {
   width: 100%;
-  height: min(42vh, 360px);
+  height: clamp(210px, 38vh, 350px);
   min-height: 190px;
   display: grid;
   grid-template-columns: repeat(5, minmax(58px, 1fr));
@@ -842,13 +937,15 @@ h1 {
 .options {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
   margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .option-group {
   display: grid;
-  gap: 8px;
+  gap: 5px;
 }
 
 .option-group > span {
@@ -860,7 +957,7 @@ h1 {
 .option-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 5px;
 }
 
 #multiplierOptions {
@@ -926,19 +1023,19 @@ h1 {
 }
 
 .option-buttons button {
-  min-height: 42px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
     rgba(22, 27, 39, 0.95);
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 900;
   box-shadow:
-    0 7px 0 rgba(5, 7, 12, 0.74),
-    0 12px 20px rgba(0, 0, 0, 0.2),
+    0 4px 0 rgba(5, 7, 12, 0.74),
+    0 8px 14px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition:
     transform 0.16s ease,
@@ -952,9 +1049,9 @@ h1 {
     linear-gradient(180deg, rgba(255, 239, 151, 0.28), rgba(255, 139, 61, 0.16)),
     rgba(84, 50, 25, 0.72);
   color: var(--text);
-  transform: translateY(3px);
+  transform: translateY(2px);
   box-shadow:
-    0 3px 0 rgba(92, 45, 0, 0.76),
+    0 2px 0 rgba(92, 45, 0, 0.76),
     0 8px 20px rgba(255, 206, 85, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
@@ -962,8 +1059,8 @@ h1 {
 .bonus-chests {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .chest-card {
@@ -977,10 +1074,10 @@ h1 {
   position: relative;
   min-width: 0;
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 7px;
   align-items: center;
-  padding: 10px;
+  padding: 7px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   background:
@@ -1035,8 +1132,8 @@ h1 {
 
 .chest-art {
   position: relative;
-  width: 70px;
-  height: 58px;
+  width: 56px;
+  height: 46px;
   grid-row: 1 / span 2;
 }
 
@@ -1045,7 +1142,7 @@ h1 {
   left: 7px;
   right: 7px;
   bottom: 0;
-  height: 36px;
+  height: 29px;
   border-radius: 5px 5px 8px 8px;
   border: 2px solid var(--chest-rim);
   background:
@@ -1062,8 +1159,8 @@ h1 {
   position: absolute;
   left: 5px;
   right: 5px;
-  top: 11px;
-  height: 24px;
+  top: 9px;
+  height: 20px;
   border-radius: 10px 10px 4px 4px;
   border: 2px solid var(--chest-rim);
   background:
@@ -1082,7 +1179,7 @@ h1 {
   position: absolute;
   left: 10px;
   right: 10px;
-  bottom: 18px;
+  bottom: 14px;
   height: calc(8px + var(--gold-level) * 26px);
   overflow: hidden;
   border-radius: 999px 999px 5px 5px;
@@ -1124,7 +1221,7 @@ h1 {
 .chest-card span,
 .jackpot-strip span {
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.66rem;
   font-weight: 800;
 }
 
@@ -1132,27 +1229,30 @@ h1 {
 .jackpot-strip strong {
   display: block;
   margin-top: 3px;
+  min-width: 10ch;
   color: var(--gold);
-  font-size: 1rem;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .jackpot-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .jackpot-strip div {
   min-width: 0;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
   border: 1px solid rgba(255, 206, 85, 0.24);
   background:
     linear-gradient(180deg, rgba(255, 206, 85, 0.16), rgba(255, 206, 85, 0.04)),
     rgba(20, 18, 12, 0.84);
   box-shadow:
-    0 8px 0 rgba(45, 32, 7, 0.72),
+    0 4px 0 rgba(45, 32, 7, 0.72),
     inset 0 1px 0 rgba(255, 247, 180, 0.14);
 }
 
@@ -1179,23 +1279,31 @@ h1 {
 }
 
 .controls.no-start {
-  grid-template-columns: repeat(2, 56px);
+  grid-template-columns: repeat(2, 44px);
   justify-content: center;
 }
 
 .round-button {
-  width: 56px;
-  height: 56px;
-  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  font-size: 1.45rem;
   font-weight: 900;
+}
+
+.play-deck {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 4px;
 }
 
 .start-button,
 .spin-button {
-  min-height: 68px;
+  min-height: 54px;
   border-radius: 8px;
   color: #2b1300;
-  font-size: clamp(1.25rem, 5vw, 2rem);
+  font-size: clamp(1.15rem, 4.2vw, 1.65rem);
   font-weight: 950;
 }
 
@@ -1208,7 +1316,7 @@ h1 {
 
 .spin-button {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 0;
   background:
     linear-gradient(180deg, #fff0a3, #ffba4a 42%, #ec6d34);
   box-shadow:
@@ -1222,8 +1330,8 @@ h1 {
 .quick-actions {
   display: grid;
   grid-template-columns: minmax(96px, 1.2fr) repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .quick-actions button.active {
@@ -1234,17 +1342,17 @@ h1 {
 
 .quick-actions button,
 .drop-box input {
-  min-height: 44px;
-  border-radius: 8px;
+  min-height: 36px;
+  border-radius: 6px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
     rgba(21, 26, 37, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.13);
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 800;
   box-shadow:
-    0 7px 0 rgba(5, 7, 12, 0.74),
+    0 4px 0 rgba(5, 7, 12, 0.74),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
@@ -1254,9 +1362,11 @@ h1 {
 
 .drop-box input {
   width: 100%;
+  min-width: 12ch;
   appearance: textfield;
   outline: none;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .drop-box input::placeholder {
@@ -1515,7 +1625,7 @@ h1 {
 @media (max-width: 820px) {
   body {
     display: block;
-    padding: 12px;
+    padding: 8px;
   }
 
   body::before {
@@ -1528,7 +1638,7 @@ h1 {
   }
 
   .machine {
-    min-height: calc(100vh - 24px);
+    min-height: calc(100vh - 16px);
     transform: none;
   }
 
@@ -1545,28 +1655,90 @@ h1 {
 
 @media (max-width: 460px) {
   .machine {
-    padding: 16px;
+    padding: 10px;
   }
 
   .meters {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: 6px 0;
+    padding: 4px;
   }
 
   .meter:first-child,
   .meter:last-child {
-    grid-column: 1 / -1;
+    grid-column: auto;
+  }
+
+  .meter {
+    padding: 5px 4px;
+  }
+
+  .meter span {
+    font-size: 0.5rem;
+  }
+
+  .meter strong {
+    min-width: 8ch;
+    font-size: 0.76rem;
+  }
+
+  #credits,
+  #bet,
+  #lastWin {
+    min-width: 10ch;
+    font-size: clamp(0.56rem, 2.7vw, 0.72rem);
+  }
+
+  #ways,
+  #multiplier,
+  #denom,
+  #rtp,
+  #bonusSpins {
+    min-width: 5ch;
   }
 
   .options {
     grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 6px;
   }
 
   .quick-actions {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(74px, 1.2fr) repeat(4, 1fr);
+    gap: 4px;
   }
 
   .drop-box {
-    grid-column: 1 / -1;
+    grid-column: auto;
+  }
+
+  .quick-actions button,
+  .drop-box input {
+    min-height: 32px;
+    padding-inline: 3px;
+    font-size: 0.58rem;
+  }
+
+  .play-deck {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .controls.no-start {
+    grid-template-columns: repeat(2, 36px);
+    gap: 5px;
+  }
+
+  .round-button {
+    width: 36px;
+    height: 42px;
+    font-size: 1.2rem;
+  }
+
+  .spin-button {
+    min-height: 46px;
   }
 
   .guide-overlay {
@@ -1584,7 +1756,42 @@ h1 {
 
   .bonus-chests,
   .jackpot-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .jackpot-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .chest-card {
     grid-template-columns: 1fr;
+    gap: 4px;
+    justify-items: center;
+    padding: 5px;
+  }
+
+  .chest-art {
+    width: 44px;
+    height: 36px;
+    grid-row: auto;
+  }
+
+  .chest-card span {
+    text-align: center;
+    font-size: 0.54rem;
+    line-height: 1.05;
+  }
+
+  .chest-card strong,
+  .jackpot-strip strong {
+    min-width: 8ch;
+    font-size: 0.66rem;
+    text-align: center;
+  }
+
+  .jackpot-strip div {
+    padding: 5px 3px;
+    text-align: center;
   }
 
   .scratch-grid {
@@ -1596,13 +1803,13 @@ h1 {
   }
 
   .reel-window {
-    min-height: 240px;
-    padding: 12px;
+    min-height: 210px;
+    padding: 8px;
   }
 
   .reels {
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    height: clamp(170px, 34vh, 260px);
+    height: clamp(180px, 36vh, 260px);
     min-height: 0;
   }
 
@@ -1616,5 +1823,666 @@ h1 {
 
   .expanded-mode .reels {
     height: clamp(260px, 56vh, 420px);
+  }
+}
+
+/* Casino cabinet pass */
+body {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(255, 206, 85, 0.18), transparent 24rem),
+    radial-gradient(circle at 18% 18%, rgba(255, 79, 139, 0.12), transparent 18rem),
+    radial-gradient(circle at 82% 22%, rgba(72, 213, 151, 0.1), transparent 18rem),
+    linear-gradient(180deg, #17151f 0%, #08090f 58%, #030407 100%);
+}
+
+.app {
+  width: min(980px, 100%);
+}
+
+.machine {
+  border: 2px solid rgba(255, 210, 91, 0.42);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.13), transparent 7%, transparent 93%, rgba(255, 255, 255, 0.08)),
+    linear-gradient(180deg, rgba(70, 30, 46, 0.98), rgba(24, 18, 27, 0.99) 32%, rgba(9, 11, 17, 0.99));
+  box-shadow:
+    0 26px 0 #06070b,
+    0 48px 78px rgba(0, 0, 0, 0.62),
+    inset 0 0 0 5px rgba(255, 210, 91, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -22px 34px rgba(0, 0, 0, 0.48);
+}
+
+.machine::before {
+  inset: 10px;
+  border: 2px solid rgba(255, 210, 91, 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 38px rgba(255, 206, 85, 0.08);
+}
+
+.topbar {
+  align-items: center;
+  padding: 3px 6px 0;
+}
+
+.eyebrow {
+  color: #ffd96b;
+  text-shadow: 0 0 14px rgba(255, 206, 85, 0.42);
+}
+
+h1 {
+  color: #fff6c8;
+  text-transform: uppercase;
+  text-shadow:
+    0 2px 0 #5c1c2b,
+    0 0 18px rgba(255, 206, 85, 0.34),
+    0 16px 28px rgba(0, 0, 0, 0.5);
+}
+
+.cabinet-marquee {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 206, 85, 0.38);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 206, 85, 0.08) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, rgba(48, 24, 31, 0.94), rgba(9, 10, 15, 0.96));
+  box-shadow:
+    0 8px 0 rgba(4, 5, 8, 0.76),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -8px 18px rgba(0, 0, 0, 0.42);
+}
+
+.cabinet-marquee span,
+.cabinet-marquee strong {
+  min-width: 0;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cabinet-marquee span {
+  color: #ff6aa2;
+  font-size: clamp(0.58rem, 1.6vw, 0.76rem);
+  font-weight: 950;
+  text-shadow: 0 0 12px rgba(255, 79, 139, 0.55);
+}
+
+.cabinet-marquee strong {
+  color: #ffe27d;
+  font-size: clamp(0.72rem, 2vw, 1rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  text-shadow:
+    0 0 10px rgba(255, 206, 85, 0.65),
+    0 0 24px rgba(255, 79, 139, 0.28);
+}
+
+.icon-button,
+.round-button,
+.quick-actions button,
+.option-buttons button,
+.denom-toggle {
+  border-color: rgba(255, 225, 128, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.2)),
+    linear-gradient(180deg, #384153, #111722);
+  box-shadow:
+    0 5px 0 rgba(4, 5, 8, 0.88),
+    0 12px 18px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -5px 0 rgba(0, 0, 0, 0.34);
+}
+
+.jackpot-strip {
+  gap: 7px;
+}
+
+.jackpot-strip div {
+  position: relative;
+  overflow: hidden;
+  min-height: 54px;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 206, 85, 0.38);
+  background:
+    radial-gradient(circle at 50% 0, rgba(255, 206, 85, 0.2), transparent 70%),
+    linear-gradient(180deg, #281712, #090809);
+  box-shadow:
+    0 5px 0 rgba(34, 19, 4, 0.82),
+    0 12px 18px rgba(0, 0, 0, 0.26),
+    inset 0 0 18px rgba(255, 206, 85, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.jackpot-strip div::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg, transparent 0 4px, rgba(255, 206, 85, 0.05) 4px 5px);
+  pointer-events: none;
+}
+
+.jackpot-strip span {
+  position: relative;
+  display: block;
+  color: #ffcf5d;
+  font-size: clamp(0.58rem, 1.4vw, 0.72rem);
+  text-align: center;
+  text-shadow: 0 0 12px rgba(255, 206, 85, 0.62);
+}
+
+.jackpot-strip strong {
+  position: relative;
+  min-width: 100%;
+  color: #fff6bf;
+  font-size: clamp(0.82rem, 2vw, 1.15rem);
+  text-align: center;
+  text-shadow:
+    0 0 8px rgba(255, 206, 85, 0.72),
+    0 0 18px rgba(255, 79, 139, 0.22);
+}
+
+.jackpot-strip div:nth-child(3),
+.jackpot-strip div:nth-child(4) {
+  border-color: rgba(255, 79, 139, 0.5);
+  background:
+    radial-gradient(circle at 50% 0, rgba(255, 79, 139, 0.2), transparent 70%),
+    linear-gradient(180deg, #301427, #090809);
+}
+
+.reel-window {
+  border: 2px solid rgba(255, 216, 104, 0.64);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.62), transparent 9%, transparent 91%, rgba(0, 0, 0, 0.66)),
+    radial-gradient(circle at 50% 0, rgba(255, 239, 164, 0.16), transparent 30%),
+    linear-gradient(180deg, #29201e 0, #07090e 18%, #0d1018 76%, #030407 100%);
+  box-shadow:
+    0 12px 0 #060506,
+    0 24px 38px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 8px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 11px rgba(255, 206, 85, 0.08),
+    inset 0 28px 54px rgba(255, 255, 255, 0.08),
+    inset 0 -34px 54px rgba(0, 0, 0, 0.66);
+}
+
+.reel-window::before,
+.reel-window::after {
+  width: 70px;
+  z-index: 4;
+}
+
+.reel-lamps {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 7px;
+  pointer-events: none;
+}
+
+.reel-lamps-top {
+  top: 7px;
+}
+
+.reel-lamps-bottom {
+  bottom: 7px;
+}
+
+.reel-lamps i {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff7b2, #ffb02f);
+  box-shadow:
+    0 0 10px rgba(255, 206, 85, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  opacity: 0.72;
+}
+
+.machine.celebrate .reel-lamps i {
+  animation: lampChase 0.52s linear infinite;
+}
+
+.reel-window.scatter-anticipation {
+  border-color: rgba(255, 230, 132, 0.9);
+  box-shadow:
+    0 12px 0 #060506,
+    0 24px 38px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 206, 85, 0.22),
+    inset 0 0 0 8px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 11px rgba(255, 206, 85, 0.12),
+    inset 0 28px 54px rgba(255, 255, 255, 0.1),
+    inset 0 -34px 54px rgba(0, 0, 0, 0.66);
+}
+
+.reel-window.scatter-anticipation .reel-lamps i {
+  animation: lampChase 0.42s linear infinite;
+}
+
+.reels {
+  gap: clamp(8px, 1.7vw, 14px);
+  padding: 22px clamp(5px, 1vw, 10px);
+}
+
+.reel {
+  border: 2px solid rgba(255, 221, 121, 0.24);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 19%, transparent 82%, rgba(0, 0, 0, 0.35)),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.08), transparent 64%),
+    linear-gradient(180deg, #252b37 0%, #111722 48%, #07090f 100%);
+  box-shadow:
+    0 12px 0 rgba(1, 2, 4, 0.92),
+    0 20px 26px rgba(0, 0, 0, 0.42),
+    inset 0 0 24px rgba(0, 0, 0, 0.58),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.reel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.38)),
+    radial-gradient(ellipse at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.26) 100%);
+  mix-blend-mode: screen;
+}
+
+.reel .symbol-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  gap: 2px;
+  padding: clamp(4px, 1.1vw, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.28), transparent 34%),
+    linear-gradient(180deg, var(--symbol-top), var(--symbol-bottom));
+  filter: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -12px 22px rgba(0, 0, 0, 0.28);
+}
+
+.reel .symbol-card::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.06);
+}
+
+.symbol-icon {
+  position: relative;
+  z-index: 1;
+  width: min(88%, 92px);
+  aspect-ratio: 1.45;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--symbol-text);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02)),
+    rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: clamp(0.62rem, min(2vw, 3.4vh), 1.22rem);
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.36),
+    0 0 14px var(--symbol-glow);
+}
+
+.symbol-card small {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: clamp(0.46rem, min(1.2vw, 1.8vh), 0.62rem);
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.38);
+}
+
+.symbol-mic {
+  --symbol-top: #4b5470;
+  --symbol-bottom: #151b28;
+  --symbol-text: #e8f4ff;
+  --symbol-glow: rgba(85, 183, 255, 0.52);
+}
+
+.symbol-beat {
+  --symbol-top: #475d63;
+  --symbol-bottom: #111f24;
+  --symbol-text: #d6fff0;
+  --symbol-glow: rgba(72, 213, 151, 0.5);
+}
+
+.symbol-note {
+  --symbol-top: #614f72;
+  --symbol-bottom: #211528;
+  --symbol-text: #f8e6ff;
+  --symbol-glow: rgba(186, 119, 255, 0.54);
+}
+
+.symbol-vibe {
+  --symbol-top: #7b3b76;
+  --symbol-bottom: #251027;
+  --symbol-text: #ffd4f1;
+  --symbol-glow: rgba(255, 79, 139, 0.58);
+}
+
+.symbol-star {
+  --symbol-top: #80612b;
+  --symbol-bottom: #29190a;
+  --symbol-text: #fff4aa;
+  --symbol-glow: rgba(255, 206, 85, 0.76);
+}
+
+.symbol-crown {
+  --symbol-top: #9a6b24;
+  --symbol-bottom: #301604;
+  --symbol-text: #fff1a2;
+  --symbol-glow: rgba(255, 206, 85, 0.86);
+}
+
+.symbol-wild {
+  --symbol-top: #1d7b84;
+  --symbol-bottom: #10213d;
+  --symbol-text: #d8fbff;
+  --symbol-glow: rgba(85, 183, 255, 0.8);
+}
+
+.symbol-scatter {
+  --symbol-top: #945122;
+  --symbol-bottom: #261207;
+  --symbol-text: #ffe681;
+  --symbol-glow: rgba(255, 206, 85, 0.9);
+}
+
+.symbol-wild .symbol-icon,
+.symbol-scatter .symbol-icon,
+.symbol-crown .symbol-icon {
+  border-color: rgba(255, 238, 156, 0.36);
+  box-shadow:
+    0 0 18px var(--symbol-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.reel.spinning .symbol-card {
+  animation: spinSymbols 0.12s linear infinite;
+  filter: blur(0.8px) saturate(1.18);
+}
+
+.free-win-overlay,
+.tease-overlay {
+  backdrop-filter: blur(4px);
+}
+
+.spin-button {
+  min-height: 64px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 248, 180, 0.58);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.72), transparent 28%),
+    linear-gradient(180deg, #fff4a8 0%, #ffbc39 42%, #db4f22 100%);
+  box-shadow:
+    0 10px 0 #6b2108,
+    0 22px 34px rgba(255, 126, 49, 0.34),
+    0 0 30px rgba(255, 206, 85, 0.18),
+    inset 0 3px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -9px 0 rgba(111, 37, 0, 0.28);
+}
+
+.spin-button:active:not(:disabled),
+.quick-actions button:active:not(:disabled),
+.round-button:active:not(:disabled),
+.option-buttons button:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 rgba(4, 5, 8, 0.82),
+    0 7px 12px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.meters {
+  border-color: rgba(255, 206, 85, 0.16);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.18)),
+    rgba(3, 4, 7, 0.78);
+}
+
+.meter {
+  background:
+    linear-gradient(180deg, rgba(255, 206, 85, 0.055), rgba(255, 255, 255, 0.015)),
+    #05070c;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.meter strong {
+  color: #fff7bf;
+  text-shadow: 0 0 10px rgba(255, 206, 85, 0.22);
+}
+
+@keyframes lampChase {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scaleX(0.72);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 820px) {
+  .cabinet-marquee {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .cabinet-marquee span:last-child {
+    display: none;
+  }
+
+  .reels {
+    padding: 20px 2px;
+    gap: 6px;
+  }
+
+  .symbol-icon {
+    width: min(92%, 68px);
+    font-size: clamp(0.52rem, 2.6vw, 0.9rem);
+  }
+
+  .symbol-card small {
+    font-size: clamp(0.42rem, 1.8vw, 0.56rem);
+  }
+
+  .reel-lamps {
+    left: 10px;
+    right: 10px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 460px) {
+  .machine {
+    padding: 7px;
+  }
+
+  .topbar {
+    gap: 8px;
+    padding-inline: 2px;
+  }
+
+  h1 {
+    font-size: clamp(1.28rem, 7vw, 1.72rem);
+  }
+
+  .eyebrow {
+    font-size: 0.58rem;
+  }
+
+  .cabinet-marquee {
+    margin-top: 5px;
+    padding: 4px 6px;
+  }
+
+  .cabinet-marquee span {
+    display: none;
+  }
+
+  .cabinet-marquee strong {
+    font-size: 0.64rem;
+  }
+
+  .bonus-chests {
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .chest-card {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 4px;
+    justify-items: stretch;
+    align-items: center;
+    padding: 4px;
+  }
+
+  .chest-art {
+    width: 34px;
+    height: 29px;
+    grid-row: 1 / span 2;
+  }
+
+  .chest-card span {
+    text-align: left;
+    font-size: 0.5rem;
+  }
+
+  .chest-card strong {
+    min-width: 7ch;
+    font-size: 0.58rem;
+    text-align: left;
+  }
+
+  .jackpot-strip div {
+    min-height: 40px;
+    padding: 5px 3px;
+  }
+
+  .spin-button {
+    min-height: 54px;
+  }
+
+  .reel-window {
+    min-height: 190px;
+    padding: 6px;
+  }
+
+  .reels {
+    height: clamp(154px, 28vh, 216px);
+    padding: 17px 1px;
+  }
+
+  .reel-lamps {
+    left: 8px;
+    right: 8px;
+  }
+
+  .reel-lamps i {
+    height: 5px;
+  }
+
+  .symbol-icon {
+    width: min(94%, 58px);
+    font-size: clamp(0.48rem, 2.35vw, 0.78rem);
+  }
+
+  .symbol-card small {
+    font-size: clamp(0.38rem, 1.55vw, 0.5rem);
+  }
+
+  .free-win-overlay {
+    padding: 14px;
+  }
+
+  .play-deck {
+    margin-top: 3px;
+  }
+
+  .quick-actions {
+    margin-top: 6px;
+  }
+
+  .options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 5px;
+    padding-top: 5px;
+  }
+
+  .option-group,
+  .option-group.wide {
+    grid-column: auto;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .option-group > span {
+    font-size: 0.5rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .option-buttons,
+  #multiplierOptions,
+  .bet-options {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .option-buttons button {
+    min-height: 28px;
+    padding: 4px 2px;
+    font-size: 0.52rem;
+  }
+
+  .denom-toggle {
+    min-height: 28px;
+    width: 100%;
+    padding: 5px 22px 5px 7px;
+    font-size: 0.62rem;
+  }
+
+  .denom-toggle::after {
+    right: 8px;
+  }
+
+  .denom-options {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 4px);
+    z-index: 8;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(5, 7, 12, 0.96);
+    border: 1px solid rgba(255, 206, 85, 0.26);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
   }
 }
