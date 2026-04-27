@@ -1,16 +1,23 @@
-const scatterSymbol = "🎟️";
-const wildSymbol = "🪩";
-const symbols = ["🎤", "🎧", "🎵", "💜", "✨", "👑", wildSymbol, scatterSymbol];
-const symbolDisplay = new Map([
-  ["🎤", { className: "symbol-mic", asset: "assets/symbols/mic.webp", label: "Stage Mic", tier: "LOW" }],
-  ["🎧", { className: "symbol-beat", asset: "assets/symbols/beat.webp", label: "Studio Beat", tier: "LOW" }],
-  ["🎵", { className: "symbol-note", asset: "assets/symbols/note.webp", label: "Hit Note", tier: "LOW" }],
-  ["💜", { className: "symbol-vibe", asset: "assets/symbols/vibe.webp", label: "Purple Vibe", tier: "MID" }],
-  ["✨", { className: "symbol-star", asset: "assets/symbols/star.webp", label: "Stage Star", tier: "PREMIUM" }],
-  ["👑", { className: "symbol-crown", asset: "assets/symbols/crown.webp", label: "Crown", tier: "TOP" }],
-  [wildSymbol, { className: "symbol-wild", asset: "assets/symbols/wild.webp", label: "Wild", tier: "WILD" }],
-  [scatterSymbol, { className: "symbol-scatter", asset: "assets/symbols/scatter.webp", label: "Scatter", tier: "SCATTER" }],
-]);
+const symbolCatalog = [
+  { id: "wild", name: "WILD", image: "assets/symbols/icon/wild.png", className: "symbol-wild", isWild: true, isScatter: false, isBonus: false },
+  { id: "scatter", name: "SCATTER", image: "assets/symbols/icon/scatter.png", className: "symbol-scatter", isWild: false, isScatter: true, isBonus: false },
+  { id: "bonus", name: "BONUS", image: "assets/symbols/icon/bonus.png", className: "symbol-bonus", isWild: false, isScatter: false, isBonus: true },
+  { id: "crown", name: "GAT", image: "assets/symbols/icon/crown.png", className: "symbol-crown", isWild: false, isScatter: false, isBonus: false },
+  { id: "diamond", name: "LANTERN", image: "assets/symbols/icon/diamond.png", className: "symbol-diamond", isWild: false, isScatter: false, isBonus: false },
+  { id: "seven", name: "7", image: "assets/symbols/icon/seven.png", className: "symbol-seven", isWild: false, isScatter: false, isBonus: false },
+  { id: "bar", name: "SAMTAEGEUK", image: "assets/symbols/icon/bar.png", className: "symbol-bar", isWild: false, isScatter: false, isBonus: false },
+  { id: "A", name: "가", image: "assets/symbols/icon/A.png", className: "symbol-a", isWild: false, isScatter: false, isBonus: false },
+  { id: "K", name: "나", image: "assets/symbols/icon/K.png", className: "symbol-k", isWild: false, isScatter: false, isBonus: false },
+  { id: "Q", name: "다", image: "assets/symbols/icon/Q.png", className: "symbol-q", isWild: false, isScatter: false, isBonus: false },
+  { id: "J", name: "라", image: "assets/symbols/icon/J.png", className: "symbol-j", isWild: false, isScatter: false, isBonus: false },
+  { id: "ten", name: "10", image: "assets/symbols/icon/ten.png", className: "symbol-ten", isWild: false, isScatter: false, isBonus: false },
+];
+const symbolById = new Map(symbolCatalog.map((symbol) => [symbol.id, symbol]));
+const wildSymbol = symbolById.get("wild");
+const scatterSymbol = symbolById.get("scatter");
+const symbols = ["bar", "A", "K", "Q", "diamond", "crown", "wild", "scatter"].map((id) =>
+  symbolById.get(id),
+);
 const reelWeights = [
   [30, 27, 21, 12, 5, 3, 1, 16],
   [30, 27, 21, 12, 5, 3, 1, 2],
@@ -54,12 +61,12 @@ const jackpotConfig = {
   GRAND: { start: 10000, max: 25000, contribution: 0.004 },
 };
 const paytable = {
-  "🎤": { 4: 0.5, 5: 8 },
-  "🎧": { 4: 0.5, 5: 8 },
-  "🎵": { 4: 1, 5: 12 },
-  "💜": { 3: 0.2, 4: 5, 5: 70 },
-  "✨": { 3: 1, 4: 30, 5: 400 },
-  "👑": { 3: 2, 4: 80, 5: 1000 },
+  bar: { 4: 0.5, 5: 8 },
+  A: { 4: 0.5, 5: 8 },
+  K: { 4: 1, 5: 12 },
+  Q: { 3: 0.2, 4: 5, 5: 70 },
+  diamond: { 3: 1, 4: 30, 5: 400 },
+  crown: { 3: 2, 4: 80, 5: 1000 },
 };
 
 const state = {
@@ -237,7 +244,9 @@ function totalWeightForReel(reelIndex) {
 }
 
 function symbolChanceOnReel(symbol, reelIndex) {
-  const symbolIndex = symbols.indexOf(symbol);
+  const symbolId = typeof symbol === "string" ? symbol : symbol.id;
+  const symbolIndex = symbols.findIndex((item) => item.id === symbolId);
+  if (symbolIndex < 0) return 0;
   return reelWeights[reelIndex][symbolIndex] / totalWeightForReel(reelIndex);
 }
 
@@ -752,7 +761,7 @@ function calculateRawWin(grid, bet, activeReelCount = state.selectedReels) {
     let ways = 1;
 
     for (const reel of activeGrid) {
-      const symbolCount = reel.filter((cell) => cell === symbol || cell === wildSymbol).length;
+      const symbolCount = reel.filter((cell) => cell.id === symbol || cell.isWild).length;
       if (symbolCount === 0) break;
 
       matchedReels += 1;
@@ -773,7 +782,7 @@ function calculateWaysWinDetails(grid, bet, activeReelCount = state.selectedReel
       let ways = 1;
 
       for (const reel of activeGrid) {
-        const symbolCount = reel.filter((cell) => cell === symbol || cell === wildSymbol).length;
+        const symbolCount = reel.filter((cell) => cell.id === symbol || cell.isWild).length;
         if (symbolCount === 0) break;
 
         counts.push(symbolCount);
@@ -783,11 +792,11 @@ function calculateWaysWinDetails(grid, bet, activeReelCount = state.selectedReel
       const matchedReels = counts.length;
       const multiplier = payouts[matchedReels] || 0;
       const rawAmount = bet * multiplier * ways;
-      const display = symbolDisplay.get(symbol);
+      const display = symbolById.get(symbol);
 
       return {
         symbol,
-        symbolName: display?.label || "Symbol",
+        symbolName: display?.name || "Symbol",
         counts,
         matchedReels,
         ways,
@@ -875,7 +884,7 @@ async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
 }
 
 function hasScatter(reel) {
-  return reel.includes(scatterSymbol);
+  return reel.some((symbol) => symbol.isScatter);
 }
 
 function scatterCount(grid, activeReelCount = state.selectedReels) {
@@ -968,7 +977,7 @@ function chooseChestBonus() {
 }
 
 function vaultBonusTitle(index) {
-  return ["10 FREE GAMES", "SCRATCH JACKPOT", "EXPANDED REELS"][index] || "VAULT BONUS";
+  return ["DOKKAEBI FREE GAMES", "DOKKAEBI SCRATCH", "DOKKAEBI EXPAND"][index] || "DOKKAEBI BONUS";
 }
 
 function renderVaultIntroGems(index) {
@@ -992,13 +1001,12 @@ function renderVaultIntroGems(index) {
 }
 
 function playVaultIntroSound() {
-  [110, 96, 124, 90].forEach((tone, index) => {
-    playTone(tone, 0.12, "sawtooth", index * 0.16, 0.035);
-  });
-  playTone(196, 0.18, "triangle", 0.92, 0.08);
-  playTone(330, 0.14, "triangle", 1.18, 0.09);
-  playTone(880, 0.22, "sine", 1.55, 0.12);
-  playTone(1320, 0.18, "triangle", 1.68, 0.1);
+  playJangguRoll(9, 0, 0.08, 0.065);
+  playBukHit(0.76, 0.13);
+  playBukHit(0.96, 0.16);
+  playJing(1.18, 0.11);
+  playDaegeumRise(1.32, 0.05);
+  playBellCluster(1.58, 8, 0.07);
 }
 
 async function playVaultBonusIntro(index) {
@@ -1024,7 +1032,7 @@ async function handleChestBonus(index) {
   if (index < 0) return;
 
   state.spinning = true;
-  setHiddenMessage("Vault Bonus feature reveal in progress");
+  setHiddenMessage("Dokkaebi gem burst feature reveal in progress");
   state.chests[index].progress = 1;
   updateChestUi(index);
   playBonusStartSound();
@@ -1035,16 +1043,16 @@ async function handleChestBonus(index) {
   if (index === 0) {
     state.freeSpinWinTotal = 0;
     state.bonusSpins += chestFreeSpinAward;
-    setMessage(`Vault Bonus! ${chestFreeSpinAward} Free Games awarded!`, true);
+    setMessage(`Dokkaebi Bonus! ${chestFreeSpinAward} Free Games awarded!`, true);
   } else if (index === 1) {
-    setMessage("Vault Bonus! Scratch Jackpot feature triggered.", true);
+    setMessage("Dokkaebi Bonus! Scratch Jackpot feature triggered.", true);
     updateUi();
     await wait(600);
     await startScratchBonus();
   } else {
     state.freeSpinWinTotal = 0;
     state.expandedBonusSpins += expandedBonusAward;
-    setMessage(`Vault Bonus! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
+    setMessage(`Dokkaebi Bonus! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
   }
 
   await wait(700);
@@ -1115,6 +1123,22 @@ function jackpotWinMessage(label, award) {
   return `${label} Jackpot hit for ${awardText}! ${awardText} paid to the credit meter.`;
 }
 
+function createScratchDokkaebiBox(index) {
+  const card = document.createElement("button");
+  card.className = `scratch-card dokkaebi-scratch-box box-${index % 4}`;
+  card.type = "button";
+  card.setAttribute("aria-label", `Closed Dokkaebi scratch box ${index + 1}`);
+  card.innerHTML = `
+    <span class="scratch-box-horns" aria-hidden="true"><i></i><i></i></span>
+    <span class="scratch-box-lid" aria-hidden="true"></span>
+    <span class="scratch-box-face" aria-hidden="true"><i></i></span>
+    <span class="scratch-box-gems" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="scratch-card-prize">?</span>
+  `;
+  card.addEventListener("click", () => revealScratchCard(card));
+  return card;
+}
+
 function startScratchBonus() {
   state.scratchActive = true;
   state.scratchPrize = drawScratchPrize();
@@ -1123,17 +1147,12 @@ function startScratchBonus() {
   state.scratchPickLimit = scratchCardCount;
   els.scratchGrid.innerHTML = "";
   els.scratchStatus.textContent = "0 / 3";
-  els.scratchMessage.textContent = "Pick cards from the 12-card scratch board.";
+  els.scratchMessage.textContent = "Pick Dokkaebi boxes from the 12-box scratch board.";
   els.scratchOverlay.classList.add("open");
   els.scratchOverlay.setAttribute("aria-hidden", "false");
 
   for (let index = 0; index < scratchCardCount; index += 1) {
-    const card = document.createElement("button");
-    card.className = "scratch-card";
-    card.type = "button";
-    card.textContent = "?";
-    card.addEventListener("click", () => revealScratchCard(card));
-    els.scratchGrid.appendChild(card);
+    els.scratchGrid.appendChild(createScratchDokkaebiBox(index));
   }
 
   updateUi();
@@ -1149,8 +1168,15 @@ function revealScratchCard(card) {
   const revealedCount = els.scratchGrid.querySelectorAll(".revealed").length;
   const symbol = state.scratchSequence[revealedCount] || jackpotLabels[revealedCount % jackpotLabels.length];
   card.classList.add("revealed");
-  card.textContent = scratchLabel(symbol);
-  playTone(620 + revealedCount * 28, 0.08, "triangle", 0, 0.1);
+  card.dataset.prize = symbol;
+  card.setAttribute("aria-label", `Opened Dokkaebi scratch box: ${scratchLabel(symbol)}`);
+  const prizeLabel = card.querySelector(".scratch-card-prize");
+  if (prizeLabel) {
+    prizeLabel.textContent = scratchLabel(symbol);
+  } else {
+    card.textContent = scratchLabel(symbol);
+  }
+  playScratchPickSound(revealedCount);
 
   if (jackpotLabels.includes(symbol)) {
     state.scratchCounts[symbol] = (state.scratchCounts[symbol] || 0) + 1;
@@ -1165,7 +1191,7 @@ function revealScratchCard(card) {
   if (revealedCount + 1 >= state.scratchPickLimit) {
     finishScratchBonus(null);
   } else {
-    els.scratchMessage.textContent = "Pick the next card.";
+    els.scratchMessage.textContent = "Pick the next Dokkaebi box.";
   }
 }
 
@@ -1256,106 +1282,208 @@ function playTone(frequency, duration, type = "sine", delay = 0, volume = 0.12) 
   oscillator.stop(start + duration + 0.02);
 }
 
+// Small synthetic cues inspired by Korean percussion, strings, reeds, and bells.
+function playNoiseBurst(duration, delay = 0, volume = 0.035, filterFrequency = 700, filterType = "bandpass") {
+  if (!state.sound) return;
+
+  const context = getAudioContext();
+  if (!context) return;
+
+  if (context.state === "suspended") {
+    context.resume().catch(() => {});
+    return;
+  }
+
+  const sampleCount = Math.max(1, Math.floor(context.sampleRate * duration));
+  const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let index = 0; index < sampleCount; index += 1) {
+    const fade = 1 - index / sampleCount;
+    data[index] = (Math.random() * 2 - 1) * fade;
+  }
+
+  const source = context.createBufferSource();
+  const filter = context.createBiquadFilter();
+  const gain = context.createGain();
+  const start = context.currentTime + delay;
+
+  filter.type = filterType;
+  filter.frequency.value = filterFrequency;
+  filter.Q.value = 4.5;
+  gain.gain.setValueAtTime(volume, start);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+  source.buffer = buffer;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(context.destination);
+  source.start(start);
+  source.stop(start + duration + 0.02);
+}
+
+function playBukHit(delay = 0, volume = 0.12) {
+  playTone(92, 0.18, "sine", delay, volume);
+  playTone(138, 0.09, "triangle", delay + 0.015, volume * 0.58);
+  playNoiseBurst(0.07, delay, volume * 0.22, 260, "lowpass");
+}
+
+function playJangguHit(delay = 0, high = false, volume = 0.08) {
+  const baseTone = high ? 210 : 128;
+  playTone(baseTone, 0.065, "triangle", delay, volume);
+  playTone(baseTone * 1.42, 0.045, "sine", delay + 0.018, volume * 0.45);
+  playNoiseBurst(0.045, delay, volume * 0.18, high ? 760 : 420, "bandpass");
+}
+
+function playJangguRoll(count = 6, startDelay = 0, step = 0.07, volume = 0.06) {
+  for (let index = 0; index < count; index += 1) {
+    playJangguHit(startDelay + index * step, index % 2 === 1, volume * (1 + index * 0.035));
+  }
+}
+
+function playJing(delay = 0, volume = 0.1) {
+  [146, 219, 292, 438].forEach((tone, index) => {
+    playTone(tone, 0.72 - index * 0.07, index % 2 ? "triangle" : "sine", delay + index * 0.012, volume * (0.9 - index * 0.14));
+  });
+  playNoiseBurst(0.18, delay, volume * 0.18, 980, "bandpass");
+}
+
+function playKwaenggwari(delay = 0, volume = 0.1) {
+  [880, 1180, 1490, 2110].forEach((tone, index) => {
+    playTone(tone, 0.16 - index * 0.018, index % 2 ? "square" : "triangle", delay + index * 0.018, volume * (0.82 - index * 0.12));
+  });
+  playNoiseBurst(0.12, delay + 0.01, volume * 0.22, 1700, "highpass");
+}
+
+function playGayageumPluck(frequency, delay = 0, volume = 0.08) {
+  playTone(frequency, 0.18, "triangle", delay, volume);
+  playTone(frequency * 2.01, 0.08, "sine", delay + 0.018, volume * 0.36);
+}
+
+function playDaegeumRise(startDelay = 0, volume = 0.045) {
+  [392, 440, 523, 587, 659].forEach((tone, index) => {
+    playTone(tone, 0.18, index % 2 ? "triangle" : "sine", startDelay + index * 0.1, volume + index * 0.008);
+  });
+}
+
+function playBellCluster(startDelay = 0, count = 5, volume = 0.055) {
+  const tones = [988, 1175, 1320, 1568, 1760, 1976, 2349];
+  for (let index = 0; index < count; index += 1) {
+    const tone = tones[index % tones.length] * (index > tones.length ? 0.5 : 1);
+    playTone(tone, 0.12, index % 2 ? "sine" : "triangle", startDelay + index * 0.045, volume * (1 - index * 0.035));
+  }
+}
+
 function playSpinSound() {
-  playTone(220, 0.08, "square");
-  playTone(280, 0.08, "square", 0.08);
-  playTone(340, 0.08, "square", 0.16);
+  playJangguRoll(5, 0, 0.055, 0.055);
+  playTone(196, 0.2, "sine", 0, 0.035);
 }
 
 function playReelSpinTick(index) {
-  playTone(120 + index * 18, 0.035, "square", 0, 0.025);
+  playJangguHit(0, index % 2 === 1, 0.026);
 }
 
 function playReelStopSound(index) {
-  playTone(360 + index * 85, 0.09, "triangle", 0, 0.13);
-  playTone(240 + index * 35, 0.06, "sine", 0.04, 0.055);
+  playBukHit(0, 0.08 + index * 0.008);
+  playTone(620 + index * 42, 0.055, "triangle", 0.045, 0.045);
 }
 
 function playScatterSound(index) {
-  const startTone = 760 + index * 55;
-  playTone(startTone, 0.1, "sine", 0.08, 0.12);
-  playTone(startTone * 1.25, 0.12, "triangle", 0.17, 0.1);
-  playTone(startTone * 1.5, 0.14, "sine", 0.28, 0.08);
+  playKwaenggwari(0, 0.085 + index * 0.006);
+  playBellCluster(0.13, 3, 0.045);
 }
 
 function playAnticipationSound() {
-  [440, 554, 659, 784].forEach((tone, index) => {
-    playTone(tone, 0.09, index % 2 ? "sine" : "triangle", index * 0.12, 0.065);
-  });
+  playJangguRoll(7, 0, 0.07, 0.045);
+  playDaegeumRise(0.16, 0.036);
 }
 
 function playCloseCallSound() {
-  playTone(660, 0.08, "triangle", 0, 0.07);
-  playTone(520, 0.12, "sine", 0.12, 0.055);
+  playBukHit(0, 0.07);
+  [520, 440, 330].forEach((tone, index) => {
+    playTone(tone, 0.12, "sine", 0.12 + index * 0.09, 0.038);
+  });
 }
 
 function playWinSound() {
-  [523, 659, 784, 1046].forEach((tone, index) => {
-    playTone(tone, 0.16, "triangle", index * 0.09);
+  [392, 523, 659, 784, 1046].forEach((tone, index) => {
+    playGayageumPluck(tone, index * 0.07, 0.07);
   });
+  playBellCluster(0.32, 3, 0.045);
 }
 
 function playBonusStartSound() {
-  [523, 659, 784, 1046, 1318].forEach((tone, index) => {
-    playTone(tone, 0.18, index % 2 === 0 ? "triangle" : "sine", index * 0.1, 0.14);
-  });
-  playTone(1568, 0.24, "sine", 0.52, 0.1);
+  playJing(0, 0.105);
+  playDaegeumRise(0.1, 0.052);
+  playBellCluster(0.48, 6, 0.058);
 }
 
 function playBonusEndSound() {
-  [1046, 880, 659, 523].forEach((tone, index) => {
-    playTone(tone, 0.18, "triangle", index * 0.12, 0.12);
+  [880, 659, 523, 392].forEach((tone, index) => {
+    playGayageumPluck(tone, index * 0.11, 0.06);
   });
-  playTone(392, 0.32, "sine", 0.5, 0.09);
+  playJing(0.48, 0.072);
 }
 
 function playDropSound() {
-  playTone(392, 0.08, "triangle", 0, 0.11);
-  playTone(523, 0.08, "triangle", 0.08, 0.12);
-  playTone(659, 0.12, "sine", 0.16, 0.1);
+  playBukHit(0, 0.075);
+  playBellCluster(0.06, 5, 0.05);
 }
 
 function playCashOutSound() {
-  playTone(880, 0.08, "sine", 0, 0.12);
-  playTone(659, 0.08, "triangle", 0.08, 0.1);
-  playTone(440, 0.16, "sine", 0.18, 0.1);
+  [1568, 1320, 988, 784, 659].forEach((tone, index) => {
+    playTone(tone, 0.08, index % 2 ? "sine" : "triangle", index * 0.055, 0.05);
+  });
+  playJing(0.24, 0.062);
 }
 
 function playCreditStackSound(step = 0) {
-  const baseTone = 820 + (step % 6) * 36;
-  playTone(baseTone, 0.045, "triangle", 0, 0.055);
-  playTone(baseTone * 1.48, 0.035, "sine", 0.025, 0.035);
+  const baseTone = 988 + (step % 5) * 62;
+  playTone(baseTone, 0.045, "triangle", 0, 0.044);
+  playTone(baseTone * 1.5, 0.035, "sine", 0.022, 0.026);
+}
+
+function playScratchPickSound(revealedCount) {
+  playGayageumPluck(523 + revealedCount * 22, 0, 0.052);
+  playTone(1320 + revealedCount * 18, 0.05, "triangle", 0.045, 0.035);
+}
+
+function playSoundToggleSound() {
+  playBellCluster(0, 3, 0.052);
 }
 
 function createReelResult(reelIndex, rowCount = visibleRows) {
   return Array.from({ length: rowCount }, () => weightedSymbol(reelIndex));
 }
 
+function symbolFromValue(value) {
+  if (!value) return symbolById.get("bar");
+  if (typeof value === "string") return symbolById.get(value.trim()) || symbolById.get("bar");
+  return value;
+}
+
 function renderReel(reel, symbolsForReel) {
   reel.innerHTML = "";
   reel.style.gridTemplateRows = `repeat(${symbolsForReel.length}, 1fr)`;
-  symbolsForReel.forEach((symbol) => {
-    const display = symbolDisplay.get(symbol) || {
-      className: "symbol-default",
-      asset: "",
-      label: "Symbol",
-      tier: "",
-    };
+  symbolsForReel.forEach((value) => {
+    const symbol = symbolFromValue(value);
     const cell = document.createElement("span");
-    cell.className = `symbol-card ${display.className}`;
-    cell.dataset.symbol = symbol;
-    cell.setAttribute("aria-label", display.label);
+    cell.className = `symbol-cell symbol-card ${symbol.className}`;
+    cell.dataset.symbol = symbol.id;
+    cell.setAttribute("aria-label", symbol.name);
+    cell.style.setProperty("--symbol-delay", `${randomBetween(0, 1.8).toFixed(2)}s`);
+    cell.style.setProperty("--symbol-drift", `${randomBetween(1.5, 3.8).toFixed(2)}px`);
 
     const image = document.createElement("img");
     image.className = "symbol-image";
-    image.src = display.asset;
+    image.src = symbol.image;
     image.alt = "";
     image.draggable = false;
 
-    const label = document.createElement("small");
-    label.textContent = display.tier;
+    image.addEventListener("error", () => {
+      cell.classList.add("symbol-missing");
+    });
 
-    cell.append(image, label);
+    cell.append(image);
     reel.appendChild(cell);
   });
 }
@@ -1373,6 +1501,72 @@ function randomizeReel(reel, index, rowCount = visibleRows) {
     Array.from({ length: rowCount }, () => weightedSymbol(index)),
   );
   playReelSpinTick(index);
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function createReelSpinProfiles(activeReelCount, shouldAnticipateBonus) {
+  return Array.from({ length: activeReelCount }, (_, index) => {
+    const baseInterval = Math.round(randomBetween(58, 96) + index * randomBetween(3, 9));
+    const baseAnimation = randomBetween(0.085, 0.15) + index * 0.004;
+    const stopDelay =
+      index === 0
+        ? Math.round(randomBetween(560, 760))
+        : Math.round(randomBetween(285, 470) + index * randomBetween(24, 58));
+
+    if (!shouldAnticipateBonus || index < 2) {
+      return {
+        intervalMs: baseInterval,
+        animationDuration: baseAnimation,
+        stopDelay,
+        teaseIntervalMs: baseInterval,
+        teaseAnimationDuration: baseAnimation,
+        teaseStopDelay: stopDelay,
+      };
+    }
+
+    const anticipationIndex = index - 2;
+    return {
+      intervalMs: baseInterval,
+      animationDuration: baseAnimation,
+      stopDelay,
+      teaseIntervalMs: Math.round(randomBetween(104, 142) + anticipationIndex * randomBetween(18, 34)),
+      teaseAnimationDuration: randomBetween(0.17, 0.24) + anticipationIndex * 0.035,
+      teaseStopDelay: Math.round(randomBetween(760, 990) + anticipationIndex * randomBetween(220, 330)),
+    };
+  });
+}
+
+function applyReelSpinProfile(reel, profile, tense = false) {
+  reel.style.setProperty("--spin-symbol-speed", `${profile.animationDuration.toFixed(3)}s`);
+  reel.classList.toggle("scatter-hunt", tense);
+}
+
+function startReelTicker(reel, reelIndex, rowCount, intervalMs) {
+  return setInterval(() => randomizeReel(reel, reelIndex, rowCount), intervalMs);
+}
+
+function intensifyScatterReels(activeReels, timers, profiles, rowCounts) {
+  for (let index = 2; index < activeReels.length; index += 1) {
+    clearInterval(timers[index]);
+    const reel = activeReels[index];
+    const reelIndex = Number(reel.dataset.index);
+    const profile = profiles[index];
+    const tenseProfile = {
+      ...profile,
+      animationDuration: profile.teaseAnimationDuration,
+    };
+
+    applyReelSpinProfile(reel, tenseProfile, true);
+    timers[index] = startReelTicker(reel, reelIndex, rowCounts[reelIndex], profile.teaseIntervalMs);
+  }
+}
+
+function clearReelSpinProfile(reel) {
+  reel.classList.remove("scatter-hunt");
+  reel.style.removeProperty("--spin-symbol-speed");
 }
 
 function wait(ms) {
@@ -1417,9 +1611,10 @@ async function showFreeGameTotal() {
 
 function stopReel(reel, result, index) {
   reel.classList.remove("spinning");
+  clearReelSpinProfile(reel);
   renderReel(reel, result);
   playReelStopSound(index);
-  if (result.includes(scatterSymbol)) {
+  if (hasScatter(result)) {
     playScatterSound(index);
   }
 }
@@ -1483,18 +1678,22 @@ async function spin() {
 
   const activeReels = els.reels.slice(0, activeReelCount);
   const shouldAnticipateBonus = openingScatterPair(result, activeReelCount);
-  const timers = activeReels.map((reel) => {
+  const spinProfiles = createReelSpinProfiles(activeReelCount, shouldAnticipateBonus);
+  const timers = activeReels.map((reel, index) => {
     reel.classList.add("spinning");
     const reelIndex = Number(reel.dataset.index);
-    return setInterval(() => randomizeReel(reel, reelIndex, rowCounts[reelIndex]), 80);
+    applyReelSpinProfile(reel, spinProfiles[index], false);
+    return startReelTicker(reel, reelIndex, rowCounts[reelIndex], spinProfiles[index].intervalMs);
   });
 
   for (let index = 0; index < activeReels.length; index += 1) {
-    await wait(index === 0 ? 650 : 360);
+    const profile = spinProfiles[index];
+    await wait(index >= 2 && shouldAnticipateBonus ? profile.teaseStopDelay : profile.stopDelay);
     clearInterval(timers[index]);
     stopReel(activeReels[index], result[index], index);
     if (index === 1 && shouldAnticipateBonus) {
       els.reelWindow.classList.add("scatter-anticipation");
+      intensifyScatterReels(activeReels, timers, spinProfiles, rowCounts);
       playAnticipationSound();
       await wait(620);
     }
@@ -1562,12 +1761,12 @@ async function spin() {
       isWin: true,
       captionAmount: null,
     };
-    setMessage(`Vault Bonus triggered! ${formatDisplayAmount(win)} ways win!`, true);
+    setMessage(`Dokkaebi Bonus triggered! ${formatDisplayAmount(win)} ways win!`, true);
     showReelWinOverlay(title, win, "Ways Award");
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
   } else if (bonusTriggered) {
-    setMessage("Vault Bonus triggered!", true);
+    setMessage("Dokkaebi Bonus triggered!", true);
     els.machine.classList.add("celebrate");
   } else if (isFreeSpin && win > 0) {
     const title = winPresentationTitle(win, bet, true);
@@ -1842,7 +2041,7 @@ els.soundButton.addEventListener("click", async () => {
   state.sound = !state.sound;
   if (state.sound) {
     await unlockAudio();
-    playTone(660, 0.12, "triangle");
+    playSoundToggleSound();
   }
   updateUi();
 });
