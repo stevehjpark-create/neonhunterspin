@@ -1543,15 +1543,15 @@ h1 {
 }
 
 .start-demo-button {
+  grid-column: 1 / -1;
   width: 100%;
-  min-height: 38px;
-  margin-top: 6px;
+  min-height: 34px;
   border-radius: 8px;
   border: 1px solid rgba(72, 213, 151, 0.58);
   background:
     linear-gradient(180deg, rgba(104, 239, 184, 0.95), rgba(31, 174, 119, 0.95));
   color: #07150f;
-  font-size: clamp(0.76rem, 2.8vw, 0.95rem);
+  font-size: clamp(0.72rem, 2.6vw, 0.88rem);
   font-weight: 950;
   letter-spacing: 0;
   box-shadow:
@@ -1604,6 +1604,13 @@ h1 {
   border-color: rgba(72, 213, 151, 0.78);
   background: rgba(72, 213, 151, 0.16);
   color: var(--text);
+}
+
+.quick-actions .start-demo-button {
+  background:
+    linear-gradient(180deg, rgba(104, 239, 184, 0.96), rgba(31, 174, 119, 0.96));
+  border-color: rgba(72, 213, 151, 0.58);
+  color: #07150f;
 }
 
 .quick-actions button,
@@ -2448,8 +2455,8 @@ h1 {
   }
 
   .start-demo-button {
-    min-height: 34px;
-    font-size: clamp(0.62rem, 2.7vw, 0.78rem);
+    min-height: 30px;
+    font-size: clamp(0.58rem, 2.5vw, 0.72rem);
   }
 
   .controls.no-start {
@@ -3875,8 +3882,7 @@ h1 {
   }
 
   .start-demo-button {
-    min-height: 28px;
-    margin-top: 4px;
+    min-height: 24px;
     font-size: 0.5rem;
   }
 
