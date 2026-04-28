@@ -46,10 +46,10 @@ const expandedBonusAward = 5;
 const jackpotLabels = ["MINI", "MINOR", "MAJOR", "GRAND"];
 const jackpotPriority = ["GRAND", "MAJOR", "MINOR", "MINI"];
 const scratchCardCount = 12;
-const scratchNoPrizePickLimit = 8;
 const bonusFreeSpinTargetRtp = 0.32;
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
+const highBetChestReserveRelief = 0.006;
 const creditOdometerCentsPerSecond = 50;
 const maxDisplayAmount = 99_999_999.99;
 const maxDropAmount = 999_999.99;
@@ -61,9 +61,9 @@ const jackpotConfig = {
   GRAND: { start: 10000, max: 25000, contribution: 0.004 },
 };
 const paytable = {
-  bar: { 4: 0.5, 5: 8 },
-  A: { 4: 0.5, 5: 8 },
-  K: { 4: 1, 5: 12 },
+  bar: { 3: 0.05, 4: 0.5, 5: 8 },
+  A: { 3: 0.05, 4: 0.5, 5: 8 },
+  K: { 3: 0.1, 4: 1, 5: 12 },
   Q: { 3: 0.2, 4: 5, 5: 70 },
   diamond: { 3: 1, 4: 30, 5: 400 },
   crown: { 3: 2, 4: 80, 5: 1000 },
@@ -739,9 +739,16 @@ function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts = Array(r
   return wholeCoins + (Math.random() < fractionalCoin ? 1 : 0);
 }
 
-function bonusRtpContribution() {
-  if (state.selectedReels < reelCount) return 0;
-  return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureRtpReserve;
+function chestFeatureReserveForBet(spinBet = currentBet()) {
+  if (spinBet <= 88) return chestFeatureRtpReserve;
+
+  const highBetSteps = (spinBet - 88) / 88;
+  return Math.max(0, chestFeatureRtpReserve - highBetChestReserveRelief * highBetSteps);
+}
+
+function bonusRtpContribution(activeReelCount = state.selectedReels, spinBet = currentBet()) {
+  if (activeReelCount < reelCount) return 0;
+  return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureReserveForBet(spinBet);
 }
 
 function baseGameTargetRtp() {
@@ -863,9 +870,18 @@ function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
 }
 
 async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
-  if (!formulas.length) return;
-
   const sequenceId = (state.overlaySequenceId += 1);
+
+  if (!formulas.length) {
+    state.currentOverlay = restoreOverlay;
+    renderReelOverlay();
+    await wait(1200);
+    if (sequenceId === state.overlaySequenceId) {
+      hideReelWinOverlay();
+    }
+    return;
+  }
+
   for (const item of formulas) {
     if (sequenceId !== state.overlaySequenceId) return;
     state.currentOverlay = {
@@ -881,6 +897,10 @@ async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
   if (sequenceId !== state.overlaySequenceId) return;
   state.currentOverlay = restoreOverlay;
   renderReelOverlay();
+  await wait(1200);
+  if (sequenceId === state.overlaySequenceId) {
+    hideReelWinOverlay();
+  }
 }
 
 function hasScatter(reel) {
@@ -1075,36 +1095,19 @@ function drawScratchPrize() {
 
 function buildScratchSequence(prize) {
   const decoys = jackpotLabels.filter((label) => label !== prize);
-  if (prize) {
-    return [
-      prize,
-      decoys[0],
-      prize,
-      decoys[1],
-      decoys[0],
-      prize,
-      decoys[2],
-      decoys[1],
-      decoys[2],
-      decoys[0],
-      decoys[1],
-      decoys[2],
-    ];
-  }
-
   return [
-    "MINI",
-    "MINOR",
-    "MAJOR",
-    "GRAND",
-    "MINI",
-    "MINOR",
-    "MAJOR",
-    "GRAND",
-    "MINI",
-    "MINOR",
-    "MAJOR",
-    "GRAND",
+    prize,
+    decoys[0],
+    prize,
+    decoys[1],
+    decoys[0],
+    prize,
+    decoys[2],
+    decoys[1],
+    decoys[2],
+    decoys[0],
+    decoys[1],
+    decoys[2],
   ];
 }
 
@@ -1189,7 +1192,7 @@ function revealScratchCard(card) {
   }
 
   if (revealedCount + 1 >= state.scratchPickLimit) {
-    finishScratchBonus(null);
+    finishScratchBonus(state.scratchPrize);
   } else {
     els.scratchMessage.textContent = "Pick the next Dokkaebi box.";
   }
@@ -1202,21 +1205,22 @@ function finishScratchBonus(prize) {
     button.disabled = true;
   });
 
-  if (prize) {
-    const award = jackpotValue(prize);
-    const message = jackpotWinMessage(prize, award);
-    addCredits(award, true);
-    state.lastWin = award;
-    resetJackpot(prize);
-    els.scratchMessage.textContent = message;
-    setMessage(message, true);
-    showReelWinOverlay(`${prize} Jackpot Hit`, award, "Jackpot Award");
-    playWinSound();
-  } else {
-    els.scratchMessage.textContent = "No jackpot collected. Better luck next time.";
-    setMessage("Scratch feature complete. No jackpot collected.");
-    playBonusEndSound();
-  }
+  const winningPrize = prize || state.scratchPrize || "MINI";
+  const award = jackpotValue(winningPrize);
+  const message = jackpotWinMessage(winningPrize, award);
+  addCredits(award, true);
+  state.lastWin = award;
+  resetJackpot(winningPrize);
+  els.scratchMessage.textContent = message;
+  setMessage(message, true);
+  showReelWinOverlay(`${winningPrize} Jackpot Hit`, award, "Jackpot Award");
+  const jackpotOverlaySequence = state.overlaySequenceId;
+  setTimeout(() => {
+    if (state.overlaySequenceId === jackpotOverlaySequence) {
+      hideReelWinOverlay();
+    }
+  }, 2600);
+  playWinSound();
 
   setTimeout(() => {
     els.scratchOverlay.classList.remove("open");
@@ -1802,7 +1806,7 @@ async function spin() {
     els.machine.classList.add("celebrate");
     playWinSound();
   } else if (!isFreeSpin && shouldAnticipateBonus && scatterCount(result, activeReelCount) === 2) {
-    setHiddenMessage("No win. Place your next wager.");
+    setHiddenMessage("");
     playCloseCallSound();
   } else if (state.bonusSpins > 0) {
     setMessage(`${state.bonusSpins} Free Games remaining.`);
@@ -1817,7 +1821,7 @@ async function spin() {
   } else if (state.credits < currentBet()) {
     setMessage("Insufficient credits. Enter cash and press DROP.");
   } else {
-    setMessage("No win. Place your next wager.");
+    setHiddenMessage("");
   }
 
   updateUi();

@@ -1,6 +1,22 @@
-const scatterSymbol = "🎟️";
-const wildSymbol = "🪩";
-const symbols = ["🎤", "🎧", "🎵", "💜", "✨", "👑", wildSymbol, scatterSymbol];
+const symbolCatalog = [
+  { id: "wild", isWild: true, isScatter: false },
+  { id: "scatter", isWild: false, isScatter: true },
+  { id: "crown", isWild: false, isScatter: false },
+  { id: "diamond", isWild: false, isScatter: false },
+  { id: "seven", isWild: false, isScatter: false },
+  { id: "bar", isWild: false, isScatter: false },
+  { id: "A", isWild: false, isScatter: false },
+  { id: "K", isWild: false, isScatter: false },
+  { id: "Q", isWild: false, isScatter: false },
+  { id: "J", isWild: false, isScatter: false },
+  { id: "ten", isWild: false, isScatter: false },
+];
+const symbolById = new Map(symbolCatalog.map((symbol) => [symbol.id, symbol]));
+const wildSymbol = symbolById.get("wild");
+const scatterSymbol = symbolById.get("scatter");
+const symbols = ["bar", "A", "K", "Q", "diamond", "crown", "wild", "scatter"].map((id) =>
+  symbolById.get(id),
+);
 const reelWeights = [
   [30, 27, 21, 12, 5, 3, 1, 16],
   [30, 27, 21, 12, 5, 3, 1, 2],
@@ -10,14 +26,21 @@ const reelWeights = [
 ];
 const reelCount = 5;
 const visibleRows = 3;
-const bet = 88;
-const paidSpins = 1_000_000;
+const paidSpins = Number(process.env.PAID_SPINS || 1_000_000);
+const betLevels = [
+  { bet: 8, activeReels: 3 },
+  { bet: 16, activeReels: 3 },
+  { bet: 40, activeReels: 4 },
+  { bet: 88, activeReels: 5 },
+  { bet: 176, activeReels: 5 },
+];
 const bonusSpinAward = 5;
 const chestFreeSpinAward = 10;
 const expandedBonusAward = 5;
 const bonusFreeSpinTargetRtp = 0.32;
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
+const highBetChestReserveRelief = 0.006;
 const jackpotPriority = ["GRAND", "MAJOR", "MINOR", "MINI"];
 const denomTargets = [
   ["1¢", 1, 0.88],
@@ -35,12 +58,12 @@ const jackpotConfig = {
   GRAND: { start: 10000, max: 25000, contribution: 0.004 },
 };
 const paytable = {
-  "🎤": { 4: 0.5, 5: 8 },
-  "🎧": { 4: 0.5, 5: 8 },
-  "🎵": { 4: 1, 5: 12 },
-  "💜": { 3: 0.2, 4: 5, 5: 70 },
-  "✨": { 3: 1, 4: 30, 5: 400 },
-  "👑": { 3: 2, 4: 80, 5: 1000 },
+  bar: { 3: 0.05, 4: 0.5, 5: 8 },
+  A: { 3: 0.05, 4: 0.5, 5: 8 },
+  K: { 3: 0.1, 4: 1, 5: 12 },
+  Q: { 3: 0.2, 4: 5, 5: 70 },
+  diamond: { 3: 1, 4: 30, 5: 400 },
+  crown: { 3: 2, 4: 80, 5: 1000 },
 };
 
 function totalWeightForReel(reelIndex) {
@@ -48,7 +71,9 @@ function totalWeightForReel(reelIndex) {
 }
 
 function symbolChanceOnReel(symbol, reelIndex) {
-  const symbolIndex = symbols.indexOf(symbol);
+  const symbolId = typeof symbol === "string" ? symbol : symbol.id;
+  const symbolIndex = symbols.findIndex((item) => item.id === symbolId);
+  if (symbolIndex < 0) return 0;
   return reelWeights[reelIndex][symbolIndex] / totalWeightForReel(reelIndex);
 }
 
@@ -100,18 +125,26 @@ function expectedBonusFreeSpins() {
   return bonusSpinAward / (1 - retriggerGrowth);
 }
 
-function bonusRtpContribution() {
-  return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureRtpReserve;
+function chestFeatureReserveForBet(spinBet) {
+  if (spinBet <= 88) return chestFeatureRtpReserve;
+
+  const highBetSteps = (spinBet - 88) / 88;
+  return Math.max(0, chestFeatureRtpReserve - highBetChestReserveRelief * highBetSteps);
 }
 
-function baseGameTargetRtp(targetRtp) {
-  return Math.max(0, targetRtp - bonusRtpContribution());
+function bonusRtpContribution(activeReelCount, spinBet) {
+  if (activeReelCount < reelCount) return 0;
+  return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureReserveForBet(spinBet);
 }
 
-function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, rowCounts = Array(reelCount).fill(visibleRows)) {
+function baseGameTargetRtp(targetRtp, activeReelCount, spinBet) {
+  return Math.max(0, targetRtp - bonusRtpContribution(activeReelCount, spinBet));
+}
+
+function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, spinBet, rowCounts = Array(reelCount).fill(visibleRows)) {
   if (rawWin <= 0) return 0;
 
-  const rtp = isFreeSpin ? bonusFreeSpinTargetRtp : baseGameTargetRtp(targetRtp);
+  const rtp = isFreeSpin ? bonusFreeSpinTargetRtp : baseGameTargetRtp(targetRtp, activeReelCount, spinBet);
   const scale = rtp / expectedRawRtp(activeReelCount, rowCounts);
   const adjustedWin = rawWin * scale;
   const wholeCoins = Math.floor(adjustedWin);
@@ -128,7 +161,7 @@ function calculateRawWin(grid, spinBet, activeReelCount) {
     let ways = 1;
 
     for (const reel of activeGrid) {
-      const symbolCount = reel.filter((cell) => cell === symbol || cell === wildSymbol).length;
+      const symbolCount = reel.filter((cell) => cell.id === symbol || cell.isWild).length;
       if (symbolCount === 0) break;
 
       matchedReels += 1;
@@ -141,7 +174,7 @@ function calculateRawWin(grid, spinBet, activeReelCount) {
 }
 
 function hasScatter(reel) {
-  return reel.includes(scatterSymbol);
+  return reel.some((symbol) => symbol.isScatter);
 }
 
 function isBonusTrigger(grid, activeReelCount) {
@@ -303,7 +336,7 @@ function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin) {
       ? 5 + Math.floor(Math.random() * 6)
       : visibleRows,
   );
-  const activeReelCount = 5;
+  const activeReelCount = isExpandedSpin ? reelCount : state.activeReelCount;
   const result = Array.from({ length: reelCount }, (_, index) =>
     createReelResult(index, rowCounts[index]),
   );
@@ -315,8 +348,8 @@ function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin) {
   }
 
   const bonusTriggered = isBonusTrigger(result, activeReelCount);
-  const rawWin = calculateRawWin(result, bet, activeReelCount);
-  const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, rowCounts);
+  const rawWin = calculateRawWin(result, state.bet, activeReelCount);
+  const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, state.bet, rowCounts);
   state.returned += win;
 
   if (bonusTriggered && isFreeSpin) {
@@ -326,13 +359,15 @@ function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin) {
   return bonusTriggered;
 }
 
-function runDenom(label, denomCents, targetRtp) {
+function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
   const state = {
     chests: createInitialChests(),
     jackpots: createInitialJackpots(),
     bonusSpins: 0,
     expandedBonusSpins: 0,
     returned: 0,
+    bet,
+    activeReelCount,
   };
   const stats = {
     bonusTriggers: 0,
@@ -384,23 +419,28 @@ function runDenom(label, denomCents, targetRtp) {
 }
 
 console.log(`paid_spins_per_denom=${paidSpins}`);
-console.log(`bet_level=${bet}, active_reels=5, ways=243`);
-console.log("denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand");
+console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand");
 
-for (const denom of denomTargets) {
-  const result = runDenom(...denom);
-  console.log([
-    result.denom,
-    (result.target * 100).toFixed(2),
-    (result.rtp * 100).toFixed(3),
-    ((result.rtp - result.target) * 100).toFixed(3),
-    result.bonusTriggers,
-    result.freeSpinsPlayed,
-    result.expandedSpinsPlayed,
-    result.scratchBonuses,
-    result.jackpotHits.MINI,
-    result.jackpotHits.MINOR,
-    result.jackpotHits.MAJOR,
-    result.jackpotHits.GRAND,
-  ].join(","));
+for (const { bet, activeReels } of betLevels) {
+  const ways = 3 ** activeReels;
+  for (const denom of denomTargets) {
+    const result = runDenom(...denom, bet, activeReels);
+    console.log([
+      bet,
+      activeReels,
+      ways,
+      result.denom,
+      (result.target * 100).toFixed(2),
+      (result.rtp * 100).toFixed(3),
+      ((result.rtp - result.target) * 100).toFixed(3),
+      result.bonusTriggers,
+      result.freeSpinsPlayed,
+      result.expandedSpinsPlayed,
+      result.scratchBonuses,
+      result.jackpotHits.MINI,
+      result.jackpotHits.MINOR,
+      result.jackpotHits.MAJOR,
+      result.jackpotHits.GRAND,
+    ].join(","));
+  }
 }
