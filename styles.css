@@ -83,11 +83,17 @@ button:disabled {
 
 .app-footer {
   margin-top: 10px;
+  max-width: 100%;
+  min-width: 0;
+  padding-inline: 8px;
   color: rgba(247, 242, 232, 0.72);
   font-size: clamp(0.66rem, 1.7vw, 0.78rem);
   font-weight: 800;
   letter-spacing: 0;
+  line-height: 1.25;
   text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .machine {
@@ -1536,6 +1542,28 @@ h1 {
   margin-top: 4px;
 }
 
+.start-demo-button {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(72, 213, 151, 0.58);
+  background:
+    linear-gradient(180deg, rgba(104, 239, 184, 0.95), rgba(31, 174, 119, 0.95));
+  color: #07150f;
+  font-size: clamp(0.76rem, 2.8vw, 0.95rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  box-shadow:
+    0 8px 0 rgba(7, 63, 39, 0.82),
+    0 16px 24px rgba(72, 213, 151, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.34);
+}
+
+.start-demo-button:disabled {
+  opacity: 0.62;
+}
+
 .start-button,
 .spin-button {
   min-height: 54px;
@@ -2417,6 +2445,11 @@ h1 {
   .play-deck {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 6px;
+  }
+
+  .start-demo-button {
+    min-height: 34px;
+    font-size: clamp(0.62rem, 2.7vw, 0.78rem);
   }
 
   .controls.no-start {
@@ -3304,14 +3337,21 @@ h1 {
 
   .app {
     width: 100%;
+    min-height: calc(100dvh - 8px);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 4px;
   }
 
   .app-footer {
-    display: none;
+    display: block;
+    margin-top: 0;
+    padding-inline: 4px;
+    font-size: 0.52rem;
+    line-height: 1.16;
   }
 
   .machine {
-    min-height: calc(100dvh - 8px);
+    min-height: 0;
     padding: 6px;
     border-radius: 7px;
     transform: none;
@@ -3834,6 +3874,12 @@ h1 {
     min-height: 40px;
   }
 
+  .start-demo-button {
+    min-height: 28px;
+    margin-top: 4px;
+    font-size: 0.5rem;
+  }
+
   .quick-actions button,
   .drop-box input {
     min-height: 26px;
@@ -3852,13 +3898,17 @@ h1 {
 }
 
 @media (max-height: 700px) and (max-width: 520px) {
-  .app-footer,
   .cabinet-marquee {
     display: none;
   }
 
   .machine {
-    min-height: calc(100dvh - 4px);
+    min-height: 0;
+  }
+
+  .app-footer {
+    font-size: 0.46rem;
+    line-height: 1.08;
   }
 
   .topbar {

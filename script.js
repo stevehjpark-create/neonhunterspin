@@ -50,6 +50,7 @@ const bonusFreeSpinTargetRtp = 0.32;
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
 const highBetChestReserveRelief = 0.006;
+const demoStartCredits = 10_000;
 const creditOdometerCentsPerSecond = 50;
 const maxDisplayAmount = 99_999_999.99;
 const maxDropAmount = 999_999.99;
@@ -112,6 +113,7 @@ const els = {
   bonusSpins: document.querySelector("#bonusSpins"),
   message: document.querySelector("#message"),
   reels: [...document.querySelectorAll(".reel")],
+  startDemoButton: document.querySelector("#startDemoButton"),
   spinButton: document.querySelector("#spinButton"),
   decreaseBet: document.querySelector("#decreaseBet"),
   increaseBet: document.querySelector("#increaseBet"),
@@ -340,7 +342,9 @@ function renderCredits() {
   els.creditsMeter.classList.toggle("credit-mode", state.showCreditsAsCredits);
   els.creditsMeter.setAttribute(
     "aria-label",
-    state.showCreditsAsCredits ? "Credit display active. Press to show cash value." : "Cash value display active. Press to show credits.",
+    state.showCreditsAsCredits
+      ? "Credit display active. Press to show currency-style value."
+      : "Currency-style value active. Press to show credits.",
   );
 }
 
@@ -445,6 +449,7 @@ function updateUi() {
   els.autoSpin.disabled = state.spinning || bonusModeActive() || state.scratchActive;
   els.autoSpin.classList.toggle("active", Boolean(autoSpinTimer));
   els.autoSpin.textContent = autoSpinTimer ? "STOP AUTO" : "AUTO PLAY";
+  els.startDemoButton.disabled = state.spinning || state.scratchActive;
   els.dropAmount.disabled = state.spinning || state.scratchActive;
   els.dropButton.disabled = state.spinning || state.scratchActive;
   els.cashOut.disabled = state.spinning || state.scratchActive || state.credits <= 0;
@@ -1819,7 +1824,7 @@ async function spin() {
     setMessage("Expanded Reels bonus complete.");
     playBonusEndSound();
   } else if (state.credits < currentBet()) {
-    setMessage("Insufficient credits. Enter cash and press DROP.");
+    setMessage("Insufficient credits. Press START DEMO or use DROP.");
   } else {
     setHiddenMessage("");
   }
@@ -1872,7 +1877,7 @@ function dropCredits() {
   stopAutoSpin();
   const dropAmount = Number(els.dropAmount.value);
   if (!Number.isFinite(dropAmount) || dropAmount <= 0) {
-    setMessage("Enter a cash-in amount.");
+    setMessage("Enter a demo credit amount.");
     updateUi();
     return;
   }
@@ -1885,8 +1890,8 @@ function dropCredits() {
       maximumFractionDigits: 2,
     });
     const maxDropCredits = (maxDropAmount * 100) / state.selectedDenomCents;
-    setHiddenMessage(`Cash-in limit exceeded. Maximum DROP is ${maxDropText}.`);
-    showReelAmountOverlay("DROP LIMIT", maxDropCredits, "Cash-in limit exceeded", false);
+    setHiddenMessage(`Demo DROP limit exceeded. Maximum DROP is ${maxDropText}.`);
+    showReelAmountOverlay("DROP LIMIT", maxDropCredits, "Demo drop limit exceeded", false);
     updateUi();
     return;
   }
@@ -1895,7 +1900,16 @@ function dropCredits() {
   addCredits(creditsToAdd, false);
   playDropSound();
   els.dropAmount.value = "";
-  setAmountMessage(creditsToAdd, "cash in complete. Press SPIN.");
+  setAmountMessage(creditsToAdd, "demo credits loaded. Press SPIN.");
+  updateUi();
+}
+
+function startDemoCredits() {
+  if (state.spinning || state.scratchActive) return;
+  stopAutoSpin();
+  addCredits(demoStartCredits, false);
+  setMessage("Virtual demo credits loaded", true);
+  showReelAmountOverlay("DEMO CREDITS", demoStartCredits, "Virtual test points loaded", true);
   updateUi();
 }
 
@@ -1909,7 +1923,7 @@ function cashOut() {
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
   state.freeSpinWinTotal = 0;
-  setAmountMessage(cashOutAmount, "cash out complete. Credit meter reset to zero.");
+  setAmountMessage(cashOutAmount, "virtual credits cleared. Credit meter reset to zero.");
   updateUi();
 }
 
@@ -1997,6 +2011,7 @@ els.maxBet.addEventListener("click", () => {
   updateUi();
 });
 els.autoSpin.addEventListener("click", toggleAutoSpin);
+els.startDemoButton.addEventListener("click", startDemoCredits);
 els.dropButton.addEventListener("click", dropCredits);
 els.dropAmount.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">NEON HUNTER SPIN preview</title>
+  <desc id="desc">Premium purple social slot demo preview with virtual credits only.</desc>
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="28%" r="76%">
+      <stop offset="0%" stop-color="#a875ff"/>
+      <stop offset="34%" stop-color="#4b217d"/>
+      <stop offset="100%" stop-color="#080a14"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff2a8"/>
+      <stop offset="42%" stop-color="#ffc24e"/>
+      <stop offset="100%" stop-color="#b86b17"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#251735"/>
+      <stop offset="100%" stop-color="#101624"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.48"/>
+    </filter>
+    <filter id="neon" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#b47cff" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="18" flood-color="#ffce55" flood-opacity="0.36"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bgGlow)"/>
+  <path d="M0 508 C176 448 288 552 458 500 C650 440 740 500 900 456 C1050 416 1120 470 1200 436 L1200 630 L0 630 Z" fill="#0b0f1c" opacity="0.82"/>
+  <g opacity="0.28">
+    <circle cx="166" cy="118" r="5" fill="#ffce55"/>
+    <circle cx="240" cy="214" r="3" fill="#ffffff"/>
+    <circle cx="985" cy="110" r="5" fill="#ffce55"/>
+    <circle cx="1040" cy="256" r="4" fill="#ffffff"/>
+    <circle cx="860" cy="72" r="3" fill="#ffffff"/>
+  </g>
+  <g filter="url(#softShadow)">
+    <rect x="176" y="86" width="848" height="428" rx="34" fill="url(#panel)" stroke="#ffce55" stroke-width="4"/>
+    <rect x="214" y="126" width="772" height="76" rx="18" fill="#10091a" stroke="#9c6dff" stroke-width="2"/>
+    <text x="600" y="176" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="900" fill="#ffce55" stroke="#3d1d6e" stroke-width="2">NEON HUNTER SPIN</text>
+    <g transform="translate(260 248)">
+      <rect width="112" height="150" rx="18" fill="#111827" stroke="#ffce55" stroke-width="3"/>
+      <path d="M56 24 L92 118 H20 Z" fill="#7f4dff" stroke="#ffce55" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M56 30 L72 116 H40 Z" fill="#fff2a8" opacity="0.8"/>
+    </g>
+    <g transform="translate(416 248)">
+      <rect width="112" height="150" rx="18" fill="#111827" stroke="#ffce55" stroke-width="3"/>
+      <circle cx="56" cy="72" r="44" fill="#f7f7ff" stroke="#9c6dff" stroke-width="6"/>
+      <path d="M30 58 C44 30 70 30 84 58 C82 94 30 94 30 58Z" fill="#ffce55"/>
+      <circle cx="43" cy="70" r="5" fill="#111827"/>
+      <circle cx="69" cy="70" r="5" fill="#111827"/>
+    </g>
+    <g transform="translate(572 248)">
+      <rect width="112" height="150" rx="18" fill="#111827" stroke="#ffce55" stroke-width="3"/>
+      <path d="M30 116 L28 56 L56 28 L84 56 L82 116 Z" fill="#2bd5ff" stroke="#ffce55" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M42 62 H70 V116 H42 Z" fill="#f2455f" opacity="0.72"/>
+    </g>
+    <g transform="translate(728 248)">
+      <rect width="112" height="150" rx="18" fill="#111827" stroke="#ffce55" stroke-width="3"/>
+      <circle cx="56" cy="74" r="42" fill="#ffce55"/>
+      <path d="M56 30 C72 44 92 48 96 74 C82 78 76 92 56 118 C36 92 30 78 16 74 C20 48 40 44 56 30Z" fill="#4b217d"/>
+      <circle cx="43" cy="73" r="5" fill="#ffce55"/>
+      <circle cx="69" cy="73" r="5" fill="#ffce55"/>
+    </g>
+    <text x="600" y="458" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#f7f2e8">Mobile social slot demo - virtual test credits only</text>
+  </g>
+  <text x="600" y="574" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="900" fill="#ffce55">DEMO ONLY - NO REAL-MONEY WAGERING OR REWARDS</text>
+</svg>
