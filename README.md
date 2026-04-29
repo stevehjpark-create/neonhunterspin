@@ -14,13 +14,12 @@ All credits are virtual test points with no cash value.
 
 This project does not include:
 
-- Payment integration
-- Payout systems
+- Monetary transaction systems
+- Redemption systems
 - External reward systems
-- Cryptocurrency rewards
-- NFT rewards
-- Wallet systems
-- User-to-user transfers
+- Token-asset systems
+- Account-value storage systems
+- User transfer systems
 - Gambling APIs
 
 ## Tech Stack
@@ -158,7 +157,7 @@ Safety rules:
 
 - Demo credits are virtual test points only.
 - Demo credits have no cash value.
-- No real-money betting, payout, external rewards, cryptocurrency, token assets, payment, or user-to-user transfer.
+- No real-money betting, payout, external rewards, cryptocurrency, token assets, monetary transaction systems, or user transfer systems.
 - Feedback and test stats are local-only.
 
 How to test:
@@ -204,7 +203,7 @@ Changes:
 
 Safety:
 
-- No real-money betting, payout, external rewards, cryptocurrency, payment, wallet, token asset, or user-transfer features.
+- No real-money betting, payout, external rewards, cryptocurrency, token-asset, monetary transaction, account-value storage, or user-transfer features.
 - Demo credits remain virtual test points with no cash value.
 - Feedback and stats remain local-only with no backend.
 
