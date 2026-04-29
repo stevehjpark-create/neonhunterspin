@@ -806,7 +806,47 @@ function activeReelsForBetIndex(index) {
 }
 
 function applyBetReelRule() {
+  const previousReels = state.selectedReels;
   state.selectedReels = activeReelsForBetIndex(state.betIndex);
+  animateReelAvailabilityChange(previousReels, state.selectedReels);
+}
+
+function animateReelAvailabilityChange(previousReels, nextReels) {
+  if (!els.reels?.length || previousReels === nextReels) return;
+
+  els.reels.forEach((reel, index) => {
+    reel.classList.remove("reel-opening", "reel-closing");
+
+    const wasActive = index < previousReels;
+    const isActive = index < nextReels;
+    if (!wasActive && isActive) {
+      reel.classList.add("reel-opening");
+      setTimeout(() => reel.classList.remove("reel-opening"), 460);
+    } else if (wasActive && !isActive) {
+      reel.classList.add("reel-closing");
+      setTimeout(() => reel.classList.remove("reel-closing"), 300);
+    }
+  });
+
+  flashReelLamps();
+  flashWaysMeter();
+}
+
+function flashReelLamps() {
+  document.querySelectorAll(".reel-lamps-top, .reel-lamps-bottom").forEach((lampRow) => {
+    lampRow.classList.remove("lamps-flash");
+    void lampRow.offsetWidth;
+    lampRow.classList.add("lamps-flash");
+    setTimeout(() => lampRow.classList.remove("lamps-flash"), 650);
+  });
+}
+
+function flashWaysMeter() {
+  if (!els.ways) return;
+  els.ways.classList.remove("ways-update");
+  void els.ways.offsetWidth;
+  els.ways.classList.add("ways-update");
+  setTimeout(() => els.ways.classList.remove("ways-update"), 420);
 }
 
 function fixedRtpForDenom(denomCents) {
@@ -1359,8 +1399,33 @@ function updateChestUi(triggeredIndex = -1) {
     els.chestCards[index].style.setProperty("--open-step", `${openStep}%`);
     els.chestCards[index].classList.toggle("triggered", index === triggeredIndex);
     els.chestProgress[index].textContent = `${openStep}/100`;
+    applyChestHeatState(index);
     renderChestGems(index, chest);
   });
+}
+
+function parseChestProgressText(text) {
+  const match = String(text || "").match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (!match) return { current: 0, max: 100 };
+  const current = Math.max(0, Number(match[1]) || 0);
+  const max = Math.max(1, Number(match[2]) || 100);
+  return { current, max };
+}
+
+function applyChestHeatState(index) {
+  const card = els.chestCards[index];
+  const progress = els.chestProgress[index];
+  if (!card || !progress) return;
+
+  const { current, max } = parseChestProgressText(progress.textContent);
+  const ratio = current / max;
+  const isHot = ratio >= 0.9;
+  const isWarming = ratio >= 0.7 && !isHot;
+
+  card.classList.toggle("chest-warming", isWarming);
+  card.classList.toggle("chest-hot", isHot);
+  progress.classList.toggle("progress-warming", isWarming);
+  progress.classList.toggle("progress-hot", isHot);
 }
 
 function renderChestGems(index, chest) {
@@ -1621,6 +1686,10 @@ function scatterSymbolCount(grid, activeReelCount = state.selectedReels) {
 
 function openingScatterPair(grid, activeReelCount = state.selectedReels) {
   return activeReelCount >= reelCount && hasScatter(grid[0]) && hasScatter(grid[1]);
+}
+
+function scatterNearMiss(grid, activeReelCount = state.selectedReels) {
+  return openingScatterPair(grid, activeReelCount) && !grid.slice(2, activeReelCount).some(hasScatter);
 }
 
 function wildOrBonusCount(grid, activeReelCount = state.selectedReels) {
@@ -2380,6 +2449,18 @@ function hideTeaseOverlay() {
   els.reelWindow.classList.remove("scatter-anticipation");
 }
 
+function playNearMissEffects(activeReelCount = state.selectedReels) {
+  els.reelWindow.classList.remove("near-miss-shake");
+  void els.reelWindow.offsetWidth;
+  els.reelWindow.classList.add("near-miss-shake");
+  setTimeout(() => els.reelWindow.classList.remove("near-miss-shake"), 650);
+
+  els.reels.slice(2, activeReelCount).forEach((reel) => {
+    reel.classList.add("reel-near-miss");
+    setTimeout(() => reel.classList.remove("reel-near-miss"), 560);
+  });
+}
+
 function pulseCabinet(type = "big-win") {
   if (cabinetPulseTimer) {
     clearTimeout(cabinetPulseTimer);
@@ -2547,13 +2628,14 @@ async function spin() {
     advanceChests();
   }
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
-  const scatterTotal = scatterSymbolCount(result, activeReelCount);
   const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
+  const nearMissTriggered = !isFreeSpin && !bonusTriggered && scatterNearMiss(result, activeReelCount);
   const observedTesterEvent =
     win > 0 ||
     bonusTriggered ||
     chestTriggered >= 0 ||
-    (!isFreeSpin && !bonusTriggered && (scatterTotal === 2 || bonusEnergyTotal >= 2));
+    nearMissTriggered ||
+    (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2);
   if (observedTesterEvent) {
     markTesterMissionComplete("observeEvent");
   }
@@ -2649,8 +2731,9 @@ async function spin() {
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
-  } else if (!isFreeSpin && !bonusTriggered && scatterTotal === 2) {
+  } else if (nearMissTriggered) {
     setHiddenMessage("");
+    playNearMissEffects(activeReelCount);
     showTeaseOverlay("Almost Free Games...", "One more scatter lights the stage", true);
     playCloseCallSound();
   } else if (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2) {
