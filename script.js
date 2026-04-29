@@ -422,6 +422,11 @@ function addCredits(amount, animate = true) {
   setCredits(state.credits + amount, animate);
 }
 
+function demoStartCreditAmountForCurrentDenom() {
+  const baseDenomCents = denomSteps[0];
+  return (demoStartCredits * baseDenomCents) / state.selectedDenomCents;
+}
+
 function activeWays() {
   return visibleRows ** state.selectedReels;
 }
@@ -2025,7 +2030,7 @@ function dropCredits() {
 function startDemoCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
-  addCredits(demoStartCredits, false);
+  addCredits(demoStartCreditAmountForCurrentDenom(), false);
   showDemoCreditsLoadedMessage();
   updateUi();
 }
