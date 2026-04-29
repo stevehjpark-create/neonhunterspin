@@ -63,6 +63,7 @@ const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const serviceWorkerPath = "service-worker.js";
 const appVersion = "v5";
 const dailyDemoCredits = 2_000;
+const missionBonusDemoCredits = 100;
 const feedbackTagOptions = [
   "Easy to Start",
   "Confusing",
@@ -241,6 +242,9 @@ let creditAnimationFrame;
 let demoMessageTimer;
 let teaseTimer;
 let cabinetPulseTimer;
+let missionBonusReady = false;
+let missionBonusTooltipTimer;
+let missionPanelPulseTimer;
 
 function createDefaultTestStats() {
   const now = new Date().toISOString();
@@ -282,6 +286,7 @@ function localDateKey(date = new Date()) {
 function createDefaultTesterMission() {
   return {
     completed: {},
+    missionBonusClaimed: {},
     betLevelsTried: [],
     denomOptionsTried: [],
     lastUpdatedAt: new Date().toISOString(),
@@ -309,6 +314,7 @@ function loadTesterMission() {
     ...defaults,
     ...parsed,
     completed: { ...(parsed.completed || {}) },
+    missionBonusClaimed: { ...(parsed.missionBonusClaimed || {}) },
     betLevelsTried: uniqueNumberList(parsed.betLevelsTried),
     denomOptionsTried: uniqueNumberList(parsed.denomOptionsTried),
   };
@@ -363,14 +369,116 @@ function missionProgress() {
   };
 }
 
+function missionBonusAmountForCurrentDenom() {
+  return demoCreditAmountForCurrentDenom(missionBonusDemoCredits);
+}
+
+function claimMissionBonuses(completed) {
+  if (!missionBonusReady) return [];
+  const newlyClaimed = [];
+  let totalBonusCredits = 0;
+
+  testerMissionDefinitions.forEach((mission) => {
+    if (!completed[mission.id] || state.testerMission.missionBonusClaimed[mission.id]) return;
+    state.testerMission.missionBonusClaimed[mission.id] = true;
+    newlyClaimed.push(mission.id);
+    totalBonusCredits += missionBonusAmountForCurrentDenom();
+  });
+
+  if (!newlyClaimed.length) return [];
+
+  saveTesterMission();
+  addCredits(totalBonusCredits, false);
+  showMissionBonusFeedback(newlyClaimed, totalBonusCredits);
+  return newlyClaimed;
+}
+
+function primeMissionBonusState() {
+  const completed = missionCompletionMap();
+  let changed = false;
+
+  testerMissionDefinitions.forEach((mission) => {
+    if (!completed[mission.id] || state.testerMission.missionBonusClaimed[mission.id]) return;
+    state.testerMission.missionBonusClaimed[mission.id] = true;
+    changed = true;
+  });
+
+  if (changed) {
+    saveTesterMission();
+  }
+  missionBonusReady = true;
+}
+
+function flashMissionItems(missionIds) {
+  if (!missionIds.length) return;
+  requestAnimationFrame(() => {
+    missionIds.forEach((missionId) => {
+      document.querySelectorAll(`[data-mission-id="${missionId}"]`).forEach((item) => {
+        item.classList.remove("mission-complete-flash");
+        void item.offsetWidth;
+        item.classList.add("mission-complete-flash");
+        setTimeout(() => item.classList.remove("mission-complete-flash"), 850);
+      });
+    });
+  });
+}
+
+function showMissionBonusTooltip(totalBonusCredits) {
+  const text = `Mission bonus +${formatCreditAmount(totalBonusCredits)}`;
+  [els.testerMissionProgress, els.guideMissionProgress].forEach((progressElement) => {
+    if (!progressElement) return;
+    const container = progressElement.parentElement;
+    if (!container) return;
+    container.querySelectorAll(".mission-bonus-tooltip").forEach((node) => node.remove());
+    const tooltip = document.createElement("span");
+    tooltip.className = "mission-bonus-tooltip";
+    tooltip.textContent = text;
+    container.append(tooltip);
+  });
+
+  clearTimeout(missionBonusTooltipTimer);
+  missionBonusTooltipTimer = setTimeout(() => {
+    document.querySelectorAll(".mission-bonus-tooltip").forEach((node) => node.remove());
+  }, 1500);
+}
+
+function pulseMissionPanels() {
+  document.querySelectorAll(".tester-mission-panel").forEach((panel) => {
+    panel.classList.remove("mission-panel-complete-pulse");
+    void panel.offsetWidth;
+    panel.classList.add("mission-panel-complete-pulse");
+  });
+
+  clearTimeout(missionPanelPulseTimer);
+  missionPanelPulseTimer = setTimeout(() => {
+    document
+      .querySelectorAll(".tester-mission-panel")
+      .forEach((panel) => panel.classList.remove("mission-panel-complete-pulse"));
+  }, 2100);
+}
+
+function showMissionBonusFeedback(missionIds, totalBonusCredits) {
+  flashMissionItems(missionIds);
+  showMissionBonusTooltip(totalBonusCredits);
+  setHiddenMessage("Mission demo credits loaded. Virtual test points only.", true);
+
+  const progress = missionProgress();
+  if (progress.completed === progress.total) {
+    pulseMissionPanels();
+    showReelMessageOverlay("Test checklist completed", true);
+    setTimeout(() => setHiddenMessage("Test checklist completed. Virtual test points only.", true), 1900);
+  }
+}
+
 function renderTesterMission() {
   if (!els.testerMissionProgress && !els.guideMissionProgress) return;
   const completed = missionCompletionMap();
   const progress = missionProgress();
+  const newlyClaimed = claimMissionBonuses(completed);
   const markup = testerMissionDefinitions
     .map((mission) => {
       const done = Boolean(completed[mission.id]);
-      return `<li class="${done ? "complete" : ""}"><span>${done ? "✓" : "○"}</span>${mission.label}</li>`;
+      return `<li class="${done ? "complete" : ""}" data-mission-id="${mission.id}"><span>${done ? "✓" : "○"}</span>${mission.label}</li>`;
     })
     .join("");
 
@@ -380,6 +488,7 @@ function renderTesterMission() {
   [els.testerMissionList, els.guideMissionList].forEach((element) => {
     if (element) element.innerHTML = markup;
   });
+  flashMissionItems(newlyClaimed);
   renderSessionSummary();
 }
 
@@ -3121,6 +3230,7 @@ addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();
 renderSelectedFeedbackTags();
 updateUi();
+primeMissionBonusState();
 maybeShowIntroModal();
 ["resize", "orientationchange"].forEach((eventName) => {
   window.addEventListener(eventName, updateTestInfoPanel, { passive: true });
