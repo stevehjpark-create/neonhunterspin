@@ -3081,9 +3081,9 @@ function setupDebugHooks() {
     },
     awardCash(amount = 100) {
       if (state.spinning || state.scratchActive) return false;
-      const cashAmount = Math.max(0, Number(amount) || 0);
-      setCredits((cashAmount * 100) / state.selectedDenomCents, false);
-      setAmountMessage(state.credits, "debug cash loaded.");
+      const demoCreditAmount = Math.max(0, Number(amount) || 0);
+      setCredits((demoCreditAmount * 100) / state.selectedDenomCents, false);
+      setAmountMessage(state.credits, "debug demo credits loaded.");
       updateUi();
       return true;
     },
