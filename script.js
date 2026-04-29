@@ -56,6 +56,7 @@ const maxDisplayAmount = 99_999_999.99;
 const maxDropAmount = 999_999.99;
 const cappedDisplayAmount = "XX,XXX,XXX.XX";
 const introSeenStorageKey = "neonHunterSpinIntroSeen";
+const serviceWorkerPath = "service-worker.js";
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
   MINOR: { start: 500, max: 1000, contribution: 0.002 },
@@ -176,6 +177,7 @@ let audioContext;
 let autoSpinTimer;
 let creditAnimationFrame;
 let demoMessageTimer;
+let teaseTimer;
 
 function createInitialChests() {
   return [0, 1, 2].map((index) => createChest(index));
@@ -717,6 +719,22 @@ function showDemoCreditsLoadedMessage() {
   }, 2000);
 }
 
+function triggerHaptic(type = "spin") {
+  if (!("vibrate" in navigator)) return;
+
+  const patterns = {
+    spin: 18,
+    win: [35, 30, 45],
+    bonus: [60, 40, 80, 40, 120],
+  };
+
+  try {
+    navigator.vibrate(patterns[type] || patterns.spin);
+  } catch {
+    // Some browsers expose vibrate but block it. Gameplay should continue silently.
+  }
+}
+
 function feedbackOpen() {
   return els.feedbackOverlay.classList.contains("open");
 }
@@ -1045,6 +1063,12 @@ function openingScatterPair(grid, activeReelCount = state.selectedReels) {
   return activeReelCount >= reelCount && hasScatter(grid[0]) && hasScatter(grid[1]);
 }
 
+function wildOrBonusCount(grid, activeReelCount = state.selectedReels) {
+  return grid.slice(0, activeReelCount).reduce((count, reel) => {
+    return count + reel.filter((symbol) => symbol.isWild || symbol.isBonus).length;
+  }, 0);
+}
+
 function isBonusTrigger(grid, activeReelCount = state.selectedReels) {
   if (activeReelCount < reelCount) return false;
 
@@ -1125,7 +1149,7 @@ function chooseChestBonus() {
 }
 
 function vaultBonusTitle(index) {
-  return ["DOKKAEBI FREE GAMES", "DOKKAEBI SCRATCH", "DOKKAEBI EXPAND"][index] || "DOKKAEBI BONUS";
+  return ["FREE GAMES UNLOCKED", "SCRATCH JACKPOT BONUS", "DOKKAEBI BONUS"][index] || "DOKKAEBI BONUS";
 }
 
 function renderVaultIntroGems(index) {
@@ -1191,16 +1215,16 @@ async function handleChestBonus(index) {
   if (index === 0) {
     state.freeSpinWinTotal = 0;
     state.bonusSpins += chestFreeSpinAward;
-    setMessage(`Dokkaebi Bonus! ${chestFreeSpinAward} Free Games awarded!`, true);
+    setMessage(`FREE GAMES UNLOCKED! ${chestFreeSpinAward} Free Games awarded!`, true);
   } else if (index === 1) {
-    setMessage("Dokkaebi Bonus! Scratch Jackpot feature triggered.", true);
+    setMessage("SCRATCH JACKPOT BONUS triggered.", true);
     updateUi();
     await wait(600);
     await startScratchBonus();
   } else {
     state.freeSpinWinTotal = 0;
     state.expandedBonusSpins += expandedBonusAward;
-    setMessage(`Dokkaebi Bonus! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
+    setMessage(`DOKKAEBI BONUS! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
   }
 
   await wait(700);
@@ -1336,6 +1360,7 @@ function finishScratchBonus(prize) {
   const winningPrize = prize || state.scratchPrize || "MINI";
   const award = jackpotValue(winningPrize);
   const message = jackpotWinMessage(winningPrize, award);
+  triggerHaptic("bonus");
   addCredits(award, true);
   state.lastWin = award;
   resetJackpot(winningPrize);
@@ -1712,14 +1737,28 @@ function showReelWinOverlay(title, amount, caption) {
 }
 
 function showTeaseOverlay(title, caption, pulse = false) {
+  if (teaseTimer) {
+    clearTimeout(teaseTimer);
+    teaseTimer = null;
+  }
+
   els.teaseTitle.textContent = title;
   els.teaseCaption.textContent = caption;
   els.teaseOverlay.classList.add("show");
   els.teaseOverlay.classList.toggle("pulse", pulse);
   els.teaseOverlay.setAttribute("aria-hidden", "false");
+
+  teaseTimer = setTimeout(() => {
+    hideTeaseOverlay();
+  }, 1800);
 }
 
 function hideTeaseOverlay() {
+  if (teaseTimer) {
+    clearTimeout(teaseTimer);
+    teaseTimer = null;
+  }
+
   els.teaseOverlay.classList.remove("show", "pulse");
   els.teaseOverlay.setAttribute("aria-hidden", "true");
   els.reelWindow.classList.remove("scatter-anticipation");
@@ -1755,7 +1794,7 @@ function winPresentationTitle(win, bet, isFreeSpin = false) {
   const multiple = bet > 0 ? win / bet : 0;
   if (multiple >= 50) return "EPIC WIN";
   if (multiple >= 25) return "MEGA WIN";
-  if (multiple >= 10) return "BIG WIN";
+  if (multiple >= 10) return "NEON BIG WIN";
   return isFreeSpin ? "BONUS WAYS WIN" : `${activeWays()} WAYS WIN`;
 }
 
@@ -1763,6 +1802,8 @@ async function spin() {
   if (state.spinning || state.scratchActive) {
     return;
   }
+
+  triggerHaptic("spin");
 
   settleCreditAnimation();
 
@@ -1858,6 +1899,13 @@ async function spin() {
     advanceChests();
   }
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
+  const scatterTotal = scatterCount(result, activeReelCount);
+  const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
+  if (bonusTriggered || chestTriggered >= 0) {
+    triggerHaptic("bonus");
+  } else if (win > 0) {
+    triggerHaptic("win");
+  }
   if (bonusTriggered || chestTriggered >= 0 || state.bonusSpins > 0 || state.expandedBonusSpins > 0) {
     stopAutoSpin();
   }
@@ -1881,10 +1929,11 @@ async function spin() {
     playBonusStartSound();
   } else if (isFreeSpin && bonusTriggered) {
     setMessage(`Retrigger! +${bonusSpinAward} Free Games awarded!`, true);
+    showReelMessageOverlay("FREE GAMES UNLOCKED", true);
     els.machine.classList.add("celebrate");
     playBonusStartSound();
   } else if (bonusTriggered && win > 0) {
-    const title = winPresentationTitle(win, bet);
+    const title = "DOKKAEBI BONUS";
     const restoreOverlay = {
       type: "amount",
       title,
@@ -1893,12 +1942,13 @@ async function spin() {
       isWin: true,
       captionAmount: null,
     };
-    setMessage(`Dokkaebi Bonus triggered! ${formatDisplayAmount(win)} ways win!`, true);
+    setMessage(`DOKKAEBI BONUS! ${formatDisplayAmount(win)} ways win!`, true);
     showReelWinOverlay(title, win, "Ways Award");
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
   } else if (bonusTriggered) {
-    setMessage("Dokkaebi Bonus triggered!", true);
+    setMessage("DOKKAEBI BONUS!", true);
+    showReelMessageOverlay("DOKKAEBI BONUS", true);
     els.machine.classList.add("celebrate");
   } else if (isFreeSpin && win > 0) {
     const title = winPresentationTitle(win, bet, true);
@@ -1933,9 +1983,13 @@ async function spin() {
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
-  } else if (!isFreeSpin && shouldAnticipateBonus && scatterCount(result, activeReelCount) === 2) {
+  } else if (!isFreeSpin && !bonusTriggered && scatterTotal === 2) {
     setHiddenMessage("");
+    showTeaseOverlay("Almost Free Games...", "One more scatter lights the stage", true);
     playCloseCallSound();
+  } else if (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2) {
+    setHiddenMessage("");
+    showTeaseOverlay("Bonus Energy Rising...", "Dokkaebi gems are getting louder", true);
   } else if (state.bonusSpins > 0) {
     setMessage(`${state.bonusSpins} Free Games remaining.`);
   } else if (bonusSpinsAtStart > 0 && !freeGameEnded) {
@@ -2258,3 +2312,8 @@ setupDebugHooks();
 setHiddenMessage(els.message.textContent);
 updateUi();
 maybeShowIntroModal();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(serviceWorkerPath).catch(() => {});
+  });
+}

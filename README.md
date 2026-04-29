@@ -2,7 +2,9 @@
 
 NEON HUNTER SPIN is a lightweight, web-based 2.5D mobile social slot demo built with HTML, CSS, and vanilla JavaScript.
 
-This project is designed for limited demo testing on static hosting such as Netlify and for safe Telegram link sharing.
+Purpose: free Telegram-safe social slot demo for limited mobile testing.
+
+Theme: Korean Fantasy x K-pop Neon Casino. The game uses an original IP-safe fantasy theme with virtual test credits only.
 
 ## Compliance Notice
 
@@ -26,6 +28,8 @@ This project does not include:
 - `index.html`
 - `styles.css`
 - `script.js`
+- `manifest.json`
+- `service-worker.js`
 - Static assets under `assets/`
 - No React, Vue, Three.js, Unity, or external game engine
 - No build step required
@@ -37,6 +41,8 @@ This project does not include:
 ├── index.html
 ├── styles.css
 ├── script.js
+├── manifest.json
+├── service-worker.js
 ├── simulate_rtp.js
 ├── assets/
 │   ├── share/
@@ -114,6 +120,17 @@ https://your-netlify-site.netlify.app/?v=2
 5. Use **DROP** only as an additional virtual test credit input.
 6. Use **CLEAR** to reset virtual credits.
 
+## How To Test
+
+1. Open the deployed Netlify link.
+2. Tap **START DEMO**.
+3. Spin at least 20 times.
+4. Try different bet levels and denom options.
+5. Trigger or observe bonus events.
+6. Submit feedback with the floating **Feedback** button.
+
+Safety Notice: No real-money betting, payout, prize, gift card, or cryptocurrency reward.
+
 ## Pre-Release Checklist
 
 Before sharing a Netlify URL in Telegram, check:
@@ -126,6 +143,8 @@ Before sharing a Netlify URL in Telegram, check:
 - Free game and bonus logic still run.
 - Symbol images load without broken paths.
 - Telegram preview metadata points to `assets/share/telegram-preview.png`.
+- Manifest loads with app name `NEON HUNTER SPIN` and standalone display mode.
+- Service worker caches only core static demo files.
 - iPhone Safari and Android Chrome do not show horizontal overflow.
 
 ## RTP Simulation
@@ -147,11 +166,11 @@ PAID_SPINS=100000 node simulate_rtp.js
 ## Suggested Branch Name
 
 ```text
-codex/netlify-readme
+codex/neon-theme-bonus-polish
 ```
 
 ## Suggested Commit Message
 
 ```text
-docs: add netlify deployment readme
+feat: improve neon hunter theme and bonus feedback
 ```

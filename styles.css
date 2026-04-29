@@ -503,7 +503,7 @@ h1 {
 }
 
 .tease-overlay.pulse {
-  animation: teasePulse 0.62s ease-in-out infinite alternate;
+  animation: teasePulse 0.62s ease-in-out 3 alternate;
 }
 
 .tease-overlay strong {
@@ -4029,6 +4029,62 @@ h1 {
     radial-gradient(circle at 50% 0, rgba(255, 206, 85, 0.28), transparent 66%),
     linear-gradient(180deg, rgba(156, 109, 255, 0.26), rgba(255, 79, 139, 0.12)),
     rgba(8, 9, 15, 0.9);
+}
+
+.free-win-overlay.win {
+  background:
+    radial-gradient(circle at 50% 0, rgba(255, 236, 154, 0.28), transparent 60%),
+    linear-gradient(180deg, rgba(156, 109, 255, 0.28), rgba(255, 79, 139, 0.12)),
+    rgba(8, 9, 15, 0.9);
+}
+
+.free-win-overlay.win strong,
+.free-win-overlay.win span {
+  text-shadow:
+    0 0 14px rgba(255, 206, 85, 0.5),
+    0 0 28px rgba(156, 109, 255, 0.34),
+    0 4px 0 rgba(0, 0, 0, 0.44);
+}
+
+.guide-intro {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 206, 85, 0.2);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 12% 0, rgba(156, 109, 255, 0.22), transparent 56%),
+    rgba(255, 255, 255, 0.045);
+  color: rgba(247, 242, 232, 0.88);
+  font-size: clamp(0.86rem, 2.5vw, 1rem);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.tester-checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tester-checklist li {
+  min-height: 34px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(247, 242, 232, 0.9);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.tester-checklist li::before {
+  content: "• ";
+  color: var(--gold);
 }
 
 .intro-overlay,

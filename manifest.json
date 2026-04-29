@@ -1,0 +1,25 @@
+{
+  "name": "NEON HUNTER SPIN",
+  "short_name": "NEON HUNTER",
+  "description": "Free Telegram-safe Korean fantasy social slot demo with virtual test credits only.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#4b217d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/symbols/icon/wild.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/share/telegram-preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
