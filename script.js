@@ -1774,6 +1774,7 @@ async function handleChestBonus(index) {
 
   if (index === 0) {
     state.freeSpinWinTotal = 0;
+    state.lastWin = 0;
     state.bonusSpins += chestFreeSpinAward;
     pulseCabinet("free-game");
     setMessage(`FREE GAMES UNLOCKED! ${chestFreeSpinAward} Free Games awarded!`, true);
@@ -1785,6 +1786,7 @@ async function handleChestBonus(index) {
     await startScratchBonus();
   } else {
     state.freeSpinWinTotal = 0;
+    state.lastWin = 0;
     state.expandedBonusSpins += expandedBonusAward;
     pulseCabinet("dokkaebi");
     setMessage(`DOKKAEBI BONUS! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
@@ -2485,7 +2487,7 @@ async function spin() {
     setCredits(state.credits - bet, false);
     accrueProgressiveJackpots(bet);
   }
-  state.lastWin = 0;
+  state.lastWin = isFreeSpin ? state.freeSpinWinTotal : 0;
   els.machine.classList.remove("celebrate");
   setHiddenMessage(isExpandedSpin ? "Expanded Reels bonus game in progress" : isFreeSpin ? "Free Game in progress" : "");
   updateUi();
@@ -2522,13 +2524,14 @@ async function spin() {
   const rawWin = calculateRawWin(result, bet, activeReelCount);
   const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts);
   const waysWinFormulas = buildWaysWinFormulas(result, bet, activeReelCount, rawWin, win);
-  state.lastWin = win;
   if (win > 0) {
     incrementTestCounter("totalWins");
   }
   if (isFreeSpin) {
     state.freeSpinWinTotal += win;
+    state.lastWin = state.freeSpinWinTotal;
   } else {
+    state.lastWin = win;
     addCredits(win, true);
   }
   if (bonusTriggered && isFreeSpin) {
