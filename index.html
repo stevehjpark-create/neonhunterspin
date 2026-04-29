@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v5-qa-cleanup" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v6-report-export" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -340,6 +340,18 @@
           </div>
           <div id="selectedFeedbackTags" class="selected-feedback-tags" aria-live="polite">No tags selected</div>
         </div>
+        <label for="feedbackIssueType">Issue type</label>
+        <select id="feedbackIssueType" class="feedback-select">
+          <option>No Issue</option>
+          <option>Sound Issue</option>
+          <option>Layout Issue</option>
+          <option>Telegram Browser Issue</option>
+          <option>Button / Touch Issue</option>
+          <option>Performance Issue</option>
+          <option>Confusing UX</option>
+          <option>Bonus / Game Flow Feedback</option>
+          <option>Other</option>
+        </select>
         <label for="feedbackDeviceNote">Device note</label>
         <input
           id="feedbackDeviceNote"
@@ -351,6 +363,11 @@
         <p class="privacy-note">Do not include name, email, phone number, or other personal data.</p>
         <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
         <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
+        <p class="feedback-instruction">After testing, tap Copy Test Report and paste it into the Telegram test group.</p>
+        <details id="reportPreview" class="report-preview">
+          <summary>Preview Test Report</summary>
+          <textarea id="reportPreviewText" rows="9" readonly></textarea>
+        </details>
         <div id="reportFallback" class="report-fallback" hidden>
           <label for="reportFallbackText">Copy this test report manually</label>
           <textarea id="reportFallbackText" rows="7" readonly></textarea>
@@ -501,6 +518,6 @@
       </section>
     </div>
 
-    <script src="script.js?v=neon-hunter-spin-v5-qa-cleanup"></script>
+    <script src="script.js?v=neon-hunter-spin-v6-report-export"></script>
   </body>
 </html>

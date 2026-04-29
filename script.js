@@ -61,7 +61,7 @@ const testStatsStorageKey = "neonHunterSpinTestStats";
 const testerMissionStorageKey = "neonHunterSpinTesterMission";
 const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const serviceWorkerPath = "service-worker.js";
-const appVersion = "v5";
+const appVersion = "v6";
 const dailyDemoCredits = 2_000;
 const missionBonusDemoCredits = 100;
 const feedbackTagOptions = [
@@ -217,11 +217,14 @@ const els = {
   feedbackDeviceNote: document.querySelector("#feedbackDeviceNote"),
   feedbackSubmit: document.querySelector("#feedbackSubmit"),
   feedbackCancel: document.querySelector("#feedbackCancel"),
+  feedbackIssueType: document.querySelector("#feedbackIssueType"),
   feedbackSession: document.querySelector("#feedbackSession"),
   feedbackStats: document.querySelector("#feedbackStats"),
   feedbackTagButtons: [...document.querySelectorAll("#feedbackTagButtons button")],
   selectedFeedbackTags: document.querySelector("#selectedFeedbackTags"),
   copyTestReport: document.querySelector("#copyTestReport"),
+  reportPreview: document.querySelector("#reportPreview"),
+  reportPreviewText: document.querySelector("#reportPreviewText"),
   reportFallback: document.querySelector("#reportFallback"),
   reportFallbackText: document.querySelector("#reportFallbackText"),
   reportStatus: document.querySelector("#reportStatus"),
@@ -570,22 +573,24 @@ function formatTestTimestamp(value) {
   });
 }
 
+function spinsPerFeedbackLabel() {
+  return state.testStats.totalFeedbackSubmitted > 0
+    ? (state.testStats.totalSpins / state.testStats.totalFeedbackSubmitted).toFixed(1)
+    : "N/A";
+}
+
 function renderTestStats() {
   if (els.feedbackSession) {
     els.feedbackSession.textContent = `Test Session: ${state.testSessionId}`;
   }
 
-  const spinsPerFeedback =
-    state.testStats.totalFeedbackSubmitted > 0
-      ? (state.testStats.totalSpins / state.testStats.totalFeedbackSubmitted).toFixed(1)
-      : "N/A";
   const rows = [
     ["Total Spins", state.testStats.totalSpins],
     ["Total Wins", state.testStats.totalWins],
     ["Bonus Triggers", state.testStats.totalBonusTriggers],
     ["Free Game Triggers", state.testStats.totalFreeGameTriggers],
     ["Feedback Submitted", state.testStats.totalFeedbackSubmitted],
-    ["Spins / Feedback", spinsPerFeedback],
+    ["Spins / Feedback", spinsPerFeedbackLabel()],
     ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
     ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
   ];
@@ -600,6 +605,24 @@ function renderTestStats() {
   });
   renderTesterMission();
   renderSessionSummary();
+}
+
+function soundStateLabel() {
+  if (typeof state.sound !== "boolean") return "Unknown";
+  if (!state.sound) return "Sound OFF";
+  return state.audioUnlocked ? "Sound ON" : "Sound Locked";
+}
+
+function hapticSupportLabel() {
+  try {
+    return "vibrate" in navigator ? "Supported" : "Not Supported";
+  } catch {
+    return "Unknown";
+  }
+}
+
+function selectedIssueType() {
+  return els.feedbackIssueType?.value || "No Issue";
 }
 
 function sessionSummaryRows() {
@@ -640,11 +663,19 @@ function updateDailyDemoCreditUi() {
   }
 }
 
+function renderReportPreview() {
+  if (!els.reportPreviewText || !els.reportPreview?.open) return;
+  els.reportPreviewText.value = buildTestReport();
+}
+
 function buildTestReport() {
   const progress = missionProgress();
   const feedback = els.feedbackText?.value.trim() || "";
   const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
   const tags = state.selectedFeedbackTags.length ? state.selectedFeedbackTags.join(", ") : "None";
+  const issueType = selectedIssueType();
+  const timestamp = new Date().toISOString();
+  const currentUrl = window.location.href;
   const missionLines = testerMissionDefinitions
     .map((mission) => {
       const complete = missionCompletionMap()[mission.id] ? "complete" : "open";
@@ -660,6 +691,8 @@ function buildTestReport() {
     `Device/browser: ${deviceLabel()}`,
     `Viewport: ${window.innerWidth} x ${window.innerHeight}`,
     `PWA status: ${pwaStatusLabel()}`,
+    `Sound state: ${soundStateLabel()}`,
+    `Haptic support: ${hapticSupportLabel()}`,
     "",
     "Test Stats:",
     `- Total Spins: ${state.testStats.totalSpins}`,
@@ -667,12 +700,16 @@ function buildTestReport() {
     `- Bonus Triggers: ${state.testStats.totalBonusTriggers}`,
     `- Free Game Triggers: ${state.testStats.totalFreeGameTriggers}`,
     `- Feedback Submitted: ${state.testStats.totalFeedbackSubmitted}`,
+    `- Spins per Feedback: ${spinsPerFeedbackLabel()}`,
     `- First Visit: ${formatTestTimestamp(state.testStats.firstVisitAt)}`,
     `- Last Visit: ${formatTestTimestamp(state.testStats.lastVisitAt)}`,
     "",
+    `Issue type: ${issueType}`,
     `Selected quick feedback tags: ${tags}`,
     `Device note: ${deviceNote || "None"}`,
     `Written feedback: ${feedback || "None"}`,
+    `Timestamp: ${timestamp}`,
+    `Current URL: ${currentUrl}`,
     "",
     `Tester Mission Progress: ${progress.label}`,
     missionLines,
@@ -694,6 +731,7 @@ function setReportStatus(text) {
 }
 
 async function copyTestReport() {
+  renderReportPreview();
   const report = buildTestReport();
   if (els.reportFallback) {
     els.reportFallback.hidden = true;
@@ -705,8 +743,8 @@ async function copyTestReport() {
       throw new Error("Clipboard unavailable");
     }
     await navigator.clipboard.writeText(report);
-    setReportStatus("Test report copied. Send it manually to the test coordinator.");
-    setHiddenMessage("Test report copied. Send it manually to the test coordinator.");
+    setReportStatus("Test report copied. Please paste it into Telegram.");
+    setHiddenMessage("Test report copied. Please paste it into Telegram.");
   } catch {
     showReportFallback(report);
     setReportStatus("Clipboard unavailable. Copy the report manually from this panel.");
@@ -784,6 +822,7 @@ function toggleFeedbackTag(tag) {
     ? state.selectedFeedbackTags.filter((selectedTag) => selectedTag !== tag)
     : [...state.selectedFeedbackTags, tag];
   renderSelectedFeedbackTags();
+  renderReportPreview();
 }
 
 function initializeTelegramMode() {
@@ -1422,6 +1461,7 @@ function openFeedbackModal() {
   if (els.reportFallback) {
     els.reportFallback.hidden = true;
   }
+  renderReportPreview();
   setReportStatus("");
   els.feedbackOverlay.classList.add("open");
   els.feedbackOverlay.setAttribute("aria-hidden", "false");
@@ -1435,7 +1475,9 @@ function closeFeedbackModal() {
 function submitFeedback() {
   const feedback = els.feedbackText.value.trim();
   const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
+  const issueType = selectedIssueType();
   const tags = [...state.selectedFeedbackTags];
+  const report = buildTestReport();
   incrementTestCounter("totalFeedbackSubmitted");
   markTesterMissionComplete("submitFeedback");
   console.log("NEON HUNTER SPIN feedback:", {
@@ -1444,9 +1486,13 @@ function submitFeedback() {
     device: deviceLabel(),
     viewport: `${window.innerWidth} x ${window.innerHeight}`,
     pwaStatus: pwaStatusLabel(),
+    soundState: soundStateLabel(),
+    hapticSupport: hapticSupportLabel(),
+    issueType,
     tags,
     deviceNote,
     feedback,
+    report,
     stats: { ...state.testStats },
     testerMission: missionProgress(),
     submittedAt: new Date().toISOString(),
@@ -1455,8 +1501,12 @@ function submitFeedback() {
   if (els.feedbackDeviceNote) {
     els.feedbackDeviceNote.value = "";
   }
+  if (els.feedbackIssueType) {
+    els.feedbackIssueType.value = "No Issue";
+  }
   state.selectedFeedbackTags = [];
   renderSelectedFeedbackTags();
+  renderReportPreview();
   renderTestStats();
   closeFeedbackModal();
   setHiddenMessage("Feedback submitted for this limited test.");
@@ -3191,6 +3241,10 @@ els.feedbackOverlay.addEventListener("click", (event) => {
 els.feedbackTagButtons.forEach((button) => {
   button.addEventListener("click", () => toggleFeedbackTag(button.dataset.feedbackTag));
 });
+els.feedbackIssueType.addEventListener("change", renderReportPreview);
+els.feedbackDeviceNote.addEventListener("input", renderReportPreview);
+els.feedbackText.addEventListener("input", renderReportPreview);
+els.reportPreview.addEventListener("toggle", renderReportPreview);
 els.testInfoToggle.addEventListener("click", () => setTestInfoOpen(!testInfoOpen()));
 els.testInfoClose.addEventListener("click", () => setTestInfoOpen(false));
 els.soundButton.addEventListener("click", async () => {

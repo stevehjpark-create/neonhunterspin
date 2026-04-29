@@ -233,6 +233,31 @@ Safety:
 - All credits are virtual test points with no cash value.
 - Test stats, missions, daily claim state, and feedback report data remain local-only unless the tester manually copies and sends the report.
 
+## v6 Test Report Export Release
+
+Version: `neon-hunter-spin-v6`
+
+Purpose: Telegram real-device test report export.
+
+Added:
+
+- Test Report Export v2 with sound state, haptic support, timestamp, and current URL.
+- Issue Type selector for structured tester feedback.
+- Report Preview section showing the exact copied text.
+- Clipboard fallback textarea for browsers that block direct copy.
+
+Safety:
+
+- No real-money betting.
+- No payout.
+- No external reward.
+- No cryptocurrency.
+- No token assets.
+- No NFT.
+- No payment.
+- All credits are virtual test points with no cash value.
+- Test reports remain local-only unless the tester manually copies and sends them.
+
 ## RTP Simulation
 
 `simulate_rtp.js` is a local math verification helper. It is not required for Netlify deployment.

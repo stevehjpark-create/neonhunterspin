@@ -4779,6 +4779,7 @@ h1 {
 
 .tester-mission-panel,
 .session-summary-section,
+.report-preview,
 .report-fallback {
   display: grid;
   gap: 10px;
@@ -4993,6 +4994,23 @@ h1 {
   outline: none;
 }
 
+.feedback-select {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 206, 85, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(5, 7, 12, 0.78)),
+    rgba(5, 7, 12, 0.74);
+  color: var(--text);
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 850;
+  outline: none;
+}
+
+.feedback-select:focus,
 .device-note-input:focus {
   border-color: rgba(156, 109, 255, 0.72);
   box-shadow: 0 0 0 3px rgba(156, 109, 255, 0.18);
@@ -5004,6 +5022,49 @@ h1 {
   font-size: 0.68rem;
   font-weight: 800;
   line-height: 1.25;
+}
+
+.feedback-instruction {
+  margin: -2px 0 0;
+  color: #fff2b6;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.report-preview {
+  padding: 0;
+  overflow: hidden;
+}
+
+.report-preview summary {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  color: #ffd96b;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.report-preview[open] {
+  padding-bottom: 10px;
+}
+
+.report-preview textarea,
+.report-fallback textarea {
+  width: calc(100% - 20px);
+  min-height: 180px;
+  max-height: min(34dvh, 280px);
+  margin: 0 10px;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .feedback-panel textarea {
@@ -5025,6 +5086,19 @@ h1 {
   box-shadow:
     0 0 0 3px rgba(156, 109, 255, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.feedback-panel .report-preview textarea,
+.feedback-panel .report-fallback textarea {
+  width: calc(100% - 20px);
+  min-height: 180px;
+  max-height: min(34dvh, 280px);
+  margin: 0 10px;
+  white-space: pre;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .feedback-actions {
