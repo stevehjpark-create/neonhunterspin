@@ -55,6 +55,7 @@ const creditOdometerCentsPerSecond = 50;
 const maxDisplayAmount = 99_999_999.99;
 const maxDropAmount = 999_999.99;
 const cappedDisplayAmount = "XX,XXX,XXX.XX";
+const introSeenStorageKey = "neonHunterSpinIntroSeen";
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
   MINOR: { start: 500, max: 1000, contribution: 0.002 },
@@ -114,6 +115,8 @@ const els = {
   message: document.querySelector("#message"),
   reels: [...document.querySelectorAll(".reel")],
   startDemoButton: document.querySelector("#startDemoButton"),
+  zeroCreditCta: document.querySelector("#zeroCreditCta"),
+  zeroCreditStartButton: document.querySelector("#zeroCreditStartButton"),
   spinButton: document.querySelector("#spinButton"),
   decreaseBet: document.querySelector("#decreaseBet"),
   increaseBet: document.querySelector("#increaseBet"),
@@ -159,11 +162,20 @@ const els = {
   denomPicker: document.querySelector("#denomPicker"),
   denomToggle: document.querySelector("#denomToggle"),
   denomOptions: [...document.querySelectorAll("#denomOptions button")],
+  introOverlay: document.querySelector("#introOverlay"),
+  introStartButton: document.querySelector("#introStartButton"),
+  introClose: document.querySelector("#introClose"),
+  feedbackButton: document.querySelector("#feedbackButton"),
+  feedbackOverlay: document.querySelector("#feedbackOverlay"),
+  feedbackText: document.querySelector("#feedbackText"),
+  feedbackSubmit: document.querySelector("#feedbackSubmit"),
+  feedbackCancel: document.querySelector("#feedbackCancel"),
 };
 
 let audioContext;
 let autoSpinTimer;
 let creditAnimationFrame;
+let demoMessageTimer;
 
 function createInitialChests() {
   return [0, 1, 2].map((index) => createChest(index));
@@ -482,6 +494,15 @@ function updateUi() {
   els.reels.forEach((reel, index) => {
     reel.classList.toggle("inactive", index >= state.selectedReels);
   });
+  const shouldShowZeroCreditCta =
+    state.credits <= 0 &&
+    !state.spinning &&
+    !state.scratchActive &&
+    !bonusModeActive() &&
+    !introOpen();
+  els.zeroCreditCta.classList.toggle("show", shouldShowZeroCreditCta);
+  els.zeroCreditCta.setAttribute("aria-hidden", String(!shouldShowZeroCreditCta));
+  els.zeroCreditStartButton.disabled = state.spinning || state.scratchActive;
 }
 
 function setMessage(text, isWin = false) {
@@ -616,6 +637,103 @@ function closeGuide() {
 
 function guideOpen() {
   return els.guideOverlay.classList.contains("open");
+}
+
+function introOpen() {
+  return els.introOverlay.classList.contains("open");
+}
+
+function openIntroModal() {
+  els.introOverlay.classList.add("open");
+  els.introOverlay.setAttribute("aria-hidden", "false");
+  updateUi();
+  setTimeout(() => els.introStartButton.focus({ preventScroll: true }), 50);
+}
+
+function closeIntroModal() {
+  els.introOverlay.classList.remove("open");
+  els.introOverlay.setAttribute("aria-hidden", "true");
+  updateUi();
+}
+
+function maybeShowIntroModal() {
+  if (!introSeen()) {
+    openIntroModal();
+  }
+}
+
+function introSeen() {
+  try {
+    return sessionStorage.getItem(introSeenStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function markIntroSeen() {
+  try {
+    sessionStorage.setItem(introSeenStorageKey, "true");
+  } catch {
+    // Some embedded webviews can block storage; the modal still closes for the current page.
+  }
+}
+
+function finishIntroStart() {
+  markIntroSeen();
+  closeIntroModal();
+  if (state.credits <= 0) {
+    startDemoCredits();
+  }
+}
+
+function showDemoCreditsLoadedMessage() {
+  if (demoMessageTimer) {
+    clearTimeout(demoMessageTimer);
+    demoMessageTimer = null;
+  }
+
+  setHiddenMessage("Demo credits loaded", true);
+  state.overlaySequenceId += 1;
+  const sequenceId = state.overlaySequenceId;
+  state.currentOverlay = {
+    type: "message",
+    text: "Demo credits loaded",
+    isWin: true,
+  };
+  els.freeWinOverlay.classList.add("demo-loaded-pop");
+  renderReelOverlay();
+
+  demoMessageTimer = setTimeout(() => {
+    if (sequenceId === state.overlaySequenceId) {
+      hideReelWinOverlay();
+    }
+    els.freeWinOverlay.classList.remove("demo-loaded-pop");
+    demoMessageTimer = null;
+  }, 2000);
+}
+
+function feedbackOpen() {
+  return els.feedbackOverlay.classList.contains("open");
+}
+
+function openFeedbackModal() {
+  stopAutoSpin();
+  els.feedbackOverlay.classList.add("open");
+  els.feedbackOverlay.setAttribute("aria-hidden", "false");
+  setTimeout(() => els.feedbackText.focus({ preventScroll: true }), 50);
+}
+
+function closeFeedbackModal() {
+  els.feedbackOverlay.classList.remove("open");
+  els.feedbackOverlay.setAttribute("aria-hidden", "true");
+}
+
+function submitFeedback() {
+  const feedback = els.feedbackText.value.trim();
+  console.log("NEON HUNTER SPIN feedback:", feedback);
+  els.feedbackText.value = "";
+  closeFeedbackModal();
+  setHiddenMessage("Feedback submitted for this limited test.");
 }
 
 function canAutoSpin() {
@@ -1908,8 +2026,7 @@ function startDemoCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
   addCredits(demoStartCredits, false);
-  setMessage("Virtual demo credits loaded", true);
-  showReelAmountOverlay("DEMO CREDITS", demoStartCredits, "Virtual test points loaded", true);
+  showDemoCreditsLoadedMessage();
   updateUi();
 }
 
@@ -2012,6 +2129,7 @@ els.maxBet.addEventListener("click", () => {
 });
 els.autoSpin.addEventListener("click", toggleAutoSpin);
 els.startDemoButton.addEventListener("click", startDemoCredits);
+els.zeroCreditStartButton.addEventListener("click", startDemoCredits);
 els.dropButton.addEventListener("click", dropCredits);
 els.dropAmount.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -2056,6 +2174,25 @@ els.guideOverlay.addEventListener("click", (event) => {
     closeGuide();
   }
 });
+els.introStartButton.addEventListener("click", finishIntroStart);
+els.introClose.addEventListener("click", () => {
+  markIntroSeen();
+  closeIntroModal();
+});
+els.introOverlay.addEventListener("click", (event) => {
+  if (event.target === els.introOverlay) {
+    markIntroSeen();
+    closeIntroModal();
+  }
+});
+els.feedbackButton.addEventListener("click", openFeedbackModal);
+els.feedbackCancel.addEventListener("click", closeFeedbackModal);
+els.feedbackSubmit.addEventListener("click", submitFeedback);
+els.feedbackOverlay.addEventListener("click", (event) => {
+  if (event.target === els.feedbackOverlay) {
+    closeFeedbackModal();
+  }
+});
 els.soundButton.addEventListener("click", async () => {
   state.sound = !state.sound;
   if (state.sound) {
@@ -2084,9 +2221,22 @@ els.soundButton.addEventListener("click", async () => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeGuide();
+    if (introOpen()) {
+      markIntroSeen();
+      closeIntroModal();
+    }
+    closeFeedbackModal();
     setDenomPickerOpen(false);
   }
-  if (guideOpen()) {
+  const target = event.target;
+  const isTypingField =
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target?.isContentEditable;
+  if (guideOpen() || introOpen() || feedbackOpen()) {
+    if (feedbackOpen() && isTypingField) {
+      return;
+    }
     event.preventDefault();
     return;
   }
@@ -2100,5 +2250,6 @@ document.addEventListener("keydown", (event) => {
 
 initializeReels();
 setupDebugHooks();
-setMessage(els.message.textContent);
+setHiddenMessage(els.message.textContent);
 updateUi();
+maybeShowIntroModal();

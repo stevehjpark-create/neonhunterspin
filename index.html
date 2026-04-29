@@ -148,6 +148,12 @@
             </div>
             <strong id="vaultIntroTitle">DOKKAEBI BONUS</strong>
           </div>
+          <div id="zeroCreditCta" class="zero-credit-cta" aria-hidden="true">
+            <button id="zeroCreditStartButton" class="zero-credit-button" type="button">
+              START DEMO WITH 10,000 CREDITS
+            </button>
+            <span>Virtual test points only</span>
+          </div>
           <div class="reel-lamps reel-lamps-bottom" aria-hidden="true">
             <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
           </div>
@@ -249,6 +255,48 @@
 
       <footer class="app-footer">Demo Only - No real-money wagering, payout, prize, gift card, or cryptocurrency reward.</footer>
     </main>
+
+    <button id="feedbackButton" class="feedback-launcher" type="button">Feedback</button>
+
+    <div id="introOverlay" class="intro-overlay" aria-hidden="true">
+      <section class="intro-modal" aria-labelledby="introTitle" role="dialog" aria-modal="true">
+        <button id="introClose" class="modal-close" type="button" aria-label="Close intro">
+          <span aria-hidden="true">×</span>
+        </button>
+        <p class="intro-kicker">Korean Fantasy Social Slot Demo</p>
+        <h2 id="introTitle">NEON HUNTER SPIN</h2>
+        <ul class="intro-checklist" aria-label="Demo rules">
+          <li>✓ Free Demo Credits</li>
+          <li>✓ No Real Money</li>
+          <li>✓ No Payout</li>
+          <li>✓ Mobile Optimized</li>
+        </ul>
+        <p class="intro-note">
+          All credits are virtual test points<br />
+          with no cash value.
+        </p>
+        <button id="introStartButton" class="intro-start-button" type="button">START DEMO</button>
+      </section>
+    </div>
+
+    <div id="feedbackOverlay" class="feedback-overlay" aria-hidden="true">
+      <section class="feedback-panel" aria-labelledby="feedbackTitle" role="dialog" aria-modal="true">
+        <header>
+          <div>
+            <p>Limited Test Feedback</p>
+            <h2 id="feedbackTitle">NEON HUNTER SPIN</h2>
+          </div>
+          <button id="feedbackCancel" class="modal-close" type="button" aria-label="Close feedback">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
+        <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
+        <div class="feedback-actions">
+          <button id="feedbackSubmit" type="button">Submit Feedback</button>
+        </div>
+      </section>
+    </div>
 
     <div id="guideOverlay" class="guide-overlay" aria-hidden="true">
       <section class="guide-panel" aria-label="Paytable and game rules" role="dialog" aria-modal="true">
