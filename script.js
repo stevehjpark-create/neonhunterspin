@@ -122,6 +122,7 @@ const state = {
   scratchPickLimit: scratchCardCount,
   spinning: false,
   sound: true,
+  audioUnlocked: false,
   currentOverlay: null,
   overlaySequenceId: 0,
   autoPlayStopRequested: false,
@@ -160,6 +161,7 @@ const els = {
   dropButton: document.querySelector("#dropButton"),
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
+  soundButtonText: document.querySelector("#soundButton span"),
   testModeBadge: document.querySelector("#testModeBadge"),
   testInfoToggle: document.querySelector("#testInfoToggle"),
   testInfoPanel: document.querySelector("#testInfoPanel"),
@@ -998,8 +1000,7 @@ function updateUi() {
   if (els.denomToggle.disabled) {
     setDenomPickerOpen(false);
   }
-  els.soundButton.setAttribute("aria-label", state.sound ? "Sound off" : "Sound on");
-  els.soundButton.classList.toggle("active", state.sound);
+  updateSoundButtonUi();
   els.reelWindow.classList.toggle("bonus-mode", bonusModeActive());
   els.reelWindow.classList.toggle("expanded-mode", state.expandedBonusSpins > 0);
   updateChestUi();
@@ -1969,10 +1970,40 @@ async function unlockAudio() {
     source.buffer = context.createBuffer(1, 1, context.sampleRate);
     source.connect(context.destination);
     source.start(0);
-    return context.state === "running";
+    state.audioUnlocked = context.state === "running";
+    updateSoundButtonUi();
+    return state.audioUnlocked;
   } catch {
+    state.audioUnlocked = false;
+    updateSoundButtonUi();
     return false;
   }
+}
+
+function updateSoundButtonUi() {
+  if (!els.soundButton) return;
+  const soundReady = state.sound && state.audioUnlocked;
+  const soundLabel = state.sound ? (soundReady ? "Sound ON" : "Tap Sound") : "Sound OFF";
+  els.soundButton.setAttribute(
+    "aria-label",
+    state.sound ? "Sound is on. Tap to test or turn sound off" : "Sound is off. Tap to turn sound on",
+  );
+  els.soundButton.classList.toggle("active", state.sound);
+  els.soundButton.classList.toggle("unlocked", soundReady);
+  els.soundButton.classList.toggle("needs-unlock", state.sound && !state.audioUnlocked);
+  if (els.soundButtonText) {
+    els.soundButtonText.textContent = soundLabel;
+  }
+}
+
+async function unlockAudioForUserGesture() {
+  if (!state.sound) return false;
+  const unlocked = await unlockAudio();
+  if (unlocked) {
+    return true;
+  }
+  setHiddenMessage("Tap Sound ON, then tap SPIN again if your iPhone blocks audio.");
+  return false;
 }
 
 function playTone(frequency, duration, type = "sine", delay = 0, volume = 0.12) {
@@ -1982,7 +2013,16 @@ function playTone(frequency, duration, type = "sine", delay = 0, volume = 0.12) 
   if (!context) return;
 
   if (context.state === "suspended") {
-    context.resume().catch(() => {});
+    context
+      .resume()
+      .then(() => {
+        state.audioUnlocked = context.state === "running";
+        updateSoundButtonUi();
+        if (state.audioUnlocked) {
+          playTone(frequency, duration, type, delay, volume);
+        }
+      })
+      .catch(() => {});
     return;
   }
 
@@ -2009,7 +2049,16 @@ function playNoiseBurst(duration, delay = 0, volume = 0.035, filterFrequency = 7
   if (!context) return;
 
   if (context.state === "suspended") {
-    context.resume().catch(() => {});
+    context
+      .resume()
+      .then(() => {
+        state.audioUnlocked = context.state === "running";
+        updateSoundButtonUi();
+        if (state.audioUnlocked) {
+          playNoiseBurst(duration, delay, volume, filterFrequency, filterType);
+        }
+      })
+      .catch(() => {});
     return;
   }
 
@@ -2395,6 +2444,7 @@ async function spin() {
   }
 
   triggerHaptic("spin");
+  await unlockAudioForUserGesture();
 
   settleCreditAnimation();
 
@@ -2664,9 +2714,10 @@ function selectBetLevel(index) {
   updateUi();
 }
 
-function dropCredits() {
+async function dropCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
+  await unlockAudioForUserGesture();
   const dropAmount = Number(els.dropAmount.value);
   if (!Number.isFinite(dropAmount) || dropAmount <= 0) {
     setMessage("Enter a demo credit amount.");
@@ -2696,18 +2747,20 @@ function dropCredits() {
   updateUi();
 }
 
-function startDemoCredits() {
+async function startDemoCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
+  await unlockAudioForUserGesture();
   addCredits(demoStartCreditAmountForCurrentDenom(), false);
   markTesterMissionComplete("startDemo");
   showDemoCreditsLoadedMessage();
   updateUi();
 }
 
-function claimDailyDemoCredits() {
+async function claimDailyDemoCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
+  await unlockAudioForUserGesture();
   const today = localDateKey();
   if (safeLocalStorageGet(dailyDemoCreditStorageKey) === today) {
     setHiddenMessage("Daily demo credits already claimed today.");
@@ -2725,9 +2778,10 @@ function claimDailyDemoCredits() {
   updateUi();
 }
 
-function cashOut() {
+async function cashOut() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
+  await unlockAudioForUserGesture();
   const cashOutAmount = state.credits;
   setCredits(0, false);
   playCashOutSound();
@@ -2898,10 +2952,26 @@ els.feedbackTagButtons.forEach((button) => {
 els.testInfoToggle.addEventListener("click", () => setTestInfoOpen(!testInfoOpen()));
 els.testInfoClose.addEventListener("click", () => setTestInfoOpen(false));
 els.soundButton.addEventListener("click", async () => {
+  if (state.sound && !state.audioUnlocked) {
+    const unlocked = await unlockAudio();
+    if (unlocked) {
+      playSoundToggleSound();
+      setHiddenMessage("Sound ON.");
+    } else {
+      setHiddenMessage("iPhone audio is still blocked. Check silent mode and tap Sound again.");
+    }
+    updateUi();
+    return;
+  }
+
   state.sound = !state.sound;
-  if (state.sound) {
-    await unlockAudio();
+  if (!state.sound) {
+    state.audioUnlocked = false;
+    setHiddenMessage("Sound OFF.");
+  } else {
+    const unlocked = await unlockAudio();
     playSoundToggleSound();
+    setHiddenMessage(unlocked ? "Sound ON." : "Tap Sound again if your iPhone blocks audio.");
   }
   updateUi();
 });
@@ -2909,7 +2979,10 @@ els.soundButton.addEventListener("click", async () => {
 ["pointerdown", "touchstart", "keydown"].forEach((eventName) => {
   document.addEventListener(
     eventName,
-    () => {
+    (event) => {
+      if (event?.target && els.soundButton.contains(event.target)) {
+        return;
+      }
       if (state.sound) {
         unlockAudio();
       }

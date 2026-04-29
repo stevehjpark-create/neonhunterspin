@@ -286,6 +286,36 @@ h1 {
   color: var(--green);
 }
 
+.sound-toggle {
+  width: auto;
+  min-width: 78px;
+  padding: 0 10px;
+  grid-auto-flow: column;
+}
+
+.sound-toggle span {
+  white-space: nowrap;
+  font-size: 0.66rem;
+  letter-spacing: 0;
+}
+
+.sound-toggle.needs-unlock {
+  border-color: rgba(255, 206, 85, 0.58);
+  box-shadow:
+    0 10px 0 rgba(7, 9, 14, 0.86),
+    0 0 18px rgba(255, 206, 85, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.32);
+}
+
+.sound-toggle.needs-unlock span {
+  color: #ffd96b;
+}
+
+.sound-toggle:not(.active) span {
+  color: rgba(247, 242, 232, 0.58);
+}
+
 #guideButton span {
   color: var(--gold);
 }
@@ -3476,6 +3506,16 @@ h1 {
       inset 0 -4px 0 rgba(0, 0, 0, 0.28);
   }
 
+  .sound-toggle {
+    width: auto;
+    min-width: 68px;
+    padding: 0 8px;
+  }
+
+  .sound-toggle span {
+    font-size: 0.58rem;
+  }
+
   .cabinet-marquee {
     display: none;
   }
@@ -3871,6 +3911,16 @@ h1 {
   .round-button {
     width: 30px;
     height: 30px;
+  }
+
+  .sound-toggle {
+    width: auto;
+    min-width: 62px;
+    padding: 0 7px;
+  }
+
+  .sound-toggle span {
+    font-size: 0.54rem;
   }
 
   .bonus-chests {
