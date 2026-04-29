@@ -108,8 +108,8 @@ https://your-netlify-site.netlify.app/?v=2
 ## Demo Flow
 
 1. Open the app.
-2. Press **START DEMO WITH 10,000 CREDITS**.
-3. Confirm the message: `Virtual demo credits loaded`.
+2. Press **START DEMO WITH $100 DEMO VALUE**.
+3. Confirm the message: `Demo credits loaded`.
 4. Press **SPIN**.
 5. Use **DROP** only as an additional virtual test credit input.
 6. Use **CLEAR** to reset virtual credits.
@@ -120,7 +120,7 @@ Before sharing a Netlify URL in Telegram, check:
 
 - The page loads without console errors.
 - The footer notice is visible on mobile.
-- The START DEMO button loads 10,000 virtual credits.
+- The START DEMO button loads the same $100 demo value across every denomination.
 - SPIN works.
 - DROP works with virtual demo credits.
 - Free game and bonus logic still run.
