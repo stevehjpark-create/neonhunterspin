@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v4-real-device-test";
+const CACHE_NAME = "neon-hunter-spin-v5-tester-guidance";
 const CORE_ASSETS = [
   "./",
   "./index.html",

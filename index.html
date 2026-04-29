@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v4-real-device-test" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v5-tester-guidance" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -209,6 +209,7 @@
 
         <div class="quick-actions">
           <button id="startDemoButton" class="start-demo-button" type="button">START DEMO WITH 10,000 CREDITS</button>
+          <button id="dailyDemoButton" class="daily-demo-button" type="button">Claim Daily Demo Credits</button>
           <label class="drop-box" aria-label="Virtual demo credit drop amount">
             <input id="dropAmount" type="number" min="0" max="999999.99" step="0.01" inputmode="decimal" placeholder="Demo" />
           </label>
@@ -253,6 +254,17 @@
             </div>
           </div>
         </div>
+
+        <section class="tester-mission-panel" aria-label="Tester mission checklist">
+          <div class="tester-mission-header">
+            <div>
+              <span>Tester Mission</span>
+              <strong id="testerMissionProgress">0 / 8 completed</strong>
+            </div>
+            <small id="dailyDemoStatus">Daily demo credits are virtual test points for testing only.</small>
+          </div>
+          <ol id="testerMissionList" class="tester-mission-list"></ol>
+        </section>
       </section>
 
       <footer class="app-footer">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</footer>
@@ -310,6 +322,10 @@
         </header>
         <p id="feedbackSession" class="test-session">Test Session: Loading</p>
         <div id="feedbackStats" class="test-stats compact" aria-label="Local test stats"></div>
+        <section class="session-summary-section" aria-label="Session summary">
+          <h3>Session Summary</h3>
+          <div id="sessionSummary" class="session-summary-grid"></div>
+        </section>
         <div class="feedback-tag-group" aria-label="Quick feedback tags">
           <p>Quick feedback tags</p>
           <div id="feedbackTagButtons" class="feedback-tags">
@@ -324,9 +340,24 @@
           </div>
           <div id="selectedFeedbackTags" class="selected-feedback-tags" aria-live="polite">No tags selected</div>
         </div>
+        <label for="feedbackDeviceNote">Device note</label>
+        <input
+          id="feedbackDeviceNote"
+          class="device-note-input"
+          type="text"
+          maxlength="120"
+          placeholder="Example: iPhone 14 / Telegram browser / screen issue"
+        />
+        <p class="privacy-note">Do not include name, email, phone number, or other personal data.</p>
         <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
         <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
+        <div id="reportFallback" class="report-fallback" hidden>
+          <label for="reportFallbackText">Copy this test report manually</label>
+          <textarea id="reportFallbackText" rows="7" readonly></textarea>
+        </div>
+        <p id="reportStatus" class="report-status" aria-live="polite"></p>
         <div class="feedback-actions">
+          <button id="copyTestReport" class="secondary-action" type="button">Copy Test Report</button>
           <button id="feedbackSubmit" type="button">Submit Feedback</button>
         </div>
       </section>
@@ -439,6 +470,17 @@
           <div id="guideStats" class="test-stats" aria-label="Local test stats"></div>
         </div>
 
+        <div class="guide-section">
+          <h3>Session Summary</h3>
+          <div id="guideSessionSummary" class="session-summary-grid"></div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Tester Mission</h3>
+          <p id="guideMissionProgress" class="mission-progress-note">0 / 8 completed</p>
+          <ol id="guideMissionList" class="tester-mission-list guide-mission-list"></ol>
+        </div>
+
         <p class="guide-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
         <p class="guide-note">All credits are virtual test points with no cash value.</p>
         <p class="guide-note">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</p>
@@ -459,6 +501,6 @@
       </section>
     </div>
 
-    <script src="script.js?v=neon-hunter-spin-v4-real-device-test"></script>
+    <script src="script.js?v=neon-hunter-spin-v5-tester-guidance"></script>
   </body>
 </html>

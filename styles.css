@@ -1679,6 +1679,11 @@ h1 {
   color: #07150f;
 }
 
+.quick-actions .daily-demo-button {
+  grid-column: 1 / -1;
+  min-height: 34px;
+}
+
 .quick-actions button,
 .drop-box input {
   min-height: 36px;
@@ -4518,6 +4523,162 @@ h1 {
   line-height: 1.25;
 }
 
+.tester-mission-panel,
+.session-summary-section,
+.report-fallback {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(255, 206, 85, 0.18);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(156, 109, 255, 0.14), transparent 40%),
+    rgba(255, 255, 255, 0.045);
+  padding: 10px;
+}
+
+.tester-mission-panel {
+  margin-top: 10px;
+}
+
+.tester-mission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tester-mission-header div {
+  display: grid;
+  gap: 3px;
+}
+
+.tester-mission-header span,
+.session-summary-section h3 {
+  color: #ffd96b;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tester-mission-header strong,
+.mission-progress-note {
+  color: #fff6cc;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.tester-mission-header small {
+  max-width: 44%;
+  color: rgba(247, 242, 232, 0.68);
+  font-size: 0.66rem;
+  font-weight: 850;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.tester-mission-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tester-mission-list li {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(5, 7, 14, 0.42);
+  color: rgba(247, 242, 232, 0.78);
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.tester-mission-list li span {
+  flex: 0 0 auto;
+  color: rgba(255, 206, 85, 0.74);
+  font-weight: 950;
+}
+
+.tester-mission-list li.complete {
+  border-color: rgba(90, 255, 185, 0.22);
+  background:
+    linear-gradient(180deg, rgba(90, 255, 185, 0.12), rgba(156, 109, 255, 0.08)),
+    rgba(255, 255, 255, 0.045);
+  color: #eafff6;
+}
+
+.session-summary-section h3 {
+  margin: 0;
+}
+
+.session-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.session-summary-grid span {
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: rgba(5, 7, 14, 0.42);
+}
+
+.session-summary-grid small,
+.session-summary-grid strong {
+  display: block;
+  min-width: 0;
+}
+
+.session-summary-grid small {
+  color: rgba(247, 242, 232, 0.62);
+  font-size: 0.6rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.session-summary-grid strong {
+  margin-top: 2px;
+  color: #fff2b6;
+  font-size: 0.72rem;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.device-note-input {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 206, 85, 0.22);
+  background: rgba(5, 7, 12, 0.74);
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+  outline: none;
+}
+
+.device-note-input:focus {
+  border-color: rgba(156, 109, 255, 0.72);
+  box-shadow: 0 0 0 3px rgba(156, 109, 255, 0.18);
+}
+
+.privacy-note {
+  margin-top: -6px;
+  color: rgba(247, 242, 232, 0.58);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .feedback-panel textarea {
   width: 100%;
   min-height: 150px;
@@ -4541,7 +4702,9 @@ h1 {
 
 .feedback-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .feedback-actions button {
@@ -4555,6 +4718,47 @@ h1 {
   box-shadow:
     0 5px 0 rgba(99, 42, 0, 0.82),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.feedback-actions .secondary-action,
+.daily-demo-button {
+  background:
+    linear-gradient(180deg, rgba(156, 109, 255, 0.28), rgba(54, 30, 80, 0.72)),
+    rgba(18, 14, 34, 0.92);
+  color: #f4eaff;
+  box-shadow:
+    0 4px 0 rgba(25, 14, 50, 0.82),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.daily-demo-button:disabled {
+  opacity: 0.54;
+  filter: grayscale(0.25);
+}
+
+.report-fallback[hidden] {
+  display: none;
+}
+
+.report-fallback label {
+  color: #ffd96b;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.report-fallback textarea {
+  min-height: 150px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.report-status {
+  min-height: 22px;
+  color: #fff2b6;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1.25;
 }
 
 @keyframes demoLoadedPop {
@@ -4636,6 +4840,34 @@ h1 {
   .test-stats,
   .test-stats.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tester-mission-header {
+    display: grid;
+  }
+
+  .tester-mission-header small {
+    max-width: none;
+    text-align: left;
+  }
+
+  .tester-mission-list,
+  .session-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tester-mission-list li {
+    min-height: 30px;
+    font-size: 0.66rem;
+  }
+
+  .feedback-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-actions button {
+    width: 100%;
   }
 
   .intro-modal h2 {

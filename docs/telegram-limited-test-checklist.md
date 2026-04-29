@@ -1,7 +1,7 @@
 # Telegram Limited Test Checklist
 
-Project: NEON HUNTER SPIN  
-Version: neon-hunter-spin-v3  
+Project: NEON HUNTER SPIN
+Version: neon-hunter-spin-v5
 Purpose: limited Telegram testing for a free social slot demo.
 
 ## v4 Real-Device Test Focus
@@ -16,6 +16,35 @@ Purpose: limited Telegram testing for a free social slot demo.
 8. Submit feedback.
 9. Check if any layout issue occurred.
 10. Record phone model and browser context manually.
+
+## v5 Tester Guidance & Retention Test
+
+1. Open in Telegram.
+2. Confirm Telegram Test Mode or Guest Demo Mode.
+3. Start demo.
+4. Claim Daily Demo Credits if available.
+5. Complete Tester Mission Checklist.
+6. Spin at least 20 times.
+7. Try multiple bet levels.
+8. Try multiple denom options.
+9. Open Feedback modal.
+10. Select quick feedback tags.
+11. Add device note.
+12. Copy Test Report.
+13. Send copied report manually to the test coordinator.
+
+Go / No-Go Criteria:
+
+- No console errors.
+- No horizontal overflow.
+- START DEMO works.
+- SPIN works.
+- Daily Demo Credits work.
+- Feedback modal works.
+- Copy Test Report works.
+- Tester Mission progress updates.
+- Safe Demo Notice remains visible.
+- No unsafe reward or monetary-system wording appears.
 
 ## 1. Pre-Test Checklist
 

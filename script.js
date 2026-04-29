@@ -58,7 +58,11 @@ const cappedDisplayAmount = "XX,XXX,XXX.XX";
 const introSeenStorageKey = "neonHunterSpinIntroSeen";
 const testSessionStorageKey = "neonHunterSpinTestSessionId";
 const testStatsStorageKey = "neonHunterSpinTestStats";
+const testerMissionStorageKey = "neonHunterSpinTesterMission";
+const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const serviceWorkerPath = "service-worker.js";
+const appVersion = "v5";
+const dailyDemoCredits = 2_000;
 const feedbackTagOptions = [
   "Easy to Start",
   "Confusing",
@@ -68,6 +72,16 @@ const feedbackTagOptions = [
   "Layout Broken",
   "Sound Issue",
   "Telegram Issue",
+];
+const testerMissionDefinitions = [
+  { id: "startDemo", label: "Start the demo" },
+  { id: "spin20", label: "Spin 20 times" },
+  { id: "tryBetLevels", label: "Try at least 2 bet levels" },
+  { id: "tryDenoms", label: "Try at least 2 denom options" },
+  { id: "openGuide", label: "Open the Guide" },
+  { id: "openTestInfo", label: "Open the Test Info panel" },
+  { id: "submitFeedback", label: "Submit feedback" },
+  { id: "observeEvent", label: "Observe at least one win, bonus, free game, or near-miss event" },
 ];
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
@@ -114,6 +128,7 @@ const state = {
   testModeLabel: "Guest Demo Mode",
   testSessionId: "",
   testStats: createDefaultTestStats(),
+  testerMission: loadTesterMission(),
   selectedFeedbackTags: [],
 };
 
@@ -196,13 +211,26 @@ const els = {
   feedbackButton: document.querySelector("#feedbackButton"),
   feedbackOverlay: document.querySelector("#feedbackOverlay"),
   feedbackText: document.querySelector("#feedbackText"),
+  feedbackDeviceNote: document.querySelector("#feedbackDeviceNote"),
   feedbackSubmit: document.querySelector("#feedbackSubmit"),
   feedbackCancel: document.querySelector("#feedbackCancel"),
   feedbackSession: document.querySelector("#feedbackSession"),
   feedbackStats: document.querySelector("#feedbackStats"),
   feedbackTagButtons: [...document.querySelectorAll("#feedbackTagButtons button")],
   selectedFeedbackTags: document.querySelector("#selectedFeedbackTags"),
+  copyTestReport: document.querySelector("#copyTestReport"),
+  reportFallback: document.querySelector("#reportFallback"),
+  reportFallbackText: document.querySelector("#reportFallbackText"),
+  reportStatus: document.querySelector("#reportStatus"),
   guideStats: document.querySelector("#guideStats"),
+  sessionSummary: document.querySelector("#sessionSummary"),
+  guideSessionSummary: document.querySelector("#guideSessionSummary"),
+  testerMissionProgress: document.querySelector("#testerMissionProgress"),
+  testerMissionList: document.querySelector("#testerMissionList"),
+  guideMissionProgress: document.querySelector("#guideMissionProgress"),
+  guideMissionList: document.querySelector("#guideMissionList"),
+  dailyDemoButton: document.querySelector("#dailyDemoButton"),
+  dailyDemoStatus: document.querySelector("#dailyDemoStatus"),
 };
 
 let audioContext;
@@ -239,6 +267,118 @@ function safeLocalStorageSet(key, value) {
   } catch {
     // Telegram and private browsers may restrict storage; the game should still run.
   }
+}
+
+function localDateKey(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function createDefaultTesterMission() {
+  return {
+    completed: {},
+    betLevelsTried: [],
+    denomOptionsTried: [],
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}
+
+function uniqueNumberList(value) {
+  return [...new Set((Array.isArray(value) ? value : []).map(Number).filter(Number.isFinite))];
+}
+
+function loadTesterMission() {
+  const defaults = createDefaultTesterMission();
+  const stored = safeLocalStorageGet(testerMissionStorageKey);
+  let parsed = {};
+
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch {
+      parsed = {};
+    }
+  }
+
+  return {
+    ...defaults,
+    ...parsed,
+    completed: { ...(parsed.completed || {}) },
+    betLevelsTried: uniqueNumberList(parsed.betLevelsTried),
+    denomOptionsTried: uniqueNumberList(parsed.denomOptionsTried),
+  };
+}
+
+function saveTesterMission() {
+  state.testerMission.lastUpdatedAt = new Date().toISOString();
+  safeLocalStorageSet(testerMissionStorageKey, JSON.stringify(state.testerMission));
+}
+
+function markTesterMissionComplete(id) {
+  if (!testerMissionDefinitions.some((mission) => mission.id === id)) return;
+  if (state.testerMission.completed[id]) return;
+  state.testerMission.completed[id] = true;
+  saveTesterMission();
+  renderTesterMission();
+  if (missionProgress().completed === testerMissionDefinitions.length) {
+    setHiddenMessage("Test checklist completed.");
+  }
+}
+
+function addMissionNumberValue(key, value) {
+  const list = uniqueNumberList(state.testerMission[key]);
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || list.includes(numericValue)) return;
+  state.testerMission[key] = [...list, numericValue];
+  saveTesterMission();
+  renderTesterMission();
+}
+
+function missionCompletionMap() {
+  const completed = { ...state.testerMission.completed };
+  completed.spin20 = state.testStats.totalSpins >= 20;
+  completed.tryBetLevels = uniqueNumberList(state.testerMission.betLevelsTried).length >= 2;
+  completed.tryDenoms = uniqueNumberList(state.testerMission.denomOptionsTried).length >= 2;
+  completed.submitFeedback = completed.submitFeedback || state.testStats.totalFeedbackSubmitted > 0;
+  completed.observeEvent =
+    completed.observeEvent ||
+    state.testStats.totalWins > 0 ||
+    state.testStats.totalBonusTriggers > 0 ||
+    state.testStats.totalFreeGameTriggers > 0;
+  return completed;
+}
+
+function missionProgress() {
+  const completed = missionCompletionMap();
+  const count = testerMissionDefinitions.filter((mission) => completed[mission.id]).length;
+  return {
+    completed: count,
+    total: testerMissionDefinitions.length,
+    label: `${count} / ${testerMissionDefinitions.length} completed`,
+  };
+}
+
+function renderTesterMission() {
+  if (!els.testerMissionProgress && !els.guideMissionProgress) return;
+  const completed = missionCompletionMap();
+  const progress = missionProgress();
+  const markup = testerMissionDefinitions
+    .map((mission) => {
+      const done = Boolean(completed[mission.id]);
+      return `<li class="${done ? "complete" : ""}"><span>${done ? "✓" : "○"}</span>${mission.label}</li>`;
+    })
+    .join("");
+
+  [els.testerMissionProgress, els.guideMissionProgress].forEach((element) => {
+    if (element) element.textContent = progress.label;
+  });
+  [els.testerMissionList, els.guideMissionList].forEach((element) => {
+    if (element) element.innerHTML = markup;
+  });
+  renderSessionSummary();
 }
 
 function generateTestSessionId() {
@@ -347,6 +487,120 @@ function renderTestStats() {
       element.innerHTML = markup;
     }
   });
+  renderTesterMission();
+  renderSessionSummary();
+}
+
+function sessionSummaryRows() {
+  const progress = missionProgress();
+  return [
+    ["Test Session ID", state.testSessionId],
+    ["Mode", state.testModeLabel],
+    ["Total Spins", state.testStats.totalSpins],
+    ["Total Wins", state.testStats.totalWins],
+    ["Bonus Triggers", state.testStats.totalBonusTriggers],
+    ["Free Game Triggers", state.testStats.totalFreeGameTriggers],
+    ["Feedback Submitted", state.testStats.totalFeedbackSubmitted],
+    ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
+    ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
+    ["Tester Mission", progress.label],
+  ];
+}
+
+function renderSessionSummary() {
+  const markup = sessionSummaryRows()
+    .map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`)
+    .join("");
+
+  [els.sessionSummary, els.guideSessionSummary].forEach((element) => {
+    if (element) element.innerHTML = markup;
+  });
+}
+
+function updateDailyDemoCreditUi() {
+  const claimedToday = safeLocalStorageGet(dailyDemoCreditStorageKey) === localDateKey();
+  if (els.dailyDemoButton) {
+    els.dailyDemoButton.disabled = state.spinning || state.scratchActive || claimedToday;
+  }
+  if (els.dailyDemoStatus) {
+    els.dailyDemoStatus.textContent = claimedToday
+      ? "Daily demo credits already claimed today."
+      : "Daily demo credits are virtual test points for testing only.";
+  }
+}
+
+function buildTestReport() {
+  const progress = missionProgress();
+  const feedback = els.feedbackText?.value.trim() || "";
+  const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
+  const tags = state.selectedFeedbackTags.length ? state.selectedFeedbackTags.join(", ") : "None";
+  const missionLines = testerMissionDefinitions
+    .map((mission) => {
+      const complete = missionCompletionMap()[mission.id] ? "complete" : "open";
+      return `- ${mission.label}: ${complete}`;
+    })
+    .join("\n");
+
+  return [
+    "Project: NEON HUNTER SPIN",
+    `Version: ${appVersion}`,
+    `Test Session ID: ${state.testSessionId}`,
+    `Mode: ${state.testModeLabel}`,
+    `Device/browser: ${deviceLabel()}`,
+    `Viewport: ${window.innerWidth} x ${window.innerHeight}`,
+    `PWA status: ${pwaStatusLabel()}`,
+    "",
+    "Test Stats:",
+    `- Total Spins: ${state.testStats.totalSpins}`,
+    `- Total Wins: ${state.testStats.totalWins}`,
+    `- Bonus Triggers: ${state.testStats.totalBonusTriggers}`,
+    `- Free Game Triggers: ${state.testStats.totalFreeGameTriggers}`,
+    `- Feedback Submitted: ${state.testStats.totalFeedbackSubmitted}`,
+    `- First Visit: ${formatTestTimestamp(state.testStats.firstVisitAt)}`,
+    `- Last Visit: ${formatTestTimestamp(state.testStats.lastVisitAt)}`,
+    "",
+    `Selected quick feedback tags: ${tags}`,
+    `Device note: ${deviceNote || "None"}`,
+    `Written feedback: ${feedback || "None"}`,
+    "",
+    `Tester Mission Progress: ${progress.label}`,
+    missionLines,
+  ].join("\n");
+}
+
+function showReportFallback(report) {
+  if (!els.reportFallback || !els.reportFallbackText) return;
+  els.reportFallback.hidden = false;
+  els.reportFallbackText.value = report;
+  els.reportFallbackText.focus({ preventScroll: true });
+  els.reportFallbackText.select();
+}
+
+function setReportStatus(text) {
+  if (els.reportStatus) {
+    els.reportStatus.textContent = text;
+  }
+}
+
+async function copyTestReport() {
+  const report = buildTestReport();
+  if (els.reportFallback) {
+    els.reportFallback.hidden = true;
+  }
+  setReportStatus("");
+
+  try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard unavailable");
+    }
+    await navigator.clipboard.writeText(report);
+    setReportStatus("Test report copied. Send it manually to the test coordinator.");
+    setHiddenMessage("Test report copied. Send it manually to the test coordinator.");
+  } catch {
+    showReportFallback(report);
+    setReportStatus("Clipboard unavailable. Copy the report manually from this panel.");
+    setHiddenMessage("Copy the test report manually from the feedback panel.");
+  }
 }
 
 function deviceLabel() {
@@ -393,6 +647,9 @@ function setTestInfoOpen(open) {
   els.testInfoPanel.classList.toggle("open", open);
   els.testInfoPanel.setAttribute("aria-hidden", String(!open));
   els.testInfoToggle.setAttribute("aria-expanded", String(open));
+  if (open) {
+    markTesterMissionComplete("openTestInfo");
+  }
 }
 
 function testInfoOpen() {
@@ -683,9 +940,13 @@ function addCredits(amount, animate = true) {
   setCredits(state.credits + amount, animate);
 }
 
-function demoStartCreditAmountForCurrentDenom() {
+function demoCreditAmountForCurrentDenom(baseCreditAmount) {
   const baseDenomCents = denomSteps[0];
-  return (demoStartCredits * baseDenomCents) / state.selectedDenomCents;
+  return (baseCreditAmount * baseDenomCents) / state.selectedDenomCents;
+}
+
+function demoStartCreditAmountForCurrentDenom() {
+  return demoCreditAmountForCurrentDenom(demoStartCredits);
 }
 
 function activeWays() {
@@ -731,6 +992,7 @@ function updateUi() {
   els.dropAmount.disabled = state.spinning || state.scratchActive;
   els.dropButton.disabled = state.spinning || state.scratchActive;
   els.cashOut.disabled = state.spinning || state.scratchActive || state.credits <= 0;
+  updateDailyDemoCreditUi();
   els.denomToggle.textContent = denomLabel();
   els.denomToggle.disabled = state.spinning || bonusModeActive() || state.scratchActive;
   if (els.denomToggle.disabled) {
@@ -892,6 +1154,7 @@ function requestAutoPlayStopByUser(event) {
 }
 
 function openGuide() {
+  markTesterMissionComplete("openGuide");
   renderTestStats();
   els.guideOverlay.classList.add("open");
   els.guideOverlay.setAttribute("aria-hidden", "false");
@@ -1006,6 +1269,10 @@ function openFeedbackModal() {
   stopAutoSpin();
   renderTestStats();
   renderSelectedFeedbackTags();
+  if (els.reportFallback) {
+    els.reportFallback.hidden = true;
+  }
+  setReportStatus("");
   els.feedbackOverlay.classList.add("open");
   els.feedbackOverlay.setAttribute("aria-hidden", "false");
 }
@@ -1017,8 +1284,10 @@ function closeFeedbackModal() {
 
 function submitFeedback() {
   const feedback = els.feedbackText.value.trim();
+  const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
   const tags = [...state.selectedFeedbackTags];
   incrementTestCounter("totalFeedbackSubmitted");
+  markTesterMissionComplete("submitFeedback");
   console.log("NEON HUNTER SPIN feedback:", {
     sessionId: state.testSessionId,
     mode: state.testModeLabel,
@@ -1026,13 +1295,19 @@ function submitFeedback() {
     viewport: `${window.innerWidth} x ${window.innerHeight}`,
     pwaStatus: pwaStatusLabel(),
     tags,
+    deviceNote,
     feedback,
     stats: { ...state.testStats },
+    testerMission: missionProgress(),
     submittedAt: new Date().toISOString(),
   });
   els.feedbackText.value = "";
+  if (els.feedbackDeviceNote) {
+    els.feedbackDeviceNote.value = "";
+  }
   state.selectedFeedbackTags = [];
   renderSelectedFeedbackTags();
+  renderTestStats();
   closeFeedbackModal();
   setHiddenMessage("Feedback submitted for this limited test.");
 }
@@ -2221,6 +2496,14 @@ async function spin() {
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
   const scatterTotal = scatterSymbolCount(result, activeReelCount);
   const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
+  const observedTesterEvent =
+    win > 0 ||
+    bonusTriggered ||
+    chestTriggered >= 0 ||
+    (!isFreeSpin && !bonusTriggered && (scatterTotal === 2 || bonusEnergyTotal >= 2));
+  if (observedTesterEvent) {
+    markTesterMissionComplete("observeEvent");
+  }
   if (bonusTriggered || chestTriggered >= 0) {
     incrementTestCounter("totalBonusTriggers");
   }
@@ -2361,6 +2644,7 @@ function changeBet(direction) {
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
   state.betIndex = Math.min(betSteps.length - 1, Math.max(0, state.betIndex + direction));
+  addMissionNumberValue("betLevelsTried", state.betIndex);
   applyBetReelRule();
   setMessage(`${activeWays()} ways active. Inactive reels are dimmed.`);
   updateUi();
@@ -2370,6 +2654,7 @@ function selectBetLevel(index) {
   if (state.spinning || bonusModeActive()) return;
   stopAutoSpin();
   state.betIndex = Math.min(betSteps.length - 1, Math.max(0, index));
+  addMissionNumberValue("betLevelsTried", state.betIndex);
   applyBetReelRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
@@ -2415,7 +2700,28 @@ function startDemoCredits() {
   if (state.spinning || state.scratchActive) return;
   stopAutoSpin();
   addCredits(demoStartCreditAmountForCurrentDenom(), false);
+  markTesterMissionComplete("startDemo");
   showDemoCreditsLoadedMessage();
+  updateUi();
+}
+
+function claimDailyDemoCredits() {
+  if (state.spinning || state.scratchActive) return;
+  stopAutoSpin();
+  const today = localDateKey();
+  if (safeLocalStorageGet(dailyDemoCreditStorageKey) === today) {
+    setHiddenMessage("Daily demo credits already claimed today.");
+    if (els.dailyDemoStatus) {
+      els.dailyDemoStatus.textContent = "Daily demo credits already claimed today.";
+    }
+    updateUi();
+    return;
+  }
+
+  safeLocalStorageSet(dailyDemoCreditStorageKey, today);
+  addCredits(demoCreditAmountForCurrentDenom(dailyDemoCredits), false);
+  setHiddenMessage("Daily demo credits loaded. Virtual test points only.");
+  showReelMessageOverlay("Daily demo credits loaded", true);
   updateUi();
 }
 
@@ -2452,6 +2758,7 @@ function selectDenom(value) {
   if (oldDenomCents === value) return;
   preserveCashValueForDenomChange(oldDenomCents, value);
   state.selectedDenomCents = value;
+  addMissionNumberValue("denomOptionsTried", value);
   applyDenomRtpRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
@@ -2510,6 +2817,7 @@ els.maxBet.addEventListener("click", () => {
   if (bonusModeActive()) return;
   stopAutoSpin();
   state.betIndex = betSteps.length - 1;
+  addMissionNumberValue("betLevelsTried", state.betIndex);
   applyBetReelRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
@@ -2519,6 +2827,7 @@ els.maxBet.addEventListener("click", () => {
 els.autoSpin.addEventListener("click", toggleAutoSpin);
 els.startDemoButton.addEventListener("click", startDemoCredits);
 els.zeroCreditStartButton.addEventListener("click", startDemoCredits);
+els.dailyDemoButton.addEventListener("click", claimDailyDemoCredits);
 els.dropButton.addEventListener("click", dropCredits);
 els.dropAmount.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -2577,6 +2886,7 @@ els.introOverlay.addEventListener("click", (event) => {
 els.feedbackButton.addEventListener("click", openFeedbackModal);
 els.feedbackCancel.addEventListener("click", closeFeedbackModal);
 els.feedbackSubmit.addEventListener("click", submitFeedback);
+els.copyTestReport.addEventListener("click", copyTestReport);
 els.feedbackOverlay.addEventListener("click", (event) => {
   if (event.target === els.feedbackOverlay) {
     closeFeedbackModal();
@@ -2647,6 +2957,8 @@ initializeReels();
 setupDebugHooks();
 setHiddenMessage(els.message.textContent);
 initializeTelegramMode();
+addMissionNumberValue("betLevelsTried", state.betIndex);
+addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();
 renderSelectedFeedbackTags();
 updateUi();

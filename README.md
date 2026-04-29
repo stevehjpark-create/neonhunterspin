@@ -207,6 +207,32 @@ Safety:
 - Demo credits remain virtual test points with no cash value.
 - Feedback and stats remain local-only with no backend.
 
+## v5 Tester Guidance and Retention Release
+
+Version: `neon-hunter-spin-v5`
+
+Purpose: Telegram real-device tester guidance and local-only retention validation.
+
+Added:
+
+- Tester Mission Checklist for guided limited testing.
+- Session Summary inside Guide and Feedback surfaces.
+- Daily Demo Credits, claimable once per local calendar day.
+- Copy Test Report for manual Telegram tester reporting.
+- Manual Device Note field for optional device context.
+
+Safety:
+
+- No real-money betting.
+- No payout.
+- No external reward.
+- No cryptocurrency.
+- No token assets.
+- No NFT.
+- No payment.
+- All credits are virtual test points with no cash value.
+- Test stats, missions, daily claim state, and feedback report data remain local-only unless the tester manually copies and sends the report.
+
 ## RTP Simulation
 
 `simulate_rtp.js` is a local math verification helper. It is not required for Netlify deployment.
