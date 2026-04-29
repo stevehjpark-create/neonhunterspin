@@ -1801,6 +1801,44 @@ function scatterNearMiss(grid, activeReelCount = state.selectedReels) {
   return openingScatterPair(grid, activeReelCount) && !grid.slice(2, activeReelCount).some(hasScatter);
 }
 
+function visualOpeningScatterPair(grid) {
+  return hasScatter(grid[0]) && hasScatter(grid[1]);
+}
+
+function lockedReelTease(grid, activeReelCount, bet) {
+  if (activeReelCount >= reelCount) return null;
+  const lockedGrid = grid.slice(activeReelCount);
+  const lockedHasFeatureSymbol = lockedGrid.some((reel) =>
+    reel.some((symbol) => symbol.isScatter || symbol.isWild || symbol.isBonus),
+  );
+  const fullReelBonusPattern = visualOpeningScatterPair(grid) && grid.slice(2).some(hasScatter);
+
+  if (fullReelBonusPattern) {
+    return {
+      title: "Locked Reel Tease",
+      caption: "Bonus energy flashed beyond the active ways",
+    };
+  }
+
+  const activeRawWin = calculateRawWin(grid, bet, activeReelCount);
+  const fullRawWin = calculateRawWin(grid, bet, reelCount);
+  if (fullRawWin > activeRawWin) {
+    return {
+      title: "More Ways Waiting...",
+      caption: "Locked reels showed extra ways potential",
+    };
+  }
+
+  if (lockedHasFeatureSymbol) {
+    return {
+      title: "Locked Reels Lit Up",
+      caption: "Raise the bet level to activate more ways",
+    };
+  }
+
+  return null;
+}
+
 function wildOrBonusCount(grid, activeReelCount = state.selectedReels) {
   return grid.slice(0, activeReelCount).reduce((count, reel) => {
     return count + reel.filter((symbol) => symbol.isWild || symbol.isBonus).length;
@@ -2683,24 +2721,24 @@ async function spin() {
   updateUi();
   playSpinSound();
 
-  const activeReels = els.reels.slice(0, activeReelCount);
-  const shouldAnticipateBonus = openingScatterPair(result, activeReelCount);
-  const spinProfiles = createReelSpinProfiles(activeReelCount, shouldAnticipateBonus);
-  const timers = activeReels.map((reel, index) => {
+  const spinReels = els.reels.slice(0, reelCount);
+  const shouldAnticipateBonus = visualOpeningScatterPair(result);
+  const spinProfiles = createReelSpinProfiles(reelCount, shouldAnticipateBonus);
+  const timers = spinReels.map((reel, index) => {
     reel.classList.add("spinning");
     const reelIndex = Number(reel.dataset.index);
     applyReelSpinProfile(reel, spinProfiles[index], false);
     return startReelTicker(reel, reelIndex, rowCounts[reelIndex], spinProfiles[index].intervalMs);
   });
 
-  for (let index = 0; index < activeReels.length; index += 1) {
+  for (let index = 0; index < spinReels.length; index += 1) {
     const profile = spinProfiles[index];
     await wait(index >= 2 && shouldAnticipateBonus ? profile.teaseStopDelay : profile.stopDelay);
     clearInterval(timers[index]);
-    stopReel(activeReels[index], result[index], index);
+    stopReel(spinReels[index], result[index], index);
     if (index === 1 && shouldAnticipateBonus) {
       els.reelWindow.classList.add("scatter-anticipation");
-      intensifyScatterReels(activeReels, timers, spinProfiles, rowCounts);
+      intensifyScatterReels(spinReels, timers, spinProfiles, rowCounts);
       playAnticipationSound();
       await wait(620);
     }
@@ -2739,11 +2777,16 @@ async function spin() {
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
   const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
   const nearMissTriggered = !isFreeSpin && !bonusTriggered && scatterNearMiss(result, activeReelCount);
+  const lockedTease =
+    !isFreeSpin && !bonusTriggered && chestTriggered < 0
+      ? lockedReelTease(result, activeReelCount, bet)
+      : null;
   const observedTesterEvent =
     win > 0 ||
     bonusTriggered ||
     chestTriggered >= 0 ||
     nearMissTriggered ||
+    Boolean(lockedTease) ||
     (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2);
   if (observedTesterEvent) {
     markTesterMissionComplete("observeEvent");
@@ -2845,6 +2888,10 @@ async function spin() {
     playNearMissEffects(activeReelCount);
     showTeaseOverlay("Almost Free Games...", "One more scatter lights the stage", true);
     playCloseCallSound();
+  } else if (lockedTease) {
+    setHiddenMessage("");
+    showTeaseOverlay(lockedTease.title, lockedTease.caption, true);
+    playCloseCallSound();
   } else if (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2) {
     setHiddenMessage("");
     showTeaseOverlay("Bonus Energy Rising...", "Dokkaebi gems are getting louder", true);
@@ -2891,7 +2938,7 @@ function changeBet(direction) {
   state.betIndex = Math.min(betSteps.length - 1, Math.max(0, state.betIndex + direction));
   addMissionNumberValue("betLevelsTried", state.betIndex);
   applyBetReelRule();
-  setMessage(`${activeWays()} ways active. Inactive reels are dimmed.`);
+  setMessage(`${activeWays()} ways active. Locked reels still spin but do not count.`);
   updateUi();
 }
 
@@ -2904,7 +2951,7 @@ function selectBetLevel(index) {
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
   setMessage(
-    `Bet level ${betSteps[state.betIndex]} selected. ${activeWays()} ways active.`,
+    `Bet level ${betSteps[state.betIndex]} selected. ${activeWays()} ways active. Locked reels do not count.`,
   );
   updateUi();
 }
