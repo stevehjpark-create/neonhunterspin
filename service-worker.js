@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v3-telegram-qa";
+const CACHE_NAME = "neon-hunter-spin-v4-real-device-test";
 const CORE_ASSETS = [
   "./",
   "./index.html",

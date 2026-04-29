@@ -8,7 +8,7 @@ Theme: Korean Fantasy x K-pop Neon Casino. The game uses an original IP-safe fan
 
 ## Compliance Notice
 
-Demo Only - No real-money wagering, payout, prize, gift card, or cryptocurrency reward.
+Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.
 
 All credits are virtual test points with no cash value.
 
@@ -16,7 +16,7 @@ This project does not include:
 
 - Payment integration
 - Payout systems
-- Gift card rewards
+- External reward systems
 - Cryptocurrency rewards
 - NFT rewards
 - Wallet systems
@@ -129,7 +129,7 @@ https://your-netlify-site.netlify.app/?v=2
 5. Trigger or observe bonus events.
 6. Submit feedback with the floating **Feedback** button.
 
-Safety Notice: No real-money betting, payout, prize, gift card, or cryptocurrency reward.
+Safety Notice: No real-money betting, payout, external rewards, cryptocurrency, or token assets.
 
 ## Pre-Release Checklist
 
@@ -158,7 +158,7 @@ Safety rules:
 
 - Demo credits are virtual test points only.
 - Demo credits have no cash value.
-- No real-money betting, payout, prize, gift card, cryptocurrency, NFT, payment, or user-to-user transfer.
+- No real-money betting, payout, external rewards, cryptocurrency, token assets, payment, or user-to-user transfer.
 - Feedback and test stats are local-only.
 
 How to test:
@@ -186,6 +186,27 @@ Known limitations:
 - Feedback is logged to the browser console only.
 - Local Test Stats are stored only in `localStorage` on the tester's device.
 - Bonus and jackpot events are virtual demo moments only.
+
+## v4 Telegram Real-Device Test Release
+
+Version: `neon-hunter-spin-v4`
+
+Purpose: Telegram real-device test build focused on onboarding clarity, tester feedback quality, and mobile stability.
+
+Changes:
+
+- Added a collapsible Test Info panel with mode, session ID, viewport, device label, and PWA status.
+- Added quick feedback tags for real-device tester reports.
+- Improved first 30 seconds onboarding so testers know to tap START DEMO first, then SPIN.
+- Added small-screen viewport safeguards for Telegram, iPhone Safari, and Android Chrome.
+- Added short cabinet pulse polish for Free Game, Dokkaebi, Scratch, and Big Win moments.
+- Improved local Test Stats with Spins per Feedback.
+
+Safety:
+
+- No real-money betting, payout, external rewards, cryptocurrency, payment, wallet, token asset, or user-transfer features.
+- Demo credits remain virtual test points with no cash value.
+- Feedback and stats remain local-only with no backend.
 
 ## RTP Simulation
 

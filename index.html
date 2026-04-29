@@ -6,7 +6,7 @@
     <title>NEON HUNTER SPIN</title>
     <meta
       name="description"
-      content="NEON HUNTER SPIN is a Korean Fantasy x K-pop Neon Casino social slot demo with virtual test credits only. No real-money wagering, payout, prizes, gift cards, cryptocurrency, or NFT rewards."
+      content="NEON HUNTER SPIN is a Korean Fantasy x K-pop Neon Casino social slot demo with virtual test credits only. No real-money wagering, payout, external rewards, cryptocurrency, or token assets."
     />
     <meta name="theme-color" content="#4b217d" />
     <meta property="og:type" content="website" />
@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v3-telegram-qa" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v4-real-device-test" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -255,8 +255,23 @@
         </div>
       </section>
 
-      <footer class="app-footer">Demo Only - No real-money wagering, payout, prize, gift card, or cryptocurrency reward.</footer>
+      <footer class="app-footer">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</footer>
     </main>
+
+    <button id="testInfoToggle" class="test-info-toggle" type="button" aria-expanded="false" aria-controls="testInfoPanel">Test Info</button>
+    <aside id="testInfoPanel" class="test-info-panel" aria-hidden="true">
+      <header>
+        <strong>Test Info</strong>
+        <button id="testInfoClose" type="button" aria-label="Close test info">×</button>
+      </header>
+      <dl>
+        <div><dt>Mode</dt><dd id="testInfoMode">Guest Demo Mode</dd></div>
+        <div><dt>Session</dt><dd id="testInfoSession">Loading</dd></div>
+        <div><dt>Viewport</dt><dd id="testInfoViewport">Loading</dd></div>
+        <div><dt>Device</dt><dd id="testInfoDevice">Unknown</dd></div>
+        <div><dt>PWA</dt><dd id="testInfoPwa">Browser Mode</dd></div>
+      </dl>
+    </aside>
 
     <button id="feedbackButton" class="feedback-launcher" type="button">Feedback</button>
 
@@ -268,14 +283,15 @@
         <p class="intro-kicker">Korean Fantasy Social Slot Demo</p>
         <h2 id="introTitle">NEON HUNTER SPIN</h2>
         <ul class="intro-checklist" aria-label="Demo rules">
+          <li>✓ Tap START DEMO First</li>
           <li>✓ Free Demo Credits</li>
           <li>✓ No Real Money</li>
           <li>✓ No Payout</li>
           <li>✓ Mobile Optimized</li>
         </ul>
         <p class="intro-note">
-          All credits are virtual test points<br />
-          with no cash value.
+          Load virtual test points first,<br />
+          then tap SPIN to start the demo.
         </p>
         <button id="introStartButton" class="intro-start-button" type="button">START DEMO</button>
       </section>
@@ -294,6 +310,20 @@
         </header>
         <p id="feedbackSession" class="test-session">Test Session: Loading</p>
         <div id="feedbackStats" class="test-stats compact" aria-label="Local test stats"></div>
+        <div class="feedback-tag-group" aria-label="Quick feedback tags">
+          <p>Quick feedback tags</p>
+          <div id="feedbackTagButtons" class="feedback-tags">
+            <button type="button" data-feedback-tag="Easy to Start">Easy to Start</button>
+            <button type="button" data-feedback-tag="Confusing">Confusing</button>
+            <button type="button" data-feedback-tag="Fun Bonus">Fun Bonus</button>
+            <button type="button" data-feedback-tag="Too Slow">Too Slow</button>
+            <button type="button" data-feedback-tag="Button Hard to Tap">Button Hard to Tap</button>
+            <button type="button" data-feedback-tag="Layout Broken">Layout Broken</button>
+            <button type="button" data-feedback-tag="Sound Issue">Sound Issue</button>
+            <button type="button" data-feedback-tag="Telegram Issue">Telegram Issue</button>
+          </div>
+          <div id="selectedFeedbackTags" class="selected-feedback-tags" aria-live="polite">No tags selected</div>
+        </div>
         <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
         <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
         <div class="feedback-actions">
@@ -411,7 +441,7 @@
 
         <p class="guide-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
         <p class="guide-note">All credits are virtual test points with no cash value.</p>
-        <p class="guide-note">Demo Only - No real-money wagering, payout, prize, gift card, or cryptocurrency reward.</p>
+        <p class="guide-note">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</p>
       </section>
     </div>
 
@@ -429,6 +459,6 @@
       </section>
     </div>
 
-    <script src="script.js?v=neon-hunter-spin-v3-telegram-qa"></script>
+    <script src="script.js?v=neon-hunter-spin-v4-real-device-test"></script>
   </body>
 </html>

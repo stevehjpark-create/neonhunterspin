@@ -4,6 +4,19 @@ Project: NEON HUNTER SPIN
 Version: neon-hunter-spin-v3  
 Purpose: limited Telegram testing for a free social slot demo.
 
+## v4 Real-Device Test Focus
+
+1. Open inside Telegram.
+2. Confirm Telegram Test Mode appears.
+3. Tap START DEMO.
+4. Spin 20 times.
+5. Trigger or observe at least one bonus or near-miss event.
+6. Open Feedback.
+7. Select at least one quick feedback tag.
+8. Submit feedback.
+9. Check if any layout issue occurred.
+10. Record phone model and browser context manually.
+
 ## 1. Pre-Test Checklist
 
 - Open the latest Netlify URL.
@@ -60,7 +73,7 @@ Purpose: limited Telegram testing for a free social slot demo.
 - Credits are described as Demo Credits or Virtual Test Points.
 - The phrase No Cash Value is visible in onboarding or guide copy.
 - No copy promises real-money value.
-- No copy promises payout, withdraw, gift card, cryptocurrency, NFT, or leaderboard reward.
+- No copy promises payout, redemption, external rewards, cryptocurrency, token assets, or ranked rewards.
 - Jackpot and win terms are used only as virtual demo game events.
 
 ## 7. Feedback Questions

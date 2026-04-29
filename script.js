@@ -59,6 +59,16 @@ const introSeenStorageKey = "neonHunterSpinIntroSeen";
 const testSessionStorageKey = "neonHunterSpinTestSessionId";
 const testStatsStorageKey = "neonHunterSpinTestStats";
 const serviceWorkerPath = "service-worker.js";
+const feedbackTagOptions = [
+  "Easy to Start",
+  "Confusing",
+  "Fun Bonus",
+  "Too Slow",
+  "Button Hard to Tap",
+  "Layout Broken",
+  "Sound Issue",
+  "Telegram Issue",
+];
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
   MINOR: { start: 500, max: 1000, contribution: 0.002 },
@@ -104,6 +114,7 @@ const state = {
   testModeLabel: "Guest Demo Mode",
   testSessionId: "",
   testStats: createDefaultTestStats(),
+  selectedFeedbackTags: [],
 };
 
 state.jackpots = jackpotBankForDenom(state.selectedDenomCents);
@@ -135,6 +146,14 @@ const els = {
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
   testModeBadge: document.querySelector("#testModeBadge"),
+  testInfoToggle: document.querySelector("#testInfoToggle"),
+  testInfoPanel: document.querySelector("#testInfoPanel"),
+  testInfoClose: document.querySelector("#testInfoClose"),
+  testInfoMode: document.querySelector("#testInfoMode"),
+  testInfoSession: document.querySelector("#testInfoSession"),
+  testInfoViewport: document.querySelector("#testInfoViewport"),
+  testInfoDevice: document.querySelector("#testInfoDevice"),
+  testInfoPwa: document.querySelector("#testInfoPwa"),
   guideButton: document.querySelector("#guideButton"),
   guideOverlay: document.querySelector("#guideOverlay"),
   guideClose: document.querySelector("#guideClose"),
@@ -181,6 +200,8 @@ const els = {
   feedbackCancel: document.querySelector("#feedbackCancel"),
   feedbackSession: document.querySelector("#feedbackSession"),
   feedbackStats: document.querySelector("#feedbackStats"),
+  feedbackTagButtons: [...document.querySelectorAll("#feedbackTagButtons button")],
+  selectedFeedbackTags: document.querySelector("#selectedFeedbackTags"),
   guideStats: document.querySelector("#guideStats"),
 };
 
@@ -189,6 +210,7 @@ let autoSpinTimer;
 let creditAnimationFrame;
 let demoMessageTimer;
 let teaseTimer;
+let cabinetPulseTimer;
 
 function createDefaultTestStats() {
   const now = new Date().toISOString();
@@ -302,12 +324,17 @@ function renderTestStats() {
     els.feedbackSession.textContent = `Test Session: ${state.testSessionId}`;
   }
 
+  const spinsPerFeedback =
+    state.testStats.totalFeedbackSubmitted > 0
+      ? (state.testStats.totalSpins / state.testStats.totalFeedbackSubmitted).toFixed(1)
+      : "N/A";
   const rows = [
-    ["Spins", state.testStats.totalSpins],
-    ["Wins", state.testStats.totalWins],
-    ["Bonus", state.testStats.totalBonusTriggers],
-    ["Free Games", state.testStats.totalFreeGameTriggers],
-    ["Feedback", state.testStats.totalFeedbackSubmitted],
+    ["Total Spins", state.testStats.totalSpins],
+    ["Total Wins", state.testStats.totalWins],
+    ["Bonus Triggers", state.testStats.totalBonusTriggers],
+    ["Free Game Triggers", state.testStats.totalFreeGameTriggers],
+    ["Feedback Submitted", state.testStats.totalFeedbackSubmitted],
+    ["Spins / Feedback", spinsPerFeedback],
     ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
     ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
   ];
@@ -320,6 +347,75 @@ function renderTestStats() {
       element.innerHTML = markup;
     }
   });
+}
+
+function deviceLabel() {
+  const ua = navigator.userAgent || "";
+  const isTelegram = Boolean(window.Telegram?.WebApp) || /Telegram/i.test(ua);
+  const isIphone = /iPhone|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+  const isChrome = /Chrome|CriOS/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !isChrome;
+
+  if (isTelegram) return "Telegram In-App Browser";
+  if (isIphone && isSafari) return "iPhone Safari";
+  if (isAndroid && isChrome) return "Android Chrome";
+  if (!/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) return "Desktop Browser";
+  return "Unknown";
+}
+
+function pwaStatusLabel() {
+  const standalone =
+    window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone;
+  return standalone ? "Standalone Mode" : "Browser Mode";
+}
+
+function updateTestInfoPanel() {
+  const viewport = `${window.innerWidth} x ${window.innerHeight}`;
+  const values = [
+    [els.testInfoMode, state.testModeLabel],
+    [els.testInfoSession, state.testSessionId],
+    [els.testInfoViewport, viewport],
+    [els.testInfoDevice, deviceLabel()],
+    [els.testInfoPwa, pwaStatusLabel()],
+  ];
+
+  values.forEach(([element, value]) => {
+    if (element) {
+      element.textContent = value;
+    }
+  });
+}
+
+function setTestInfoOpen(open) {
+  if (!els.testInfoPanel || !els.testInfoToggle) return;
+  updateTestInfoPanel();
+  els.testInfoPanel.classList.toggle("open", open);
+  els.testInfoPanel.setAttribute("aria-hidden", String(!open));
+  els.testInfoToggle.setAttribute("aria-expanded", String(open));
+}
+
+function testInfoOpen() {
+  return els.testInfoPanel?.classList.contains("open");
+}
+
+function renderSelectedFeedbackTags() {
+  els.feedbackTagButtons.forEach((button) => {
+    button.classList.toggle("selected", state.selectedFeedbackTags.includes(button.dataset.feedbackTag));
+  });
+
+  if (!els.selectedFeedbackTags) return;
+  els.selectedFeedbackTags.textContent = state.selectedFeedbackTags.length
+    ? `Selected: ${state.selectedFeedbackTags.join(", ")}`
+    : "No tags selected";
+}
+
+function toggleFeedbackTag(tag) {
+  if (!feedbackTagOptions.includes(tag)) return;
+  state.selectedFeedbackTags = state.selectedFeedbackTags.includes(tag)
+    ? state.selectedFeedbackTags.filter((selectedTag) => selectedTag !== tag)
+    : [...state.selectedFeedbackTags, tag];
+  renderSelectedFeedbackTags();
 }
 
 function initializeTelegramMode() {
@@ -339,6 +435,7 @@ function initializeTelegramMode() {
     els.testModeBadge.textContent = state.testModeLabel;
     els.testModeBadge.classList.toggle("telegram", Boolean(telegramApp));
   }
+  updateTestInfoPanel();
 }
 
 function createInitialChests() {
@@ -853,6 +950,9 @@ function finishIntroStart() {
   closeIntroModal();
   if (state.credits <= 0) {
     startDemoCredits();
+  } else {
+    setHiddenMessage("Tap SPIN to start the demo.", true);
+    showReelMessageOverlay("Tap SPIN to start the demo.", true);
   }
 }
 
@@ -862,12 +962,12 @@ function showDemoCreditsLoadedMessage() {
     demoMessageTimer = null;
   }
 
-  setHiddenMessage("Demo credits loaded", true);
+  setHiddenMessage("Demo credits loaded. Tap SPIN to start the demo.", true);
   state.overlaySequenceId += 1;
   const sequenceId = state.overlaySequenceId;
   state.currentOverlay = {
     type: "message",
-    text: "Demo credits loaded",
+    text: "Demo credits loaded. Tap SPIN to start the demo.",
     isWin: true,
   };
   els.freeWinOverlay.classList.add("demo-loaded-pop");
@@ -905,6 +1005,7 @@ function feedbackOpen() {
 function openFeedbackModal() {
   stopAutoSpin();
   renderTestStats();
+  renderSelectedFeedbackTags();
   els.feedbackOverlay.classList.add("open");
   els.feedbackOverlay.setAttribute("aria-hidden", "false");
 }
@@ -916,15 +1017,22 @@ function closeFeedbackModal() {
 
 function submitFeedback() {
   const feedback = els.feedbackText.value.trim();
+  const tags = [...state.selectedFeedbackTags];
   incrementTestCounter("totalFeedbackSubmitted");
   console.log("NEON HUNTER SPIN feedback:", {
     sessionId: state.testSessionId,
     mode: state.testModeLabel,
+    device: deviceLabel(),
+    viewport: `${window.innerWidth} x ${window.innerHeight}`,
+    pwaStatus: pwaStatusLabel(),
+    tags,
     feedback,
     stats: { ...state.testStats },
     submittedAt: new Date().toISOString(),
   });
   els.feedbackText.value = "";
+  state.selectedFeedbackTags = [];
+  renderSelectedFeedbackTags();
   closeFeedbackModal();
   setHiddenMessage("Feedback submitted for this limited test.");
 }
@@ -1391,8 +1499,10 @@ async function handleChestBonus(index) {
   if (index === 0) {
     state.freeSpinWinTotal = 0;
     state.bonusSpins += chestFreeSpinAward;
+    pulseCabinet("free-game");
     setMessage(`FREE GAMES UNLOCKED! ${chestFreeSpinAward} Free Games awarded!`, true);
   } else if (index === 1) {
+    pulseCabinet("scratch");
     setMessage("SCRATCH JACKPOT BONUS triggered.", true);
     updateUi();
     await wait(600);
@@ -1400,6 +1510,7 @@ async function handleChestBonus(index) {
   } else {
     state.freeSpinWinTotal = 0;
     state.expandedBonusSpins += expandedBonusAward;
+    pulseCabinet("dokkaebi");
     setMessage(`DOKKAEBI BONUS! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
   }
 
@@ -1910,6 +2021,9 @@ function wait(ms) {
 
 function showReelWinOverlay(title, amount, caption) {
   showReelAmountOverlay(title, amount, caption, true);
+  if (/NEON BIG WIN|MEGA WIN|EPIC WIN/i.test(title)) {
+    pulseCabinet("big-win");
+  }
 }
 
 function showTeaseOverlay(title, caption, pulse = false) {
@@ -1938,6 +2052,32 @@ function hideTeaseOverlay() {
   els.teaseOverlay.classList.remove("show", "pulse");
   els.teaseOverlay.setAttribute("aria-hidden", "true");
   els.reelWindow.classList.remove("scatter-anticipation");
+}
+
+function pulseCabinet(type = "big-win") {
+  if (cabinetPulseTimer) {
+    clearTimeout(cabinetPulseTimer);
+  }
+
+  els.machine.classList.remove(
+    "event-pulse",
+    "pulse-free-game",
+    "pulse-dokkaebi",
+    "pulse-scratch",
+    "pulse-big-win",
+  );
+  els.machine.classList.add("event-pulse", `pulse-${type}`);
+
+  cabinetPulseTimer = setTimeout(() => {
+    els.machine.classList.remove(
+      "event-pulse",
+      "pulse-free-game",
+      "pulse-dokkaebi",
+      "pulse-scratch",
+      "pulse-big-win",
+    );
+    cabinetPulseTimer = null;
+  }, 1700);
 }
 
 function hideReelWinOverlay() {
@@ -2112,11 +2252,13 @@ async function spin() {
     showReelAmountOverlay("FREE GAMES UNLOCKED", win, `+${bonusSpinAward} Free Games`, true, state.freeSpinWinTotal);
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
+    pulseCabinet("free-game");
     playBonusStartSound();
   } else if (isFreeSpin && bonusTriggered) {
     setMessage(`Retrigger! +${bonusSpinAward} Free Games awarded!`, true);
     showReelMessageOverlay("FREE GAMES UNLOCKED", true);
     els.machine.classList.add("celebrate");
+    pulseCabinet("free-game");
     playBonusStartSound();
   } else if (bonusTriggered && win > 0) {
     const title = "DOKKAEBI BONUS";
@@ -2132,10 +2274,12 @@ async function spin() {
     showReelWinOverlay(title, win, "Ways Award");
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
+    pulseCabinet("dokkaebi");
   } else if (bonusTriggered) {
     setMessage("DOKKAEBI BONUS!", true);
     showReelMessageOverlay("DOKKAEBI BONUS", true);
     els.machine.classList.add("celebrate");
+    pulseCabinet("dokkaebi");
   } else if (isFreeSpin && win > 0) {
     const title = winPresentationTitle(win, bet, true);
     const restoreOverlay = {
@@ -2438,6 +2582,11 @@ els.feedbackOverlay.addEventListener("click", (event) => {
     closeFeedbackModal();
   }
 });
+els.feedbackTagButtons.forEach((button) => {
+  button.addEventListener("click", () => toggleFeedbackTag(button.dataset.feedbackTag));
+});
+els.testInfoToggle.addEventListener("click", () => setTestInfoOpen(!testInfoOpen()));
+els.testInfoClose.addEventListener("click", () => setTestInfoOpen(false));
 els.soundButton.addEventListener("click", async () => {
   state.sound = !state.sound;
   if (state.sound) {
@@ -2471,6 +2620,7 @@ document.addEventListener("keydown", (event) => {
       closeIntroModal();
     }
     closeFeedbackModal();
+    setTestInfoOpen(false);
     setDenomPickerOpen(false);
   }
   const target = event.target;
@@ -2498,8 +2648,12 @@ setupDebugHooks();
 setHiddenMessage(els.message.textContent);
 initializeTelegramMode();
 renderTestStats();
+renderSelectedFeedbackTags();
 updateUi();
 maybeShowIntroModal();
+["resize", "orientationchange"].forEach((eventName) => {
+  window.addEventListener(eventName, updateTestInfoPanel, { passive: true });
+});
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register(serviceWorkerPath).catch(() => {});
