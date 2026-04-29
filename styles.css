@@ -589,7 +589,7 @@ h1 {
 }
 
 .vault-bonus-intro.playing .vault-eruption {
-  animation: vaultEruption 2.35s ease-out forwards;
+  animation: vaultEruption 1.8s ease-out forwards;
 }
 
 .vault-intro-chest {
@@ -626,7 +626,7 @@ h1 {
 }
 
 .vault-bonus-intro.playing .vault-intro-chest {
-  animation: vaultChestDrop 2.45s cubic-bezier(0.18, 0.92, 0.18, 1) forwards;
+  animation: vaultChestDrop 1.9s cubic-bezier(0.18, 0.92, 0.18, 1) forwards;
 }
 
 .vault-intro-horns {
@@ -758,7 +758,7 @@ h1 {
 }
 
 .vault-bonus-intro.playing .vault-intro-lid {
-  animation: vaultLidBurst 2.45s ease-out forwards;
+  animation: vaultLidBurst 1.9s ease-out forwards;
 }
 
 .vault-intro-gems {
@@ -802,7 +802,7 @@ h1 {
 }
 
 .vault-bonus-intro.playing .vault-flying-gem {
-  animation: vaultGemBurst 0.95s cubic-bezier(0.08, 0.72, 0.2, 1) forwards;
+  animation: vaultGemBurst 0.72s cubic-bezier(0.08, 0.72, 0.2, 1) forwards;
   animation-delay: var(--delay);
 }
 
@@ -824,7 +824,7 @@ h1 {
 }
 
 .vault-bonus-intro.playing > strong {
-  animation: vaultTitlePop 2.45s ease-out forwards;
+  animation: vaultTitlePop 1.9s ease-out forwards;
 }
 
 @keyframes vaultChestDrop {

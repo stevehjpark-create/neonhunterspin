@@ -1059,6 +1059,12 @@ function scatterCount(grid, activeReelCount = state.selectedReels) {
   }, 0);
 }
 
+function scatterSymbolCount(grid, activeReelCount = state.selectedReels) {
+  return grid.slice(0, activeReelCount).reduce((count, reel) => {
+    return count + reel.filter((symbol) => symbol.isScatter).length;
+  }, 0);
+}
+
 function openingScatterPair(grid, activeReelCount = state.selectedReels) {
   return activeReelCount >= reelCount && hasScatter(grid[0]) && hasScatter(grid[1]);
 }
@@ -1158,7 +1164,7 @@ function renderVaultIntroGems(index) {
     const piece = document.createElement("i");
     const burstX = Math.round((Math.random() - 0.5) * 320);
     const burstY = Math.round(-80 - Math.random() * 180);
-    const delay = 1.38 + Math.random() * 0.28;
+    const delay = 0.9 + Math.random() * 0.18;
     const rotation = Math.round((Math.random() - 0.5) * 980);
 
     piece.className = `vault-flying-gem ${gem.shape}`;
@@ -1194,7 +1200,7 @@ async function playVaultBonusIntro(index) {
   els.vaultBonusIntro.setAttribute("aria-hidden", "false");
   playVaultIntroSound();
 
-  await wait(2600);
+  await wait(1950);
   els.vaultBonusIntro.classList.remove("show", "playing");
   els.vaultBonusIntro.setAttribute("aria-hidden", "true");
   await wait(160);
@@ -1372,7 +1378,7 @@ function finishScratchBonus(prize) {
     if (state.overlaySequenceId === jackpotOverlaySequence) {
       hideReelWinOverlay();
     }
-  }, 2600);
+  }, 1900);
   playWinSound();
 
   setTimeout(() => {
@@ -1899,7 +1905,7 @@ async function spin() {
     advanceChests();
   }
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
-  const scatterTotal = scatterCount(result, activeReelCount);
+  const scatterTotal = scatterSymbolCount(result, activeReelCount);
   const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
   if (bonusTriggered || chestTriggered >= 0) {
     triggerHaptic("bonus");
@@ -1913,7 +1919,7 @@ async function spin() {
   if (isFreeSpin && bonusTriggered && win > 0) {
     const restoreOverlay = {
       type: "amount",
-      title: "Retrigger",
+      title: "FREE GAMES UNLOCKED",
       amount: win,
       caption: `+${bonusSpinAward} Free Games`,
       isWin: true,
@@ -1923,7 +1929,7 @@ async function spin() {
       `Retrigger! +${bonusSpinAward} Free Games and ${formatDisplayAmount(win)} added to bonus bank!`,
       true,
     );
-    showReelAmountOverlay("Retrigger", win, `+${bonusSpinAward} Free Games`, true, state.freeSpinWinTotal);
+    showReelAmountOverlay("FREE GAMES UNLOCKED", win, `+${bonusSpinAward} Free Games`, true, state.freeSpinWinTotal);
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playBonusStartSound();
