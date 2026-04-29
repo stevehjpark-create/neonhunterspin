@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v3";
+const CACHE_NAME = "neon-hunter-spin-v3-telegram-qa";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -44,6 +44,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
+  const networkFirstDestinations = new Set(["script", "style", "manifest"]);
 
   if (request.mode === "navigate") {
     event.respondWith(
@@ -54,6 +55,19 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  if (networkFirstDestinations.has(request.destination)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }

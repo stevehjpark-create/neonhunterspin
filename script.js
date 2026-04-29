@@ -56,6 +56,8 @@ const maxDisplayAmount = 99_999_999.99;
 const maxDropAmount = 999_999.99;
 const cappedDisplayAmount = "XX,XXX,XXX.XX";
 const introSeenStorageKey = "neonHunterSpinIntroSeen";
+const testSessionStorageKey = "neonHunterSpinTestSessionId";
+const testStatsStorageKey = "neonHunterSpinTestStats";
 const serviceWorkerPath = "service-worker.js";
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
@@ -99,9 +101,14 @@ const state = {
   currentOverlay: null,
   overlaySequenceId: 0,
   autoPlayStopRequested: false,
+  testModeLabel: "Guest Demo Mode",
+  testSessionId: "",
+  testStats: createDefaultTestStats(),
 };
 
 state.jackpots = jackpotBankForDenom(state.selectedDenomCents);
+state.testSessionId = getOrCreateTestSessionId();
+state.testStats = loadTestStats();
 
 const els = {
   creditsMeter: document.querySelector("#creditsMeter"),
@@ -127,6 +134,7 @@ const els = {
   dropButton: document.querySelector("#dropButton"),
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
+  testModeBadge: document.querySelector("#testModeBadge"),
   guideButton: document.querySelector("#guideButton"),
   guideOverlay: document.querySelector("#guideOverlay"),
   guideClose: document.querySelector("#guideClose"),
@@ -171,6 +179,9 @@ const els = {
   feedbackText: document.querySelector("#feedbackText"),
   feedbackSubmit: document.querySelector("#feedbackSubmit"),
   feedbackCancel: document.querySelector("#feedbackCancel"),
+  feedbackSession: document.querySelector("#feedbackSession"),
+  feedbackStats: document.querySelector("#feedbackStats"),
+  guideStats: document.querySelector("#guideStats"),
 };
 
 let audioContext;
@@ -178,6 +189,157 @@ let autoSpinTimer;
 let creditAnimationFrame;
 let demoMessageTimer;
 let teaseTimer;
+
+function createDefaultTestStats() {
+  const now = new Date().toISOString();
+  return {
+    totalSpins: 0,
+    totalWins: 0,
+    totalBonusTriggers: 0,
+    totalFreeGameTriggers: 0,
+    totalFeedbackSubmitted: 0,
+    firstVisitAt: now,
+    lastVisitAt: now,
+  };
+}
+
+function safeLocalStorageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Telegram and private browsers may restrict storage; the game should still run.
+  }
+}
+
+function generateTestSessionId() {
+  const date = new Date();
+  const datePart = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("");
+  const randomPart = Math.random().toString(36).slice(2, 7).toUpperCase().padEnd(5, "X");
+  return `NHS-${datePart}-${randomPart}`;
+}
+
+function getOrCreateTestSessionId() {
+  const existing = safeLocalStorageGet(testSessionStorageKey);
+  if (existing && /^NHS-\d{8}-[A-Z0-9]{5}$/.test(existing)) {
+    return existing;
+  }
+
+  const nextSessionId = generateTestSessionId();
+  safeLocalStorageSet(testSessionStorageKey, nextSessionId);
+  return nextSessionId;
+}
+
+function loadTestStats() {
+  const defaults = createDefaultTestStats();
+  const stored = safeLocalStorageGet(testStatsStorageKey);
+  let parsed = {};
+
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch {
+      parsed = {};
+    }
+  }
+
+  const stats = {
+    ...defaults,
+    ...parsed,
+    lastVisitAt: new Date().toISOString(),
+  };
+
+  ["totalSpins", "totalWins", "totalBonusTriggers", "totalFreeGameTriggers", "totalFeedbackSubmitted"].forEach(
+    (key) => {
+      stats[key] = Math.max(0, Number(stats[key]) || 0);
+    },
+  );
+
+  if (!parsed.firstVisitAt) {
+    stats.firstVisitAt = defaults.firstVisitAt;
+  }
+
+  saveTestStats(stats);
+  return stats;
+}
+
+function saveTestStats(stats = state.testStats) {
+  safeLocalStorageSet(testStatsStorageKey, JSON.stringify(stats));
+}
+
+function incrementTestCounter(key, amount = 1) {
+  state.testStats[key] = Math.max(0, Number(state.testStats[key]) || 0) + amount;
+  state.testStats.lastVisitAt = new Date().toISOString();
+  saveTestStats();
+  renderTestStats();
+}
+
+function formatTestTimestamp(value) {
+  if (!value) return "Not set";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not set";
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function renderTestStats() {
+  if (els.feedbackSession) {
+    els.feedbackSession.textContent = `Test Session: ${state.testSessionId}`;
+  }
+
+  const rows = [
+    ["Spins", state.testStats.totalSpins],
+    ["Wins", state.testStats.totalWins],
+    ["Bonus", state.testStats.totalBonusTriggers],
+    ["Free Games", state.testStats.totalFreeGameTriggers],
+    ["Feedback", state.testStats.totalFeedbackSubmitted],
+    ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
+    ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
+  ];
+  const markup = rows
+    .map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`)
+    .join("");
+
+  [els.feedbackStats, els.guideStats].forEach((element) => {
+    if (element) {
+      element.innerHTML = markup;
+    }
+  });
+}
+
+function initializeTelegramMode() {
+  const telegramApp = window.Telegram?.WebApp;
+  state.testModeLabel = telegramApp ? "Telegram Test Mode" : "Guest Demo Mode";
+
+  if (telegramApp) {
+    try {
+      telegramApp.ready?.();
+      telegramApp.expand?.();
+    } catch {
+      // Telegram WebApp methods are optional in some test shells.
+    }
+  }
+
+  if (els.testModeBadge) {
+    els.testModeBadge.textContent = state.testModeLabel;
+    els.testModeBadge.classList.toggle("telegram", Boolean(telegramApp));
+  }
+}
 
 function createInitialChests() {
   return [0, 1, 2].map((index) => createChest(index));
@@ -633,6 +795,7 @@ function requestAutoPlayStopByUser(event) {
 }
 
 function openGuide() {
+  renderTestStats();
   els.guideOverlay.classList.add("open");
   els.guideOverlay.setAttribute("aria-hidden", "false");
 }
@@ -741,9 +904,9 @@ function feedbackOpen() {
 
 function openFeedbackModal() {
   stopAutoSpin();
+  renderTestStats();
   els.feedbackOverlay.classList.add("open");
   els.feedbackOverlay.setAttribute("aria-hidden", "false");
-  setTimeout(() => els.feedbackText.focus({ preventScroll: true }), 50);
 }
 
 function closeFeedbackModal() {
@@ -753,7 +916,14 @@ function closeFeedbackModal() {
 
 function submitFeedback() {
   const feedback = els.feedbackText.value.trim();
-  console.log("NEON HUNTER SPIN feedback:", feedback);
+  incrementTestCounter("totalFeedbackSubmitted");
+  console.log("NEON HUNTER SPIN feedback:", {
+    sessionId: state.testSessionId,
+    mode: state.testModeLabel,
+    feedback,
+    stats: { ...state.testStats },
+    submittedAt: new Date().toISOString(),
+  });
   els.feedbackText.value = "";
   closeFeedbackModal();
   setHiddenMessage("Feedback submitted for this limited test.");
@@ -1817,6 +1987,7 @@ async function spin() {
     return;
   }
 
+  incrementTestCounter("totalSpins");
   hideReelWinOverlay();
   hideTeaseOverlay();
   const bet = currentBet();
@@ -1887,6 +2058,9 @@ async function spin() {
   const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts);
   const waysWinFormulas = buildWaysWinFormulas(result, bet, activeReelCount, rawWin, win);
   state.lastWin = win;
+  if (win > 0) {
+    incrementTestCounter("totalWins");
+  }
   if (isFreeSpin) {
     state.freeSpinWinTotal += win;
   } else {
@@ -1907,6 +2081,12 @@ async function spin() {
   const chestTriggered = bonusTriggered && !isFreeSpin ? chooseChestBonus() : -1;
   const scatterTotal = scatterSymbolCount(result, activeReelCount);
   const bonusEnergyTotal = wildOrBonusCount(result, activeReelCount);
+  if (bonusTriggered || chestTriggered >= 0) {
+    incrementTestCounter("totalBonusTriggers");
+  }
+  if ((isFreeSpin && bonusTriggered) || chestTriggered === 0) {
+    incrementTestCounter("totalFreeGameTriggers");
+  }
   if (bonusTriggered || chestTriggered >= 0) {
     triggerHaptic("bonus");
   } else if (win > 0) {
@@ -2316,6 +2496,8 @@ document.addEventListener("keydown", (event) => {
 initializeReels();
 setupDebugHooks();
 setHiddenMessage(els.message.textContent);
+initializeTelegramMode();
+renderTestStats();
 updateUi();
 maybeShowIntroModal();
 if ("serviceWorker" in navigator) {

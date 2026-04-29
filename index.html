@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v3-telegram-qa" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -40,6 +40,7 @@
             <h1 id="game-title">NEON HUNTER SPIN</h1>
           </div>
           <div class="top-actions">
+            <span id="testModeBadge" class="test-mode-badge" aria-live="polite">Guest Demo Mode</span>
             <button id="guideButton" class="icon-button" type="button" aria-label="Open paytable and game rules">
               <span aria-hidden="true">?</span>
             </button>
@@ -291,6 +292,8 @@
             <span aria-hidden="true">×</span>
           </button>
         </header>
+        <p id="feedbackSession" class="test-session">Test Session: Loading</p>
+        <div id="feedbackStats" class="test-stats compact" aria-label="Local test stats"></div>
         <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
         <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
         <div class="feedback-actions">
@@ -401,6 +404,11 @@
           <p class="guide-note">Please use the Feedback button after testing.</p>
         </div>
 
+        <div class="guide-section">
+          <h3>Test Stats</h3>
+          <div id="guideStats" class="test-stats" aria-label="Local test stats"></div>
+        </div>
+
         <p class="guide-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
         <p class="guide-note">All credits are virtual test points with no cash value.</p>
         <p class="guide-note">Demo Only - No real-money wagering, payout, prize, gift card, or cryptocurrency reward.</p>
@@ -421,6 +429,6 @@
       </section>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=neon-hunter-spin-v3-telegram-qa"></script>
   </body>
 </html>

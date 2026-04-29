@@ -148,6 +148,45 @@ Before sharing a Netlify URL in Telegram, check:
 - Service worker caches only core static demo files.
 - iPhone Safari and Android Chrome do not show horizontal overflow.
 
+## v3 Limited Telegram Test Release
+
+Version: `neon-hunter-spin-v3`
+
+Purpose: limited Telegram user testing for the free social slot demo.
+
+Safety rules:
+
+- Demo credits are virtual test points only.
+- Demo credits have no cash value.
+- No real-money betting, payout, prize, gift card, cryptocurrency, NFT, payment, or user-to-user transfer.
+- Feedback and test stats are local-only.
+
+How to test:
+
+1. Open the deployed Netlify link.
+2. Confirm the mode label shows `Telegram Test Mode` in Telegram or `Guest Demo Mode` elsewhere.
+3. Tap **START DEMO WITH 10,000 CREDITS**.
+4. Spin at least 20 times.
+5. Try bet levels, bet multipliers, and denomination options.
+6. Open the guide and review the local Test Stats.
+7. Submit feedback from the floating **Feedback** button.
+
+Mobile test checklist:
+
+- iPhone Safari has no horizontal overflow.
+- Android Chrome has no horizontal overflow.
+- Telegram in-app browser can start the demo and spin.
+- SPIN, DROP, AUTO PLAY, Guide, and Feedback controls remain touch-friendly.
+- Modal overlays fit small screens and can be closed.
+- Footer safety notice stays visible without blocking gameplay.
+
+Known limitations:
+
+- There is no backend, login, account system, or server analytics.
+- Feedback is logged to the browser console only.
+- Local Test Stats are stored only in `localStorage` on the tester's device.
+- Bonus and jackpot events are virtual demo moments only.
+
 ## RTP Simulation
 
 `simulate_rtp.js` is a local math verification helper. It is not required for Netlify deployment.
