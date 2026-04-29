@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v6-report-export";
+const CACHE_NAME = "neon-hunter-spin-v6-report-export-fix";
 const CORE_ASSETS = [
   "./",
   "./index.html",

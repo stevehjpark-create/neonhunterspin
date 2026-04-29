@@ -663,9 +663,9 @@ function updateDailyDemoCreditUi() {
   }
 }
 
-function renderReportPreview() {
+function renderReportPreview(report = null) {
   if (!els.reportPreviewText || !els.reportPreview?.open) return;
-  els.reportPreviewText.value = buildTestReport();
+  els.reportPreviewText.value = report || buildTestReport();
 }
 
 function buildTestReport() {
@@ -731,8 +731,8 @@ function setReportStatus(text) {
 }
 
 async function copyTestReport() {
-  renderReportPreview();
   const report = buildTestReport();
+  renderReportPreview(report);
   if (els.reportFallback) {
     els.reportFallback.hidden = true;
   }
@@ -1477,9 +1477,9 @@ function submitFeedback() {
   const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
   const issueType = selectedIssueType();
   const tags = [...state.selectedFeedbackTags];
-  const report = buildTestReport();
   incrementTestCounter("totalFeedbackSubmitted");
   markTesterMissionComplete("submitFeedback");
+  const report = buildTestReport();
   console.log("NEON HUNTER SPIN feedback:", {
     sessionId: state.testSessionId,
     mode: state.testModeLabel,
