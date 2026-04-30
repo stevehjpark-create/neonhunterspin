@@ -3881,6 +3881,13 @@ function renderReel(reel, symbolsForReel) {
 
     image.addEventListener("error", () => {
       cell.classList.add("symbol-missing");
+      image.remove();
+      if (!cell.querySelector(".symbol-fallback")) {
+        const fallback = document.createElement("strong");
+        fallback.className = "symbol-fallback";
+        fallback.textContent = symbol.name;
+        cell.append(fallback);
+      }
     });
 
     cell.append(image);

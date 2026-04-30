@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v7-mobile-fit";
+const CACHE_NAME = "neon-hunter-spin-v7-icon-fit";
 const CORE_ASSETS = [
   "./",
   "./index.html",
