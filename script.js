@@ -98,6 +98,15 @@ const feedbackTagOptions = [
   "Select/Take Confusing",
   "Auto Play Issue",
 ];
+const telegramOnlyFeedbackTags = new Set(["Telegram Issue"]);
+const kakaoOnlyFeedbackTags = new Set([
+  "Kakao Browser Issue",
+  "Sound Not Working",
+  "Screen Cut Off",
+  "Button Hidden",
+  "Select/Take Confusing",
+  "Auto Play Issue",
+]);
 const testerMissionDefinitions = [
   { id: "startDemo", label: "Start the demo" },
   { id: "spin20", label: "Spin 20 times" },
@@ -402,11 +411,15 @@ const i18n = {
     selected: "Selected",
     issueType: "Issue type",
     deviceNote: "Device note",
-    deviceNotePlaceholder: "Example: iPhone 14 / Telegram browser / screen issue",
+    deviceNotePlaceholder: "Example: iPhone 14 / in-app browser / screen issue",
+    deviceNotePlaceholderTelegram: "Example: iPhone 14 / Telegram browser / screen issue",
+    deviceNotePlaceholderKakao: "Example: iPhone 14 / KakaoTalk browser / screen issue",
     privacyNote: "Do not include name, email, phone number, or other personal data.",
     feedbackPrompt: "Tell us what felt good, confusing, or broken.",
     feedbackPlaceholder: "Type feedback here...",
-    feedbackInstruction: "After testing, tap Copy Test Report and paste it into the Telegram test group.",
+    feedbackInstruction: "After testing, tap Copy Test Report and paste it into the test chat.",
+    feedbackInstructionTelegram: "After testing, tap Copy Test Report and paste it into the Telegram test group.",
+    feedbackInstructionKakao: "After testing, tap Copy Kakao Test Message and paste it into the KakaoTalk test chat.",
     previewReport: "Preview Test Report",
     manualCopy: "Copy this test report manually",
     copyReport: "Copy Test Report",
@@ -544,11 +557,15 @@ const i18n = {
     selected: "선택됨",
     issueType: "이슈 유형",
     deviceNote: "기기 메모",
-    deviceNotePlaceholder: "예: iPhone 14 / 텔레그램 브라우저 / 화면 문제",
+    deviceNotePlaceholder: "예: iPhone 14 / 인앱 브라우저 / 화면 문제",
+    deviceNotePlaceholderTelegram: "예: iPhone 14 / 텔레그램 브라우저 / 화면 문제",
+    deviceNotePlaceholderKakao: "예: iPhone 14 / 카카오톡 브라우저 / 화면 문제",
     privacyNote: "이름, 이메일, 전화번호 등 개인정보를 입력하지 마세요.",
     feedbackPrompt: "좋았던 점, 헷갈린 점, 깨진 부분을 알려주세요.",
     feedbackPlaceholder: "피드백을 입력하세요...",
-    feedbackInstruction: "테스트 후 Copy Test Report를 눌러 텔레그램 테스트방에 붙여넣어 주세요.",
+    feedbackInstruction: "테스트 후 Copy Test Report를 눌러 테스트 채팅방에 붙여넣어 주세요.",
+    feedbackInstructionTelegram: "테스트 후 Copy Test Report를 눌러 텔레그램 테스트방에 붙여넣어 주세요.",
+    feedbackInstructionKakao: "테스트 후 Copy Kakao Test Message를 눌러 카카오톡 테스트방에 붙여넣어 주세요.",
     previewReport: "테스트 리포트 미리보기",
     manualCopy: "이 테스트 리포트를 직접 복사하세요",
     copyReport: "테스트 리포트 복사",
@@ -1502,8 +1519,9 @@ async function copyTestReport() {
       throw new Error("Clipboard unavailable");
     }
     await navigator.clipboard.writeText(report);
-    setReportStatus("Test report copied. Please paste it into Telegram.");
-    setHiddenMessage("Test report copied. Please paste it into Telegram.");
+    const target = copyTargetLabel();
+    setReportStatus(`Test report copied. Please paste it into ${target}.`);
+    setHiddenMessage(`Test report copied. Please paste it into ${target}.`);
   } catch {
     showReportFallback(report);
     setReportStatus("Clipboard unavailable. Copy the report manually from this panel.");
@@ -1602,8 +1620,9 @@ async function copyShareMoment() {
       throw new Error("Clipboard unavailable");
     }
     await navigator.clipboard.writeText(report);
-    setShareMomentStatus("Share moment copied. Paste it into Telegram.");
-    setHiddenMessage("Share moment copied. Paste it into Telegram.");
+    const target = copyTargetLabel();
+    setShareMomentStatus(`Share moment copied. Paste it into ${target}.`);
+    setHiddenMessage(`Share moment copied. Paste it into ${target}.`);
   } catch {
     showShareMomentFallback(report);
     setShareMomentStatus("Clipboard unavailable. Copy the share moment manually.");
@@ -1630,6 +1649,47 @@ function deviceLabel() {
 
 function isKakaoTalkInAppBrowser() {
   return /KAKAOTALK|KakaoTalk/i.test(navigator.userAgent || "");
+}
+
+function currentBrowserModeKey() {
+  if (isKakaoTalkInAppBrowser()) return "kakao";
+  if (window.Telegram?.WebApp || /Telegram/i.test(navigator.userAgent || "")) return "telegram";
+  return "guest";
+}
+
+function feedbackTagVisibleInCurrentMode(tag) {
+  const mode = currentBrowserModeKey();
+  if (telegramOnlyFeedbackTags.has(tag)) return mode === "telegram";
+  if (kakaoOnlyFeedbackTags.has(tag)) return mode === "kakao";
+  return true;
+}
+
+function issueOptionVisibleInCurrentMode(value) {
+  const mode = currentBrowserModeKey();
+  if (value === "Telegram Browser Issue") return mode === "telegram";
+  if (value === "Kakao Browser Issue") return mode === "kakao";
+  return true;
+}
+
+function feedbackInstructionForMode() {
+  const mode = currentBrowserModeKey();
+  if (mode === "telegram") return t("feedbackInstructionTelegram");
+  if (mode === "kakao") return t("feedbackInstructionKakao");
+  return t("feedbackInstruction");
+}
+
+function deviceNotePlaceholderForMode() {
+  const mode = currentBrowserModeKey();
+  if (mode === "telegram") return t("deviceNotePlaceholderTelegram");
+  if (mode === "kakao") return t("deviceNotePlaceholderKakao");
+  return t("deviceNotePlaceholder");
+}
+
+function copyTargetLabel() {
+  const mode = currentBrowserModeKey();
+  if (mode === "telegram") return "Telegram";
+  if (mode === "kakao") return "KakaoTalk";
+  return "the test chat";
 }
 
 function pwaStatusLabel() {
@@ -1681,8 +1741,41 @@ function renderSelectedFeedbackTags() {
     : t("noTags");
 }
 
+function updateFeedbackModeVisibility() {
+  const visibleTags = new Set();
+  els.feedbackTagButtons.forEach((button) => {
+    const tag = button.dataset.feedbackTag;
+    const visible = feedbackTagVisibleInCurrentMode(tag);
+    button.hidden = !visible;
+    button.disabled = !visible;
+    if (visible) visibleTags.add(tag);
+  });
+
+  state.selectedFeedbackTags = state.selectedFeedbackTags.filter((tag) => visibleTags.has(tag));
+
+  document.querySelectorAll("#feedbackIssueType option").forEach((option) => {
+    const visible = issueOptionVisibleInCurrentMode(option.value);
+    option.hidden = !visible;
+    option.disabled = !visible;
+  });
+  if (els.feedbackIssueType && !issueOptionVisibleInCurrentMode(els.feedbackIssueType.value)) {
+    els.feedbackIssueType.value = "No Issue";
+  }
+
+  setTextContent(".feedback-instruction", feedbackInstructionForMode());
+  if (els.feedbackDeviceNote) {
+    els.feedbackDeviceNote.placeholder = deviceNotePlaceholderForMode();
+  }
+  if (els.copyKakaoTestMessage) {
+    const showKakaoCopy = currentBrowserModeKey() === "kakao";
+    els.copyKakaoTestMessage.hidden = !showKakaoCopy;
+    els.copyKakaoTestMessage.disabled = !showKakaoCopy;
+  }
+  renderSelectedFeedbackTags();
+}
+
 function toggleFeedbackTag(tag) {
-  if (!feedbackTagOptions.includes(tag)) return;
+  if (!feedbackTagOptions.includes(tag) || !feedbackTagVisibleInCurrentMode(tag)) return;
   state.selectedFeedbackTags = state.selectedFeedbackTags.includes(tag)
     ? state.selectedFeedbackTags.filter((selectedTag) => selectedTag !== tag)
     : [...state.selectedFeedbackTags, tag];
@@ -1710,6 +1803,7 @@ function initializeTelegramMode() {
     els.testModeBadge.classList.toggle("telegram", !kakaoApp && Boolean(telegramApp));
   }
   updateTestInfoPanel();
+  updateFeedbackModeVisibility();
 }
 
 function applyLanguage(persist = false) {
@@ -1783,7 +1877,7 @@ function applyLanguage(persist = false) {
   setTextContent('label[for="feedbackDeviceNote"]', t("deviceNote"));
   setTextContent(".privacy-note", t("privacyNote"));
   setTextContent('label[for="feedbackText"]', t("feedbackPrompt"));
-  setTextContent(".feedback-instruction", t("feedbackInstruction"));
+  setTextContent(".feedback-instruction", feedbackInstructionForMode());
   setTextContent("#reportPreview summary", t("previewReport"));
   setTextContent('label[for="reportFallbackText"]', t("manualCopy"));
   setTextContent("#copyTestReport", t("copyReport"));
@@ -1824,7 +1918,7 @@ function applyLanguage(persist = false) {
     els.testInfoClose.setAttribute("aria-label", t("closeTestInfo"));
   }
   if (els.feedbackDeviceNote) {
-    els.feedbackDeviceNote.placeholder = t("deviceNotePlaceholder");
+    els.feedbackDeviceNote.placeholder = deviceNotePlaceholderForMode();
   }
   if (els.feedbackText) {
     els.feedbackText.placeholder = t("feedbackPlaceholder");
@@ -1841,7 +1935,7 @@ function applyLanguage(persist = false) {
 
   initializeTelegramMode();
   renderTestStats();
-  renderSelectedFeedbackTags();
+  updateFeedbackModeVisibility();
   renderTesterMission();
   updateUi();
   renderReportPreview();
@@ -2478,7 +2572,7 @@ function openFeedbackModal() {
   stopAutoSpin();
   markFeatureTrailComplete("openFeedback");
   renderTestStats();
-  renderSelectedFeedbackTags();
+  updateFeedbackModeVisibility();
   if (els.reportFallback) {
     els.reportFallback.hidden = true;
   }

@@ -385,13 +385,13 @@
             <button type="button" data-feedback-tag="Button Hard to Tap">Button Hard to Tap</button>
             <button type="button" data-feedback-tag="Layout Broken">Layout Broken</button>
             <button type="button" data-feedback-tag="Sound Issue">Sound Issue</button>
-            <button type="button" data-feedback-tag="Telegram Issue">Telegram Issue</button>
-            <button type="button" data-feedback-tag="Kakao Browser Issue">Kakao Browser Issue</button>
-            <button type="button" data-feedback-tag="Sound Not Working">Sound Not Working</button>
-            <button type="button" data-feedback-tag="Screen Cut Off">Screen Cut Off</button>
-            <button type="button" data-feedback-tag="Button Hidden">Button Hidden</button>
-            <button type="button" data-feedback-tag="Select/Take Confusing">Select/Take Confusing</button>
-            <button type="button" data-feedback-tag="Auto Play Issue">Auto Play Issue</button>
+            <button type="button" data-feedback-tag="Telegram Issue" hidden>Telegram Issue</button>
+            <button type="button" data-feedback-tag="Kakao Browser Issue" hidden>Kakao Browser Issue</button>
+            <button type="button" data-feedback-tag="Sound Not Working" hidden>Sound Not Working</button>
+            <button type="button" data-feedback-tag="Screen Cut Off" hidden>Screen Cut Off</button>
+            <button type="button" data-feedback-tag="Button Hidden" hidden>Button Hidden</button>
+            <button type="button" data-feedback-tag="Select/Take Confusing" hidden>Select/Take Confusing</button>
+            <button type="button" data-feedback-tag="Auto Play Issue" hidden>Auto Play Issue</button>
           </div>
           <div id="selectedFeedbackTags" class="selected-feedback-tags" aria-live="polite">No tags selected</div>
         </div>
@@ -400,8 +400,8 @@
           <option value="No Issue">No Issue</option>
           <option value="Sound Issue">Sound Issue</option>
           <option value="Layout Issue">Layout Issue</option>
-          <option value="Telegram Browser Issue">Telegram Browser Issue</option>
-          <option value="Kakao Browser Issue">Kakao Browser Issue</option>
+          <option value="Telegram Browser Issue" hidden>Telegram Browser Issue</option>
+          <option value="Kakao Browser Issue" hidden>Kakao Browser Issue</option>
           <option value="Button / Touch Issue">Button / Touch Issue</option>
           <option value="Performance Issue">Performance Issue</option>
           <option value="Confusing UX">Confusing UX</option>
@@ -414,12 +414,12 @@
           class="device-note-input"
           type="text"
           maxlength="120"
-          placeholder="Example: iPhone 14 / Telegram browser / screen issue"
+          placeholder="Example: iPhone 14 / in-app browser / screen issue"
         />
         <p class="privacy-note">Do not include name, email, phone number, or other personal data.</p>
         <label for="feedbackText">Tell us what felt good, confusing, or broken.</label>
         <textarea id="feedbackText" rows="5" maxlength="1000" placeholder="Type feedback here..."></textarea>
-        <p class="feedback-instruction">After testing, tap Copy Test Report and paste it into the Telegram test group.</p>
+        <p class="feedback-instruction">After testing, tap Copy Test Report and paste it into the test chat.</p>
         <details id="reportPreview" class="report-preview">
           <summary>Preview Test Report</summary>
           <textarea id="reportPreviewText" rows="9" readonly></textarea>
