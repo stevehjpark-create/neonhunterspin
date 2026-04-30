@@ -47,6 +47,8 @@ const jackpotLabels = ["MINI", "MINOR", "MAJOR", "GRAND"];
 const jackpotPriority = ["GRAND", "MAJOR", "MINOR", "MINI"];
 const scratchCardCount = 12;
 const bonusFreeSpinTargetRtp = 0.32;
+const ascensionAverageMultiplier = 1.075;
+const ascensionAdjustedFreeRtp = bonusFreeSpinTargetRtp / ascensionAverageMultiplier;
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
 const highBetChestReserveRelief = 0.006;
@@ -148,6 +150,8 @@ const state = {
   freeSpinWinTotal: 0,
   bonusSpins: 0,
   expandedBonusSpins: 0,
+  freeSpinMultiplier: 1,
+  retriggerCount: 0,
   chests: createInitialChests(),
   jackpotBanksByDenom: createInitialJackpotBanks(),
   jackpots: null,
@@ -2062,7 +2066,10 @@ function updateUi() {
   els.denom.textContent = denomLabel();
   els.rtp.textContent = `${Math.round(state.selectedTotalRtp * 100)}%`;
   els.lastWin.textContent = formatDisplayAmount(state.lastWin);
-  els.bonusSpins.textContent = state.bonusSpins + state.expandedBonusSpins;
+  const totalBonusSpins = state.bonusSpins + state.expandedBonusSpins;
+  els.bonusSpins.textContent =
+    state.freeSpinMultiplier > 1 ? `${totalBonusSpins} x${state.freeSpinMultiplier}` : totalBonusSpins;
+  els.bonusSpins.classList.toggle("ascension-active", state.freeSpinMultiplier > 1);
   els.spinButton.textContent =
     state.expandedBonusSpins > 0 ? t("megaSpin") : state.bonusSpins > 0 ? t("freeGame") : t("spin");
   els.spinButton.disabled =
@@ -2552,7 +2559,7 @@ function expectedRawRtp(activeReelCount, rowCounts = Array(reelCount).fill(visib
 function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts = Array(reelCount).fill(visibleRows)) {
   if (rawWin <= 0) return 0;
 
-  const targetRtp = isFreeSpin ? bonusFreeSpinTargetRtp : baseGameTargetRtp();
+  const targetRtp = isFreeSpin ? ascensionAdjustedFreeRtp : baseGameTargetRtp();
   const scale = targetRtp / expectedRawRtp(activeReelCount, rowCounts);
   const adjustedWin = rawWin * scale;
   const wholeCoins = Math.floor(adjustedWin);
@@ -2580,6 +2587,27 @@ function baseGameTargetRtp() {
 function expectedBonusFreeSpins() {
   const retriggerGrowth = targetBonusTriggerRate * bonusSpinAward;
   return bonusSpinAward / (1 - retriggerGrowth);
+}
+
+function computeAscensionMultiplier(retriggerCount) {
+  if (retriggerCount <= 0) return 1;
+  if (retriggerCount === 1) return 2;
+  if (retriggerCount === 2) return 3;
+  return Math.min(10, 3 + (retriggerCount - 2));
+}
+
+function resetAscensionState() {
+  state.freeSpinMultiplier = 1;
+  state.retriggerCount = 0;
+  els.bonusSpins?.classList.remove("ascension-active", "multiplier-pulse");
+}
+
+function pulseAscensionBadge() {
+  if (!els.bonusSpins) return;
+  els.bonusSpins.classList.remove("multiplier-pulse");
+  void els.bonusSpins.offsetWidth;
+  els.bonusSpins.classList.add("multiplier-pulse");
+  setTimeout(() => els.bonusSpins?.classList.remove("multiplier-pulse"), 650);
 }
 
 function calculateRawWin(grid, bet, activeReelCount = state.selectedReels) {
@@ -2974,6 +3002,7 @@ async function handleChestBonus(index) {
   if (index === 0) {
     state.freeSpinWinTotal = 0;
     state.lastWin = 0;
+    resetAscensionState();
     state.bonusSpins += chestFreeSpinAward;
     pulseCabinet("free-game");
     setMessage(`FREE GAMES UNLOCKED! ${chestFreeSpinAward} Free Games awarded!`, true);
@@ -2986,6 +3015,7 @@ async function handleChestBonus(index) {
   } else {
     state.freeSpinWinTotal = 0;
     state.lastWin = 0;
+    resetAscensionState();
     state.expandedBonusSpins += expandedBonusAward;
     pulseCabinet("dokkaebi");
     setMessage(`DOKKAEBI BONUS! ${expandedBonusAward} Expanded Reel Games awarded!`, true);
@@ -3923,8 +3953,10 @@ async function spin() {
     incrementTestCounter("totalWins");
     applyWinningSymbolHighlights(result, waysWinDetails, activeReelCount);
   }
+  const freeSpinCurrentMultiplier = isFreeSpin ? state.freeSpinMultiplier : 1;
+  const multipliedWin = isFreeSpin ? win * freeSpinCurrentMultiplier : win;
   if (isFreeSpin) {
-    state.freeSpinWinTotal += win;
+    state.freeSpinWinTotal += multipliedWin;
     state.lastWin = state.freeSpinWinTotal;
   } else {
     state.lastWin = win;
@@ -3932,6 +3964,10 @@ async function spin() {
   }
   if (bonusTriggered && isFreeSpin) {
     state.bonusSpins += bonusSpinAward;
+    state.retriggerCount += 1;
+    state.freeSpinMultiplier = computeAscensionMultiplier(state.retriggerCount);
+    updateUi();
+    pulseAscensionBadge();
   }
   const freeGameEnded =
     isFreeSpin &&
@@ -3982,26 +4018,37 @@ async function spin() {
   }
 
   if (isFreeSpin && bonusTriggered && win > 0) {
+    const ascensionLevel = state.freeSpinMultiplier;
     const restoreOverlay = {
       type: "amount",
-      title: "FREE GAMES UNLOCKED",
-      amount: win,
-      caption: `+${bonusSpinAward} Free Games`,
+      title: `ASCENSION LEVEL ${ascensionLevel}`,
+      amount: multipliedWin,
+      caption: `+${bonusSpinAward} Free Games · x${ascensionLevel} active`,
       isWin: true,
       captionAmount: state.freeSpinWinTotal,
     };
     setMessage(
-      `Retrigger! +${bonusSpinAward} Free Games and ${formatDisplayAmount(win)} added to bonus bank!`,
+      `ASCENSION LEVEL ${ascensionLevel}! +${bonusSpinAward} Free Games. Multiplier x${ascensionLevel} active.`,
       true,
     );
-    showReelAmountOverlay("FREE GAMES UNLOCKED", win, `+${bonusSpinAward} Free Games`, true, state.freeSpinWinTotal);
+    showReelAmountOverlay(
+      `ASCENSION LEVEL ${ascensionLevel}`,
+      multipliedWin,
+      `+${bonusSpinAward} Free Games · x${ascensionLevel} active`,
+      true,
+      state.freeSpinWinTotal,
+    );
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     pulseCabinet("free-game");
     playBonusStartSound();
   } else if (isFreeSpin && bonusTriggered) {
-    setMessage(`Retrigger! +${bonusSpinAward} Free Games awarded!`, true);
-    showReelMessageOverlay("FREE GAMES UNLOCKED", true);
+    const ascensionLevel = state.freeSpinMultiplier;
+    setMessage(
+      `ASCENSION LEVEL ${ascensionLevel}! +${bonusSpinAward} Free Games. Multiplier x${ascensionLevel} active.`,
+      true,
+    );
+    showReelMessageOverlay(`ASCENSION LEVEL ${ascensionLevel}`, true);
     els.machine.classList.add("celebrate");
     pulseCabinet("free-game");
     playBonusStartSound();
@@ -4027,19 +4074,21 @@ async function spin() {
     pulseCabinet("dokkaebi");
   } else if (isFreeSpin && win > 0) {
     const title = winPresentationTitle(win, bet, true);
+    const spinWinCaption =
+      freeSpinCurrentMultiplier > 1 ? `This Spin x${freeSpinCurrentMultiplier}` : "This Spin";
     const restoreOverlay = {
       type: "amount",
       title,
-      amount: win,
-      caption: "This Spin",
+      amount: multipliedWin,
+      caption: spinWinCaption,
       isWin: true,
       captionAmount: state.freeSpinWinTotal,
     };
     setMessage(
-      `${formatDisplayAmount(win)} bonus win added. Bonus bank ${formatDisplayAmount(state.freeSpinWinTotal)}.`,
+      `${formatDisplayAmount(multipliedWin)} bonus win added. Bonus bank ${formatDisplayAmount(state.freeSpinWinTotal)}.`,
       true,
     );
-    showReelAmountOverlay(title, win, "This Spin", true, state.freeSpinWinTotal);
+    showReelAmountOverlay(title, multipliedWin, spinWinCaption, true, state.freeSpinWinTotal);
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
@@ -4101,6 +4150,7 @@ async function spin() {
       addCredits(state.freeSpinWinTotal, true);
     }
     state.freeSpinWinTotal = 0;
+    resetAscensionState();
     state.spinning = false;
     setMessage("Total bonus win paid to the credit meter.", true);
     playBonusEndSound();
@@ -4113,6 +4163,7 @@ function changeBet(direction) {
   stopAutoSpin();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
+  resetAscensionState();
   state.betIndex = Math.min(betSteps.length - 1, Math.max(0, state.betIndex + direction));
   addMissionNumberValue("betLevelsTried", state.betIndex);
   applyBetReelRule();
@@ -4128,6 +4179,7 @@ function selectBetLevel(index) {
   applyBetReelRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
+  resetAscensionState();
   setMessage(
     `Bet level ${betSteps[state.betIndex]} selected. ${activeWays()} ways active. Locked reels do not count.`,
   );
@@ -4161,6 +4213,10 @@ async function dropCredits() {
 
   const creditsToAdd = (dropAmount * 100) / state.selectedDenomCents;
   addCredits(creditsToAdd, false);
+  state.bonusSpins = 0;
+  state.expandedBonusSpins = 0;
+  state.freeSpinWinTotal = 0;
+  resetAscensionState();
   playDropSound();
   els.dropAmount.value = "";
   setAmountMessage(creditsToAdd, state.language === "ko" ? "데모 CREDIT 로드 완료. SPIN을 누르세요." : "demo credits loaded. Press SPIN.");
@@ -4172,6 +4228,10 @@ async function startDemoCredits() {
   stopAutoSpin();
   await unlockAudioForUserGesture();
   addCredits(demoStartCreditAmountForCurrentDenom(), false);
+  state.bonusSpins = 0;
+  state.expandedBonusSpins = 0;
+  state.freeSpinWinTotal = 0;
+  resetAscensionState();
   markTesterMissionComplete("startDemo");
   markFeatureTrailComplete("startDemo");
   showDemoCreditsLoadedMessage();
@@ -4194,6 +4254,10 @@ async function claimDailyDemoCredits() {
 
   safeLocalStorageSet(dailyDemoCreditStorageKey, today);
   addCredits(demoCreditAmountForCurrentDenom(dailyDemoCredits), false);
+  state.bonusSpins = 0;
+  state.expandedBonusSpins = 0;
+  state.freeSpinWinTotal = 0;
+  resetAscensionState();
   setHiddenMessage(state.language === "ko" ? "일일 데모 CREDIT 로드 완료. 가상 테스트 포인트 전용입니다." : "Daily demo credits loaded. Virtual test points only.");
   showReelMessageOverlay(t("dailyLoaded"), true);
   updateUi();
@@ -4210,6 +4274,7 @@ async function cashOut() {
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
   state.freeSpinWinTotal = 0;
+  resetAscensionState();
   setAmountMessage(cashOutAmount, state.language === "ko" ? "가상 CREDIT 초기화 완료. 보유 CREDIT이 0으로 리셋되었습니다." : "virtual credits cleared. Credit meter reset to zero.");
   updateUi();
 }
@@ -4220,6 +4285,7 @@ function selectMultiplier(value) {
   state.selectedMultiplier = value;
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
+  resetAscensionState();
   setMessage(state.language === "ko" ? `배수 x${value} 선택됨. SPIN을 누르세요.` : `Multiplier x${value} selected. Press SPIN.`);
   updateUi();
 }
@@ -4237,6 +4303,7 @@ function selectDenom(value) {
   applyDenomRtpRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
+  resetAscensionState();
   switchJackpotBankForDenom(value);
   setMessage(
     state.language === "ko"
@@ -4264,6 +4331,10 @@ function setupDebugHooks() {
       if (state.spinning || state.scratchActive) return false;
       const demoCreditAmount = Math.max(0, Number(amount) || 0);
       setCredits((demoCreditAmount * 100) / state.selectedDenomCents, false);
+      state.bonusSpins = 0;
+      state.expandedBonusSpins = 0;
+      state.freeSpinWinTotal = 0;
+      resetAscensionState();
       setAmountMessage(state.credits, "debug demo credits loaded.");
       updateUi();
       return true;
@@ -4281,6 +4352,8 @@ function setupDebugHooks() {
         displayValue: (state.credits * state.selectedDenomCents) / 100,
         bonusSpins: state.bonusSpins,
         expandedBonusSpins: state.expandedBonusSpins,
+        freeSpinMultiplier: state.freeSpinMultiplier,
+        retriggerCount: state.retriggerCount,
         jackpots: structuredClone(state.jackpots),
       };
     },
@@ -4298,6 +4371,7 @@ els.maxBet.addEventListener("click", () => {
   applyBetReelRule();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
+  resetAscensionState();
   setMessage(`Max bet selected. ${activeWays()} ways active.`);
   updateUi();
 });

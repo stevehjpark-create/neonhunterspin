@@ -444,6 +444,34 @@ h1 {
   min-width: 6ch;
 }
 
+#bonusSpins.ascension-active {
+  color: #ffe066;
+  text-shadow:
+    0 0 8px rgba(255, 224, 102, 0.55),
+    0 0 14px rgba(156, 109, 255, 0.5);
+}
+
+#bonusSpins.multiplier-pulse {
+  animation: multiplierPulse 0.6s ease-out;
+}
+
+@keyframes multiplierPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(255, 224, 102, 0));
+  }
+
+  45% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 10px rgba(255, 224, 102, 0.9));
+  }
+
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(255, 224, 102, 0));
+  }
+}
+
 .meter-action {
   cursor: pointer;
   transition:
@@ -2676,7 +2704,8 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .reel:not(.spinning) .symbol-image,
-  .reel:not(.spinning) .symbol-card::after {
+  .reel:not(.spinning) .symbol-card::after,
+  #bonusSpins.multiplier-pulse {
     animation: none;
   }
 }

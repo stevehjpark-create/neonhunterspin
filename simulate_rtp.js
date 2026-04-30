@@ -38,6 +38,8 @@ const bonusSpinAward = 5;
 const chestFreeSpinAward = 10;
 const expandedBonusAward = 5;
 const bonusFreeSpinTargetRtp = 0.32;
+const ascensionAverageMultiplier = 1.075;
+const ascensionAdjustedFreeRtp = bonusFreeSpinTargetRtp / ascensionAverageMultiplier;
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
 const highBetChestReserveRelief = 0.006;
@@ -125,6 +127,13 @@ function expectedBonusFreeSpins() {
   return bonusSpinAward / (1 - retriggerGrowth);
 }
 
+function computeAscensionMultiplier(retriggerCount) {
+  if (retriggerCount <= 0) return 1;
+  if (retriggerCount === 1) return 2;
+  if (retriggerCount === 2) return 3;
+  return Math.min(10, 3 + (retriggerCount - 2));
+}
+
 function chestFeatureReserveForBet(spinBet) {
   if (spinBet <= 88) return chestFeatureRtpReserve;
 
@@ -144,7 +153,7 @@ function baseGameTargetRtp(targetRtp, activeReelCount, spinBet) {
 function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, spinBet, rowCounts = Array(reelCount).fill(visibleRows)) {
   if (rawWin <= 0) return 0;
 
-  const rtp = isFreeSpin ? bonusFreeSpinTargetRtp : baseGameTargetRtp(targetRtp, activeReelCount, spinBet);
+  const rtp = isFreeSpin ? ascensionAdjustedFreeRtp : baseGameTargetRtp(targetRtp, activeReelCount, spinBet);
   const scale = rtp / expectedRawRtp(activeReelCount, rowCounts);
   const adjustedWin = rawWin * scale;
   const wholeCoins = Math.floor(adjustedWin);
@@ -311,6 +320,9 @@ function handleChestBonus(state, index, stats) {
   state.chests[index].progress = 1;
 
   if (index === 0) {
+    state.freeSpinMultiplier = 1;
+    state.retriggerCount = 0;
+    state.currentFreeGameWin = 0;
     state.bonusSpins += chestFreeSpinAward;
     stats.chestFreeSpins += 1;
   } else if (index === 1) {
@@ -323,6 +335,9 @@ function handleChestBonus(state, index, stats) {
       resetJackpot(state, prize);
     }
   } else {
+    state.freeSpinMultiplier = 1;
+    state.retriggerCount = 0;
+    state.currentFreeGameWin = 0;
     state.expandedBonusSpins += expandedBonusAward;
     stats.expandedBonuses += 1;
   }
@@ -330,7 +345,7 @@ function handleChestBonus(state, index, stats) {
   state.chests[index] = createChest(index);
 }
 
-function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin) {
+function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin, stats = null) {
   const rowCounts = Array.from({ length: reelCount }, (_, index) =>
     isExpandedSpin && index > 0 && index < reelCount - 1
       ? 5 + Math.floor(Math.random() * 6)
@@ -350,10 +365,21 @@ function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin) {
   const bonusTriggered = isBonusTrigger(result, activeReelCount);
   const rawWin = calculateRawWin(result, state.bet, activeReelCount);
   const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, state.bet, rowCounts);
-  state.returned += win;
+  const returnedWin = isFreeSpin ? win * state.freeSpinMultiplier : win;
+  state.returned += returnedWin;
+  if (isFreeSpin) {
+    state.currentFreeGameWin += returnedWin;
+  }
 
   if (bonusTriggered && isFreeSpin) {
     state.bonusSpins += bonusSpinAward;
+    state.retriggerCount += 1;
+    state.freeSpinMultiplier = computeAscensionMultiplier(state.retriggerCount);
+    if (stats) {
+      stats.retriggers += 1;
+      stats.maxMultiplierSum += state.freeSpinMultiplier;
+      stats.maxMultiplierSeen = Math.max(stats.maxMultiplierSeen, state.freeSpinMultiplier);
+    }
   }
 
   return bonusTriggered;
@@ -365,6 +391,9 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
     jackpots: createInitialJackpots(),
     bonusSpins: 0,
     expandedBonusSpins: 0,
+    freeSpinMultiplier: 1,
+    retriggerCount: 0,
+    currentFreeGameWin: 0,
     returned: 0,
     bet,
     activeReelCount,
@@ -376,6 +405,10 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
     chestFreeSpins: 0,
     scratchBonuses: 0,
     expandedBonuses: 0,
+    retriggers: 0,
+    maxMultiplierSum: 0,
+    maxMultiplierSeen: 1,
+    freeGameTotals: [],
     jackpotHits: { MINI: 0, MINOR: 0, MAJOR: 0, GRAND: 0 },
   };
 
@@ -391,17 +424,25 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
       handleChestBonus(state, chest, stats);
     }
 
+    let bonusSessionPlayed = false;
     while (state.bonusSpins > 0 || state.expandedBonusSpins > 0) {
+      bonusSessionPlayed = true;
       if (state.expandedBonusSpins > 0) {
         state.expandedBonusSpins -= 1;
         stats.expandedSpinsPlayed += 1;
-        spinOnce(state, targetRtp, true, true);
+        spinOnce(state, targetRtp, true, true, stats);
       } else {
         state.bonusSpins -= 1;
         stats.freeSpinsPlayed += 1;
-        spinOnce(state, targetRtp, false, true);
+        spinOnce(state, targetRtp, false, true, stats);
       }
     }
+    if (bonusSessionPlayed) {
+      stats.freeGameTotals.push(state.currentFreeGameWin);
+    }
+    state.freeSpinMultiplier = 1;
+    state.retriggerCount = 0;
+    state.currentFreeGameWin = 0;
   }
 
   const wagered = paidSpins * bet;
@@ -414,12 +455,22 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
     diff: rtp - targetRtp,
     returned: state.returned,
     wagered,
+    avgRetriggerCount: stats.freeGameTotals.length ? stats.retriggers / stats.freeGameTotals.length : 0,
+    avgMaxMultiplier: stats.retriggers ? stats.maxMultiplierSum / stats.retriggers : 1,
+    p99FreeGameTotalWin: percentile(stats.freeGameTotals, 0.99),
     ...stats,
   };
 }
 
+function percentile(values, p) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * p));
+  return sorted[index];
+}
+
 console.log(`paid_spins_per_denom=${paidSpins}`);
-console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand");
+console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand,avg_retrigger_count,avg_max_multiplier,p99_freegame_total_win");
 
 for (const { bet, activeReels } of betLevels) {
   const ways = 3 ** activeReels;
@@ -441,6 +492,9 @@ for (const { bet, activeReels } of betLevels) {
       result.jackpotHits.MINOR,
       result.jackpotHits.MAJOR,
       result.jackpotHits.GRAND,
+      result.avgRetriggerCount.toFixed(4),
+      result.avgMaxMultiplier.toFixed(3),
+      result.p99FreeGameTotalWin.toFixed(2),
     ].join(","));
   }
 }
