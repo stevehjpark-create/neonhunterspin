@@ -27,6 +27,8 @@ const reelWeights = [
 const reelCount = 5;
 const visibleRows = 3;
 const paidSpins = Number(process.env.PAID_SPINS || 1_000_000);
+const selectedRevealPolicy = (process.env.SELECT_POLICY || "ev").toLowerCase();
+const selectedRevealEvSamples = Math.max(1, Number(process.env.SELECT_EV_SAMPLES || 8));
 const simulationSeed = Number(process.env.SEED || 0);
 if (Number.isFinite(simulationSeed) && simulationSeed > 0) {
   Math.random = seededRandom(simulationSeed);
@@ -174,6 +176,13 @@ function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, spinBet,
   return wholeCoins + (Math.random() < fractionalCoin ? 1 : 0);
 }
 
+function expectedRtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, spinBet, rowCounts = Array(reelCount).fill(visibleRows)) {
+  if (rawWin <= 0) return 0;
+
+  const rtp = isFreeSpin ? ascensionAdjustedFreeRtp : baseGameTargetRtp(targetRtp, activeReelCount, spinBet);
+  return rawWin * (rtp / expectedRawRtp(activeReelCount, rowCounts));
+}
+
 function calculateRawWin(grid, spinBet, activeReelCount) {
   const activeGrid = grid.slice(0, activeReelCount);
 
@@ -192,6 +201,51 @@ function calculateRawWin(grid, spinBet, activeReelCount) {
     const multiplier = payouts[matchedReels] || 0;
     return totalWin + spinBet * multiplier * ways;
   }, 0);
+}
+
+function calculateWaysWinDetails(grid, spinBet, activeReelCount) {
+  const activeGrid = grid.slice(0, activeReelCount);
+
+  return Object.entries(paytable)
+    .map(([symbol, payouts]) => {
+      const counts = [];
+      let ways = 1;
+
+      for (const reel of activeGrid) {
+        const symbolCount = reel.filter((cell) => cell.id === symbol || cell.isWild).length;
+        if (symbolCount === 0) break;
+
+        counts.push(symbolCount);
+        ways *= symbolCount;
+      }
+
+      const matchedReels = counts.length;
+      const multiplier = payouts[matchedReels] || 0;
+
+      return {
+        symbol,
+        counts,
+        matchedReels,
+        ways,
+        multiplier,
+        rawAmount: spinBet * multiplier * ways,
+      };
+    })
+    .filter((detail) => detail.rawAmount > 0);
+}
+
+function winningReelIndexesFromDetails(winDetails, activeReelCount) {
+  const indexes = new Set();
+  winDetails.forEach((detail) => {
+    for (let index = 0; index < detail.matchedReels && index < activeReelCount; index += 1) {
+      indexes.add(index);
+    }
+  });
+  return [...indexes];
+}
+
+function cloneGrid(grid) {
+  return grid.map((reel) => reel.slice());
 }
 
 function hasScatter(reel) {
@@ -236,6 +290,102 @@ function forceBonusTrigger(grid) {
   placeScatter(grid[0]);
   placeScatter(grid[1]);
   placeScatter(grid[2 + Math.floor(Math.random() * 3)]);
+}
+
+function selectableRevealReels(grid, winDetails, activeReelCount, bonusTriggered, isFreeSpin) {
+  if (!winDetails.length || bonusTriggered || isFreeSpin) return [];
+
+  return winningReelIndexesFromDetails(winDetails, activeReelCount).filter((reelIndex) => {
+    if (reelIndex >= activeReelCount) return false;
+    const reel = grid[reelIndex] || [];
+    return !reel.some((symbol) => symbol?.isBonus);
+  });
+}
+
+function selectedRevealCandidateWin(grid, reelIndex, rowCounts, state, targetRtp, activeReelCount) {
+  const nextGrid = cloneGrid(grid);
+  nextGrid[reelIndex] = createReelResult(reelIndex, rowCounts[reelIndex] || visibleRows);
+  const rawWin = calculateRawWin(nextGrid, state.bet, activeReelCount);
+  const win = rtpAdjustedWin(rawWin, activeReelCount, false, targetRtp, state.bet, rowCounts);
+  return { grid: nextGrid, win };
+}
+
+function expectedSelectedRevealWinForReel(grid, reelIndex, rowCounts, state, targetRtp, activeReelCount) {
+  let total = 0;
+
+  for (let sample = 0; sample < selectedRevealEvSamples; sample += 1) {
+    const nextGrid = cloneGrid(grid);
+    nextGrid[reelIndex] = createReelResult(reelIndex, rowCounts[reelIndex] || visibleRows);
+    const rawWin = calculateRawWin(nextGrid, state.bet, activeReelCount);
+    total += expectedRtpAdjustedWin(rawWin, activeReelCount, false, targetRtp, state.bet, rowCounts);
+  }
+
+  return total / selectedRevealEvSamples;
+}
+
+function resolveSelectedReelReveal(grid, originalWin, selectableReels, rowCounts, state, targetRtp, activeReelCount, stats) {
+  stats.selectedRevealOffers += 1;
+
+  if (selectedRevealPolicy === "random") {
+    const reelIndex = selectableReels[Math.floor(Math.random() * selectableReels.length)];
+    const candidate = selectedRevealCandidateWin(grid, reelIndex, rowCounts, state, targetRtp, activeReelCount);
+    stats.selectedRevealSelects += 1;
+    stats.selectedRevealWinDelta += candidate.win - originalWin;
+    return candidate.win;
+  }
+
+  if (selectedRevealPolicy === "best") {
+    const bestCandidate = selectableReels
+      .map((reelIndex) => selectedRevealCandidateWin(grid, reelIndex, rowCounts, state, targetRtp, activeReelCount))
+      .reduce((best, candidate) => (candidate.win > best.win ? candidate : best), { win: originalWin });
+
+    if (bestCandidate.win > originalWin) {
+      stats.selectedRevealSelects += 1;
+    } else {
+      stats.selectedRevealTakes += 1;
+    }
+    stats.selectedRevealWinDelta += bestCandidate.win - originalWin;
+    return bestCandidate.win;
+  }
+
+  if (selectedRevealPolicy === "ev") {
+    const bestReel = selectableReels
+      .map((reelIndex) => ({
+        reelIndex,
+        expectedWin: expectedSelectedRevealWinForReel(
+          grid,
+          reelIndex,
+          rowCounts,
+          state,
+          targetRtp,
+          activeReelCount,
+        ),
+      }))
+      .reduce((best, candidate) => (candidate.expectedWin > best.expectedWin ? candidate : best), {
+        reelIndex: -1,
+        expectedWin: originalWin,
+      });
+
+    if (bestReel.reelIndex >= 0 && bestReel.expectedWin > originalWin) {
+      const candidate = selectedRevealCandidateWin(
+        grid,
+        bestReel.reelIndex,
+        rowCounts,
+        state,
+        targetRtp,
+        activeReelCount,
+      );
+      stats.selectedRevealSelects += 1;
+      stats.selectedRevealWinDelta += candidate.win - originalWin;
+      return candidate.win;
+    }
+
+    stats.selectedRevealTakes += 1;
+    return originalWin;
+  }
+
+  stats.selectedRevealTakes += 1;
+  return originalWin;
 }
 
 function createChest(index) {
@@ -376,7 +526,23 @@ function spinOnce(state, targetRtp, isExpandedSpin, isFreeSpin, stats = null) {
 
   const bonusTriggered = isBonusTrigger(result, activeReelCount);
   const rawWin = calculateRawWin(result, state.bet, activeReelCount);
-  const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, state.bet, rowCounts);
+  let win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, state.bet, rowCounts);
+  if (!isFreeSpin && win > 0 && stats) {
+    const winDetails = calculateWaysWinDetails(result, state.bet, activeReelCount);
+    const selectableReels = selectableRevealReels(result, winDetails, activeReelCount, bonusTriggered, isFreeSpin);
+    if (selectableReels.length) {
+      win = resolveSelectedReelReveal(
+        result,
+        win,
+        selectableReels,
+        rowCounts,
+        state,
+        targetRtp,
+        activeReelCount,
+        stats,
+      );
+    }
+  }
   const returnedWin = isFreeSpin ? win * state.freeSpinMultiplier : win;
   state.returned += returnedWin;
   if (isFreeSpin) {
@@ -422,11 +588,15 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
     maxMultiplierSeen: 1,
     freeGameTotals: [],
     jackpotHits: { MINI: 0, MINOR: 0, MAJOR: 0, GRAND: 0 },
+    selectedRevealOffers: 0,
+    selectedRevealTakes: 0,
+    selectedRevealSelects: 0,
+    selectedRevealWinDelta: 0,
   };
 
   for (let spin = 0; spin < paidSpins; spin += 1) {
     accrueProgressiveJackpots(state, bet);
-    const bonusTriggered = spinOnce(state, targetRtp, false, false);
+    const bonusTriggered = spinOnce(state, targetRtp, false, false, stats);
 
     advanceChests(state);
 
@@ -470,6 +640,7 @@ function runDenom(label, denomCents, targetRtp, bet, activeReelCount) {
     avgRetriggerCount: stats.freeGameTotals.length ? stats.retriggers / stats.freeGameTotals.length : 0,
     avgMaxMultiplier: stats.retriggers ? stats.maxMultiplierSum / stats.retriggers : 1,
     p99FreeGameTotalWin: percentile(stats.freeGameTotals, 0.99),
+    avgSelectedRevealDelta: stats.selectedRevealOffers ? stats.selectedRevealWinDelta / stats.selectedRevealOffers : 0,
     ...stats,
   };
 }
@@ -482,7 +653,11 @@ function percentile(values, p) {
 }
 
 console.log(`paid_spins_per_denom=${paidSpins}`);
-console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand,avg_retrigger_count,avg_max_multiplier,p99_freegame_total_win");
+console.log(`selected_reveal_policy=${selectedRevealPolicy}`);
+if (selectedRevealPolicy === "ev") {
+  console.log(`selected_reveal_ev_samples=${selectedRevealEvSamples}`);
+}
+console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand,avg_retrigger_count,avg_max_multiplier,p99_freegame_total_win,selected_reveal_offers,selected_reveal_takes,selected_reveal_selects,avg_selected_reveal_delta");
 
 for (const { bet, activeReels } of betLevels) {
   const ways = 3 ** activeReels;
@@ -507,6 +682,10 @@ for (const { bet, activeReels } of betLevels) {
       result.avgRetriggerCount.toFixed(4),
       result.avgMaxMultiplier.toFixed(3),
       result.p99FreeGameTotalWin.toFixed(2),
+      result.selectedRevealOffers,
+      result.selectedRevealTakes,
+      result.selectedRevealSelects,
+      result.avgSelectedRevealDelta.toFixed(3),
     ].join(","));
   }
 }
