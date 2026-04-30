@@ -2823,7 +2823,7 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
       return;
     }
 
-    if (containsScatter) {
+    if (containsScatter && options.scatterBonusTriggered) {
       setRevealReelState(reel, "reel-scatter-locked", "SCATTER LOCKED");
       return;
     }
@@ -2853,6 +2853,7 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
     activeReelCount,
     rowCounts: options.rowCounts?.slice() || Array(reelCount).fill(visibleRows),
     originalWin: options.win || 0,
+    scatterBonusTriggered: Boolean(options.scatterBonusTriggered),
   };
   els.reelWindow.classList.add("selectable-reel-mode");
   els.reelWindow.classList.toggle("single-selectable-reel", selectableReels.length === 1);
@@ -2882,7 +2883,7 @@ async function confirmSelectableReel(reel) {
 async function rerollSelectedReel(reelIndex) {
   const reveal = state.selectedReelReveal;
   if (!reveal || !Number.isInteger(reelIndex) || reelIndex < 0 || reelIndex >= reveal.activeReelCount) return;
-  if ((reveal.grid[reelIndex] || []).some((symbol) => symbol?.isScatter)) {
+  if (reveal.scatterBonusTriggered && (reveal.grid[reelIndex] || []).some((symbol) => symbol?.isScatter)) {
     showTeaseOverlay("SCATTER LOCKED", "Scatter reels cannot be respun.", true);
     return;
   }
@@ -4158,6 +4159,7 @@ async function spin() {
       bet,
       rowCounts,
       win,
+      scatterBonusTriggered: bonusTriggered,
     });
   }
   const freeSpinCurrentMultiplier = isFreeSpin ? state.freeSpinMultiplier : 1;

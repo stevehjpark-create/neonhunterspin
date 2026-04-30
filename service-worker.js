@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v7-scatter-reroll-lock";
+const CACHE_NAME = "neon-hunter-spin-v7-scatter-bonus-lock";
 const CORE_ASSETS = [
   "./",
   "./index.html",

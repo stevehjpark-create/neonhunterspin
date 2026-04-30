@@ -159,10 +159,10 @@ Go / No-Go Criteria:
 - Scratch bonus board appears as a 4x3 grid and can complete.
 - Jackpot moments remain clearly virtual demo events.
 - Test Stats update after spins, wins, bonus triggers, free-game triggers, and feedback submission.
-- On a normal ways win, selectable winning reels show SELECT while non-winning, scatter, bonus, and inactive reels stay visually locked.
+- On a normal ways win, selectable winning reels show SELECT while non-winning, bonus, and inactive reels stay visually locked.
 - Tapping SELECT respins only that reel, updates the displayed result, and removes the SELECT opportunity.
 - Spins with no win do not show any SELECT or reel-respin opportunity.
-- Scatter reels remain SCATTER LOCKED and cannot be selected or respun, including scatter bonus situations.
+- Scatter reels are locked only when the result is entering the scatter bonus flow; ordinary scatter appearances do not automatically block reel selection.
 
 ## 6. Safety Copy Checklist
 
