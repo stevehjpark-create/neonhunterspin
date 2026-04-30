@@ -285,6 +285,7 @@ Added:
 - Dokkaebi Ascension retrigger presentation and multiplier tracking for free-game retriggers.
 - Selectable Reel visibility states that mark eligible winning reels with SELECT, lock bonus/inactive/non-winning reels, and only lock scatter reels during scatter-bonus flow.
 - Selected Reel wins are paid only after the tester chooses a reel and the respin result is final.
+- TAKE button lets the tester keep the original ways win instead of selecting a reel respin.
 
 Safety:
 

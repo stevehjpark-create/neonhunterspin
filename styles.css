@@ -1829,9 +1829,9 @@ h1 {
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.22);
 }
 
-.machine.reveal-pending .spin-button:disabled {
+.machine.reveal-pending .spin-button {
   opacity: 1;
-  cursor: not-allowed;
+  cursor: pointer;
   color: #fff5c8;
   background:
     linear-gradient(180deg, rgba(90, 46, 158, 0.98), rgba(48, 22, 97, 0.98));

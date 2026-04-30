@@ -2078,17 +2078,16 @@ function updateUi() {
   els.bonusSpins.classList.toggle("ascension-active", state.freeSpinMultiplier > 1);
   els.spinButton.textContent =
     revealPending
-      ? "SELECT REEL"
+      ? "TAKE"
       : state.expandedBonusSpins > 0
         ? t("megaSpin")
         : state.bonusSpins > 0
           ? t("freeGame")
           : t("spin");
   els.spinButton.disabled =
-    revealPending ||
     state.scratchActive ||
     state.spinning ||
-    (!bonusModeActive() && state.credits < currentBet());
+    (!revealPending && !bonusModeActive() && state.credits < currentBet());
   els.decreaseBet.disabled = revealPending || state.spinning || bonusModeActive() || state.betIndex === 0;
   els.increaseBet.disabled = revealPending || state.spinning || bonusModeActive() || state.betIndex === betSteps.length - 1;
   els.maxBet.disabled = revealPending || state.spinning || bonusModeActive();
@@ -2868,14 +2867,16 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
     activeReelCount,
     rowCounts: options.rowCounts?.slice() || Array(reelCount).fill(visibleRows),
     originalWin: options.win || 0,
+    waysWinDetails: winDetails.map((detail) => ({ ...detail })),
+    waysWinFormulas: options.waysWinFormulas?.map((item) => ({ ...item })) || [],
     scatterBonusTriggered: Boolean(options.scatterBonusTriggered),
   };
   els.reelWindow.classList.add("selectable-reel-mode");
   els.reelWindow.classList.toggle("single-selectable-reel", selectableReels.length === 1);
   if (selectableReels.length === 1) {
-    showTeaseOverlay("Only one reel is available.", "Tap SELECT to respin that reel.", true);
+    showTeaseOverlay("Only one reel is available.", "Tap SELECT to respin, or TAKE the win.", true);
   } else {
-    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT to respin one winning reel.", true);
+    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT to respin, or TAKE the win.", true);
   }
 }
 
@@ -2968,6 +2969,40 @@ async function rerollSelectedReel(reelIndex) {
 
   state.spinning = false;
   updateUi();
+}
+
+async function takeSelectedReelRevealWin() {
+  const reveal = state.selectedReelReveal;
+  if (!reveal || state.spinning) return;
+
+  stopAutoSpin();
+  settleCreditAnimation();
+  hideTeaseOverlay();
+  clearSelectableReelStates();
+
+  state.lastWin = reveal.originalWin;
+  addCredits(reveal.originalWin, reveal.originalWin > 0);
+  updateUi();
+
+  if (reveal.originalWin > 0) {
+    incrementTestCounter("totalWins");
+    const restoreOverlay = {
+      type: "amount",
+      title: "TAKE WIN",
+      amount: reveal.originalWin,
+      caption: "Original ways award",
+      isWin: true,
+      captionAmount: null,
+    };
+    setMessage(`${formatDisplayAmount(reveal.originalWin)} take win paid.`, true);
+    showReelWinOverlay("TAKE WIN", reveal.originalWin, "Original ways award");
+    showWaysWinFormulaSequence(reveal.waysWinFormulas || [], restoreOverlay);
+    els.machine.classList.add("celebrate");
+    playWinSound();
+  } else {
+    setHiddenMessage("");
+    showReelMessageOverlay("NEXT SPIN READY", false);
+  }
 }
 
 async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
@@ -4079,7 +4114,7 @@ async function spin() {
     return;
   }
   if (selectedReelRevealPending()) {
-    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT before the next spin.", true);
+    await takeSelectedReelRevealWin();
     return;
   }
 
@@ -4178,6 +4213,7 @@ async function spin() {
       bet,
       rowCounts,
       win,
+      waysWinFormulas,
       scatterBonusTriggered: bonusTriggered,
     });
     selectedReelRevealPendingThisSpin = selectedReelRevealPending();

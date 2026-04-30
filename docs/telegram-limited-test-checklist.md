@@ -161,6 +161,7 @@ Go / No-Go Criteria:
 - Test Stats update after spins, wins, bonus triggers, free-game triggers, and feedback submission.
 - On a normal ways win, selectable winning reels show SELECT while non-winning, bonus, and inactive reels stay visually locked.
 - Tapping SELECT respins only that reel, updates the displayed result, and removes the SELECT opportunity.
+- Tapping TAKE keeps the original ways win and pays it without a reel respin.
 - Credits and Last Win do not update while waiting for the SELECT choice; they update once after the selected reel respin result is final.
 - Spins with no win do not show any SELECT or reel-respin opportunity.
 - Scatter reels are locked only when the result is entering the scatter bonus flow; ordinary scatter appearances do not automatically block reel selection.
@@ -198,7 +199,7 @@ Go criteria:
 - PWA does not break loading.
 - Selectable Reel labels are readable, and the optional selected-reel respin updates only the selected reel/result.
 - Selected Reel respin is available only after a win and cannot be repeated on the updated result.
-- Pending SELECT state disables SPIN and bet controls until the player chooses a reel.
+- Pending SELECT state turns SPIN into TAKE and disables bet controls until the player chooses SELECT or TAKE.
 
 No-Go criteria:
 
