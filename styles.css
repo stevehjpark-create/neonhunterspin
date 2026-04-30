@@ -6005,14 +6005,6 @@ h1 {
 }
 
 /* Compact Telegram/iPhone fit pass */
-.machine.has-credits .quick-actions .start-demo-button {
-  display: none;
-}
-
-.machine.has-credits .quick-actions .daily-demo-button {
-  grid-column: auto;
-}
-
 @media (max-width: 520px) {
   .topbar {
     display: grid;
@@ -6056,14 +6048,6 @@ h1 {
   .top-actions .icon-button {
     width: 30px;
     height: 30px;
-  }
-
-  .machine.has-credits .quick-actions {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .machine.has-credits .quick-actions .daily-demo-button {
-    font-size: clamp(0.42rem, 1.55vw, 0.52rem);
   }
 
   .spin-button,

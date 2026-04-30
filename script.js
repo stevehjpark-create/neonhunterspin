@@ -4199,18 +4199,22 @@ async function spin() {
   );
   const waysWinFormulas = buildWaysWinFormulasFromDetails(waysWinDetails);
   let selectedReelRevealPendingThisSpin = false;
+  let autoTakeSelectedRevealThisSpin = false;
   if (win > 0) {
     applyWinningSymbolHighlights(result, waysWinDetails, activeReelCount);
-    applySelectableReelRevealStates(result, waysWinDetails, activeReelCount, {
-      bonusTriggered,
-      isFreeSpin,
-      bet,
-      rowCounts,
-      win,
-      waysWinFormulas,
-      scatterBonusTriggered: bonusTriggered,
-    });
-    selectedReelRevealPendingThisSpin = selectedReelRevealPending();
+    autoTakeSelectedRevealThisSpin = Boolean(autoSpinTimer) && !bonusTriggered && !isFreeSpin;
+    if (!autoTakeSelectedRevealThisSpin) {
+      applySelectableReelRevealStates(result, waysWinDetails, activeReelCount, {
+        bonusTriggered,
+        isFreeSpin,
+        bet,
+        rowCounts,
+        win,
+        waysWinFormulas,
+        scatterBonusTriggered: bonusTriggered,
+      });
+      selectedReelRevealPendingThisSpin = selectedReelRevealPending();
+    }
     if (!selectedReelRevealPendingThisSpin) {
       incrementTestCounter("totalWins");
     }
@@ -4360,16 +4364,22 @@ async function spin() {
     setHiddenMessage("Choose one neon reel to lock in the result.");
   } else if (win > 0) {
     const title = winPresentationTitle(win, bet);
+    const waysCaption = autoTakeSelectedRevealThisSpin ? "Auto Take" : "Ways Award";
     const restoreOverlay = {
       type: "amount",
       title,
       amount: win,
-      caption: "Ways Award",
+      caption: waysCaption,
       isWin: true,
       captionAmount: null,
     };
-    setMessage(`${formatDisplayAmount(win)} ways win!`, true);
-    showReelWinOverlay(title, win, "Ways Award");
+    setMessage(
+      autoTakeSelectedRevealThisSpin
+        ? `${formatDisplayAmount(win)} auto take.`
+        : `${formatDisplayAmount(win)} ways win!`,
+      true,
+    );
+    showReelWinOverlay(title, win, waysCaption);
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
