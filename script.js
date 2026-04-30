@@ -2109,6 +2109,7 @@ function updateUi() {
   els.reelWindow.classList.toggle("expanded-mode", state.expandedBonusSpins > 0);
   els.reelWindow.classList.toggle("reveal-pending", revealPending);
   els.machine.classList.toggle("reveal-pending", revealPending);
+  els.machine.classList.toggle("has-credits", state.credits > 0);
   updateChestUi();
   updateJackpotUi();
   els.multiplierOptions.forEach((button) => {
