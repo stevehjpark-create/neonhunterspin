@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v7-local-show" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v7-audio-phase-1" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -54,6 +54,10 @@
             <button id="soundButton" class="icon-button sound-toggle" type="button" aria-label="Sound is on. Tap to turn sound off">
               <span aria-hidden="true">Sound ON</span>
             </button>
+            <label class="sound-volume" for="soundVolume">
+              <span id="soundVolumeValue">VOL 80</span>
+              <input id="soundVolume" type="range" min="0" max="100" step="1" value="80" aria-label="Sound volume" />
+            </label>
           </div>
         </header>
 
@@ -592,6 +596,6 @@
 
     <div id="achievementToast" class="achievement-toast" aria-live="polite" aria-hidden="true"></div>
 
-    <script src="script.js?v=neon-hunter-spin-v7-local-show"></script>
+    <script src="script.js?v=neon-hunter-spin-v7-audio-phase-1"></script>
   </body>
 </html>

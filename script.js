@@ -61,6 +61,7 @@ const testStatsStorageKey = "neonHunterSpinTestStats";
 const testerMissionStorageKey = "neonHunterSpinTesterMission";
 const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const languageStorageKey = "neonHunterSpinLanguage";
+const soundVolumeStorageKey = "neonHunterSpinSoundVolume";
 const featureTrailStorageKey = "neonHunterSpinFeatureTrail";
 const achievementStorageKey = "neonHunterSpinAchievements";
 const symbolCollectionStorageKey = "neonHunterSpinSymbolCollection";
@@ -158,6 +159,7 @@ const state = {
   scratchPickLimit: scratchCardCount,
   spinning: false,
   sound: true,
+  soundVolume: loadSoundVolume(),
   audioUnlocked: false,
   currentOverlay: null,
   overlaySequenceId: 0,
@@ -201,6 +203,8 @@ const els = {
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
   soundButtonText: document.querySelector("#soundButton span"),
+  soundVolume: document.querySelector("#soundVolume"),
+  soundVolumeValue: document.querySelector("#soundVolumeValue"),
   languageSelect: document.querySelector("#languageSelect"),
   testModeBadge: document.querySelector("#testModeBadge"),
   testInfoToggle: document.querySelector("#testInfoToggle"),
@@ -310,6 +314,7 @@ let missionBonusReady = false;
 let missionBonusTooltipTimer;
 let missionPanelPulseTimer;
 let achievementToastTimer;
+let masterFadeTimer;
 
 const i18n = {
   en: {
@@ -665,6 +670,12 @@ function safeLocalStorageSet(key, value) {
   } catch {
     // Telegram and private browsers may restrict storage; the game should still run.
   }
+}
+
+function loadSoundVolume() {
+  const stored = Number(safeLocalStorageGet(soundVolumeStorageKey));
+  if (!Number.isFinite(stored)) return 0.8;
+  return Math.min(1, Math.max(0, stored / 100));
 }
 
 function localDateKey(date = new Date()) {
@@ -3147,6 +3158,142 @@ function getAudioContext() {
   return audioContext;
 }
 
+function createSyntheticIR(context, seconds = 1.2, damping = 0.35) {
+  const length = Math.max(1, Math.floor(context.sampleRate * seconds));
+  const impulse = context.createBuffer(2, length, context.sampleRate);
+
+  for (let channel = 0; channel < impulse.numberOfChannels; channel += 1) {
+    const data = impulse.getChannelData(channel);
+    for (let index = 0; index < length; index += 1) {
+      const progress = index / length;
+      const decay = (1 - progress) ** (2.2 + damping * 5);
+      data[index] = (Math.random() * 2 - 1) * decay * (channel ? 0.92 : 1);
+    }
+  }
+
+  return impulse;
+}
+
+function getMasterGainTarget() {
+  return state.sound ? state.soundVolume : 0.0001;
+}
+
+function getMasterBus() {
+  const context = getAudioContext();
+  if (!context) return null;
+  if (context._masterBus) return context._masterBus;
+
+  const preGain = context.createGain();
+  preGain.gain.value = 0.9;
+
+  const compressor = context.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value = 12;
+  compressor.ratio.value = 3;
+  compressor.attack.value = 0.005;
+  compressor.release.value = 0.18;
+
+  const tameShelf = context.createBiquadFilter();
+  tameShelf.type = "highshelf";
+  tameShelf.frequency.value = 2400;
+  tameShelf.gain.value = -2.5;
+
+  const safetyLowPass = context.createBiquadFilter();
+  safetyLowPass.type = "lowpass";
+  safetyLowPass.frequency.value = 11000;
+  safetyLowPass.Q.value = 0.7;
+
+  const convolver = context.createConvolver();
+  convolver.buffer = createSyntheticIR(context, 1.2, 0.35);
+  const reverbSend = context.createGain();
+  reverbSend.gain.value = 0.18;
+  const reverbReturn = context.createGain();
+  reverbReturn.gain.value = 0.5;
+
+  const limiter = context.createDynamicsCompressor();
+  limiter.threshold.value = -1;
+  limiter.knee.value = 0;
+  limiter.ratio.value = 20;
+  limiter.attack.value = 0.001;
+  limiter.release.value = 0.05;
+
+  const masterGain = context.createGain();
+  masterGain.gain.value = getMasterGainTarget();
+
+  preGain.connect(compressor);
+  compressor.connect(tameShelf);
+  tameShelf.connect(safetyLowPass);
+  safetyLowPass.connect(limiter);
+  limiter.connect(masterGain);
+  masterGain.connect(context.destination);
+
+  compressor.connect(reverbSend);
+  reverbSend.connect(convolver);
+  convolver.connect(reverbReturn);
+  reverbReturn.connect(masterGain);
+
+  context._masterBus = {
+    preGain,
+    masterGain,
+    reverbSend,
+    compressor,
+    tameShelf,
+    safetyLowPass,
+    limiter,
+    convolver,
+    reverbReturn,
+  };
+  return context._masterBus;
+}
+
+function rampMasterGain(target, duration = 0.06) {
+  const context = getAudioContext();
+  const bus = getMasterBus();
+  if (!context || !bus) return;
+
+  const now = context.currentTime;
+  const safeTarget = Math.max(0.0001, Math.min(1, target));
+  bus.masterGain.gain.cancelScheduledValues(now);
+  bus.masterGain.gain.setValueAtTime(Math.max(0.0001, bus.masterGain.gain.value), now);
+  bus.masterGain.gain.linearRampToValueAtTime(safeTarget, now + duration);
+}
+
+function updateSoundVolumeUi() {
+  const volumePercent = Math.round(state.soundVolume * 100);
+  if (els.soundVolume) {
+    els.soundVolume.value = String(volumePercent);
+  }
+  if (els.soundVolumeValue) {
+    els.soundVolumeValue.textContent = `VOL ${volumePercent}`;
+  }
+}
+
+function setSoundVolumeFromInput(value, persist = true) {
+  const volumePercent = Math.min(100, Math.max(0, Number(value) || 0));
+  state.soundVolume = volumePercent / 100;
+  if (persist) {
+    safeLocalStorageSet(soundVolumeStorageKey, String(volumePercent));
+  }
+  updateSoundVolumeUi();
+  if (state.sound) {
+    rampMasterGain(state.soundVolume, 0.06);
+  }
+}
+
+function setSoundEnabled(enabled, fadeSeconds = 0.25) {
+  state.sound = Boolean(enabled);
+  clearTimeout(masterFadeTimer);
+  if (!state.sound) {
+    rampMasterGain(0.0001, fadeSeconds);
+    masterFadeTimer = setTimeout(() => {
+      state.audioUnlocked = false;
+      updateSoundButtonUi();
+    }, fadeSeconds * 1000 + 20);
+    return;
+  }
+  rampMasterGain(state.soundVolume, fadeSeconds);
+}
+
 async function unlockAudio() {
   const context = getAudioContext();
   if (!context) return false;
@@ -3158,9 +3305,13 @@ async function unlockAudio() {
 
     const source = context.createBufferSource();
     source.buffer = context.createBuffer(1, 1, context.sampleRate);
-    source.connect(context.destination);
+    const bus = getMasterBus();
+    source.connect(bus ? bus.preGain : context.destination);
     source.start(0);
     state.audioUnlocked = context.state === "running";
+    if (state.audioUnlocked && state.sound) {
+      rampMasterGain(state.soundVolume, 0.06);
+    }
     updateSoundButtonUi();
     return state.audioUnlocked;
   } catch {
@@ -3230,7 +3381,8 @@ function playTone(frequency, duration, type = "sine", delay = 0, volume = 0.12) 
   gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
   oscillator.connect(gain);
-  gain.connect(context.destination);
+  const bus = getMasterBus();
+  gain.connect(bus ? bus.preGain : context.destination);
   oscillator.start(start);
   oscillator.stop(start + duration + 0.02);
 }
@@ -3278,7 +3430,8 @@ function playNoiseBurst(duration, delay = 0, volume = 0.035, filterFrequency = 7
   source.buffer = buffer;
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(context.destination);
+  const bus = getMasterBus();
+  gain.connect(bus ? bus.preGain : context.destination);
   source.start(start);
   source.stop(start + duration + 0.02);
 }
@@ -4234,6 +4387,9 @@ els.feedbackText.addEventListener("input", renderReportPreview);
 els.reportPreview.addEventListener("toggle", renderReportPreview);
 els.testInfoToggle.addEventListener("click", () => setTestInfoOpen(!testInfoOpen()));
 els.testInfoClose.addEventListener("click", () => setTestInfoOpen(false));
+els.soundVolume?.addEventListener("input", () => {
+  setSoundVolumeFromInput(els.soundVolume.value);
+});
 els.soundButton.addEventListener("click", async () => {
   if (state.sound && !state.audioUnlocked) {
     const unlocked = await unlockAudio();
@@ -4251,9 +4407,9 @@ els.soundButton.addEventListener("click", async () => {
     return;
   }
 
-  state.sound = !state.sound;
-  if (!state.sound) {
-    state.audioUnlocked = false;
+  const nextSoundState = !state.sound;
+  setSoundEnabled(nextSoundState, 0.25);
+  if (!nextSoundState) {
     setHiddenMessage(`${t("soundOff")}.`);
   } else {
     const unlocked = await unlockAudio();
@@ -4328,6 +4484,7 @@ addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();
 renderSelectedFeedbackTags();
 renderV7Panels();
+updateSoundVolumeUi();
 updateUi();
 primeMissionBonusState();
 maybeShowIntroModal();

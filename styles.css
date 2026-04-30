@@ -355,6 +355,32 @@ h1 {
   color: rgba(247, 242, 232, 0.58);
 }
 
+.sound-volume {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(156, 109, 255, 0.28);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.16)),
+    rgba(15, 17, 27, 0.78);
+  box-shadow: 0 0 14px rgba(156, 109, 255, 0.13);
+}
+
+.sound-volume span {
+  color: rgba(247, 242, 232, 0.76);
+  font-size: 0.58rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.sound-volume input {
+  width: clamp(64px, 9vw, 96px);
+  accent-color: var(--gold);
+}
+
 #guideButton span {
   color: var(--gold);
 }
@@ -3846,6 +3872,20 @@ h1 {
     font-size: 0.58rem;
   }
 
+  .sound-volume {
+    min-height: 28px;
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .sound-volume span {
+    font-size: 0.52rem;
+  }
+
+  .sound-volume input {
+    width: 58px;
+  }
+
   .cabinet-marquee {
     display: none;
   }
@@ -4251,6 +4291,14 @@ h1 {
 
   .sound-toggle span {
     font-size: 0.54rem;
+  }
+
+  .sound-volume {
+    padding: 2px 5px;
+  }
+
+  .sound-volume input {
+    width: 46px;
   }
 
   .bonus-chests {
