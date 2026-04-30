@@ -1,8 +1,37 @@
 # Telegram Limited Test Checklist
 
 Project: NEON HUNTER SPIN
-Version: neon-hunter-spin-v7
+Version: neon-hunter-spin-v9-kakao-inapp-test
 Purpose: limited Telegram testing for a free social slot demo.
+
+## v9 KakaoTalk Pre-Test Note
+
+- Run the KakaoTalk limited test before broader Telegram testing.
+- Use `docs/kakao-limited-test-checklist.md` for KakaoTalk-specific checks.
+- Confirm KakaoTalk Test Mode, SOUND ON/OFF, SELECT, TAKE, Auto Play, Feedback, and Copy Kakao Test Message on real devices.
+- Keep the Demo Only notice visible and verify all credits remain virtual test points with no cash value.
+
+## v8 QA Stabilization
+
+1. Tap START DEMO and confirm demo credits load.
+2. Tap SPIN and confirm the base game starts normally.
+3. On a ways win, SELECT one eligible glowing reel and confirm only that reel respins.
+4. On a ways win, press TAKE and confirm the current win is paid once.
+5. Start AUTO PLAY and confirm it automatically TAKES if a SELECT/TAKE state appears.
+6. Confirm scatter/free-game triggers do not conflict with Selected Reel Reveal.
+7. Confirm scatter reels are locked only when the result enters the scatter/free-game flow.
+8. Observe a bonus chest trigger before the visual meter reaches 100, if it occurs during testing.
+9. Test SOUND ON/OFF on iPhone Telegram browser and confirm the tap-to-enable prompt is understandable.
+10. Open Feedback, copy or submit the test report, and confirm Safe Demo Notice remains visible.
+
+v8 Go / No-Go:
+
+- START DEMO, SPIN, DROP, SELECT, TAKE, and AUTO PLAY all work.
+- No double credit occurs after TAKE or SELECT.
+- Auto Play does not freeze in reveal state.
+- No horizontal overflow on mobile.
+- SOUND ON/OFF remains compact and readable.
+- Credits are clearly virtual test points with no cash value.
 
 ## v4 Real-Device Test Focus
 

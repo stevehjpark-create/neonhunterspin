@@ -79,6 +79,12 @@ http://localhost:8080
 
 ## Netlify Deployment
 
+Official test URL:
+
+```text
+https://neonhunterspin.netlify.app/
+```
+
 ### Option 1: Netlify Drag and Drop
 
 1. Open Netlify.
@@ -117,7 +123,7 @@ Preview image size:
 If Telegram shows an old preview, wait for Telegram cache refresh or test with a fresh URL query parameter such as:
 
 ```text
-https://your-netlify-site.netlify.app/?v=2
+https://neonhunterspin.netlify.app/?v=2
 ```
 
 ## Demo Flow
@@ -302,6 +308,57 @@ Safety:
 - No backend login.
 - All credits are virtual test points with no cash value.
 - Trail, achievements, collection, and share moments are cosmetic/local-only test features.
+
+## v8 QA Stabilization
+
+Version: `neon-hunter-spin-v8-qa-stabilization`
+
+Purpose: stabilize the v7 feature set before the next Telegram and mobile real-device test.
+
+Focus:
+
+- Selected Reel Reveal UX checks: glowing eligible reels, locked non-eligible reels, and clear SELECT or TAKE instruction.
+- Auto Play TAKE validation: Auto Play should keep the current win automatically when the SELECT/TAKE state appears.
+- Sound testing on iPhone Telegram browser: SOUND button must clearly show when a tap is needed to unlock audio.
+- Bonus gauge explanation: chest progress is a visual test meter, and feature triggers may occur before 100.
+- Demo-only safety reminder: all credits remain virtual test points with no cash value.
+
+QA reminders:
+
+- Verify no double credit when pressing TAKE repeatedly.
+- Verify Auto Play does not freeze in a reveal state.
+- Verify scatter reels are locked only when the result is entering the scatter/free-game flow.
+- Run local RTP sanity checks after any Selected Reel Reveal eligibility, paytable, or bet-level change.
+
+## v9 KakaoTalk In-App Test
+
+Version: `neon-hunter-spin-v9-kakao-inapp-test`
+
+Purpose: prepare for a small domestic KakaoTalk in-app browser test before broader Telegram testing.
+
+Added:
+
+- KakaoTalk Test Mode with priority over Telegram and Guest mode labels.
+- Kakao-specific quick feedback tags for browser, sound, screen, button, SELECT/TAKE, and Auto Play issues.
+- Copy Kakao Test Message for manual paste-back into KakaoTalk.
+- Kakao mobile viewport hardening for modals, feedback tags, and small-screen scrolling.
+- Kakao sound unlock clarity with a compact tap-to-enable state.
+- Kakao limited test checklist in `docs/kakao-limited-test-checklist.md`.
+
+Safety:
+
+- No real-money betting.
+- No payout.
+- No cash-out.
+- No external reward.
+- No gift card.
+- No cryptocurrency.
+- No token asset.
+- No NFT.
+- No wallet.
+- No payment.
+- No backend login.
+- All credits are virtual test points with no cash value.
 
 ## RTP Simulation
 

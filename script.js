@@ -79,7 +79,7 @@ const featureTrailStorageKey = "neonHunterSpinFeatureTrail";
 const achievementStorageKey = "neonHunterSpinAchievements";
 const symbolCollectionStorageKey = "neonHunterSpinSymbolCollection";
 const serviceWorkerPath = "service-worker.js";
-const appVersion = "v7";
+const appVersion = "v9";
 const dailyDemoCredits = 2_000;
 const missionBonusDemoCredits = 100;
 const feedbackTagOptions = [
@@ -91,6 +91,12 @@ const feedbackTagOptions = [
   "Layout Broken",
   "Sound Issue",
   "Telegram Issue",
+  "Kakao Browser Issue",
+  "Sound Not Working",
+  "Screen Cut Off",
+  "Button Hidden",
+  "Select/Take Confusing",
+  "Auto Play Issue",
 ];
 const testerMissionDefinitions = [
   { id: "startDemo", label: "Start the demo" },
@@ -152,8 +158,8 @@ const state = {
   displayCredits: 0,
   showCreditsAsCredits: true,
   language: determineInitialLanguage(),
-  betIndex: 1,
-  selectedReels: reelsByBetIndex[1],
+  betIndex: 3,
+  selectedReels: reelsByBetIndex[3],
   selectedMultiplier: 1,
   selectedDenomCents: 1,
   selectedTotalRtp: 0.88,
@@ -279,6 +285,7 @@ const els = {
   feedbackTagButtons: [...document.querySelectorAll("#feedbackTagButtons button")],
   selectedFeedbackTags: document.querySelector("#selectedFeedbackTags"),
   copyTestReport: document.querySelector("#copyTestReport"),
+  copyKakaoTestMessage: document.querySelector("#copyKakaoTestMessage"),
   reportPreview: document.querySelector("#reportPreview"),
   reportPreviewText: document.querySelector("#reportPreviewText"),
   reportFallback: document.querySelector("#reportFallback"),
@@ -319,6 +326,7 @@ const els = {
 
 let audioContext;
 let autoSpinTimer;
+let autoSpinInFlight = false;
 let creditAnimationFrame;
 let demoMessageTimer;
 let teaseTimer;
@@ -334,6 +342,7 @@ const i18n = {
     languageLabel: "Language",
     guestMode: "Guest Demo Mode",
     telegramMode: "Telegram Test Mode",
+    kakaoMode: "KakaoTalk Test Mode",
     eyebrow: "Korean Fantasy Social Slot Demo",
     marqueeLeft: "Korean Fantasy x K-pop Neon Casino",
     marqueeRight: "No Real-Money Play",
@@ -341,6 +350,7 @@ const i18n = {
     soundOn: "Sound ON",
     soundOff: "Sound OFF",
     soundLocked: "Sound Locked",
+    soundTap: "Tap Sound",
     soundOnAria: "Sound is on. Tap to turn sound off",
     soundOffAria: "Sound is off. Tap to turn sound on",
     soundLockedAria: "Sound is on but locked. Tap to unlock audio",
@@ -400,6 +410,7 @@ const i18n = {
     previewReport: "Preview Test Report",
     manualCopy: "Copy this test report manually",
     copyReport: "Copy Test Report",
+    copyKakaoReport: "Copy Kakao Test Message",
     submitFeedback: "Submit Feedback",
     introCheckStart: "✓ Tap START DEMO First",
     introCheckCredits: "✓ Free Demo Credits",
@@ -431,6 +442,10 @@ const i18n = {
     originalIpNotice:
       "This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.",
     virtualCreditsNotice: "All credits are virtual test points with no cash value.",
+    bonusGaugeNote: "Bonus chest progress is a visual test meter. Feature triggers may occur before the gauge reaches 100.",
+    localDemoNote: "For testing only. No personal data sent.",
+    kakaoTestNote:
+      "KakaoTalk Test: Please test whether START DEMO, SPIN, SOUND ON/OFF, SELECT, TAKE, Auto Play, and Feedback work correctly inside KakaoTalk's in-app browser. This is a free demo test only. All credits are virtual test points with no cash value.",
     scratchTitle: "Dokkaebi Scratch",
     scratchSubtitle: "Match 3 Jackpot Symbols",
     pickCard: "Pick a card.",
@@ -444,6 +459,12 @@ const i18n = {
     tagLayout: "Layout Broken",
     tagSound: "Sound Issue",
     tagTelegram: "Telegram Issue",
+    tagKakao: "Kakao Browser Issue",
+    tagSoundNotWorking: "Sound Not Working",
+    tagScreenCutOff: "Screen Cut Off",
+    tagButtonHidden: "Button Hidden",
+    tagSelectTake: "Select/Take Confusing",
+    tagAutoPlayIssue: "Auto Play Issue",
     noIssue: "No Issue",
     layoutIssue: "Layout Issue",
     telegramIssue: "Telegram Browser Issue",
@@ -463,6 +484,7 @@ const i18n = {
     languageLabel: "언어",
     guestMode: "게스트 데모 모드",
     telegramMode: "텔레그램 테스트 모드",
+    kakaoMode: "카카오톡 테스트 모드",
     eyebrow: "한국 판타지 소셜 슬롯 데모",
     marqueeLeft: "한국 판타지 x K-pop 네온 카지노",
     marqueeRight: "실제 금전 플레이 없음",
@@ -470,6 +492,7 @@ const i18n = {
     soundOn: "사운드 켜짐",
     soundOff: "사운드 꺼짐",
     soundLocked: "사운드 잠김",
+    soundTap: "사운드 탭",
     soundOnAria: "사운드가 켜져 있습니다. 끄려면 누르세요",
     soundOffAria: "사운드가 꺼져 있습니다. 켜려면 누르세요",
     soundLockedAria: "사운드가 켜져 있지만 잠겨 있습니다. 오디오를 해제하려면 누르세요",
@@ -529,6 +552,7 @@ const i18n = {
     previewReport: "테스트 리포트 미리보기",
     manualCopy: "이 테스트 리포트를 직접 복사하세요",
     copyReport: "테스트 리포트 복사",
+    copyKakaoReport: "카카오 테스트 메시지 복사",
     submitFeedback: "피드백 제출",
     introCheckStart: "✓ 먼저 START DEMO 누르기",
     introCheckCredits: "✓ 무료 데모 CREDIT",
@@ -560,6 +584,10 @@ const i18n = {
     originalIpNotice:
       "이 데모는 독창적인 K-pop 판타지 슬롯 데모입니다. 기존 영화, 게임, 음악 자산의 저작권 캐릭터, 로고, 장면, 공식 에셋을 사용하지 않습니다.",
     virtualCreditsNotice: "모든 CREDIT은 현금 가치가 없는 가상 테스트 포인트입니다.",
+    bonusGaugeNote: "보너스 상자 진행도는 시각 테스트 미터입니다. 기능 트리거는 게이지가 100에 도달하기 전에 발생할 수 있습니다.",
+    localDemoNote: "테스트 전용입니다. 개인정보는 전송되지 않습니다.",
+    kakaoTestNote:
+      "카카오톡 테스트: 카카오톡 인앱 브라우저에서 START DEMO, SPIN, SOUND ON/OFF, SELECT, TAKE, Auto Play, Feedback이 정상 동작하는지 확인해 주세요. 무료 데모 테스트 전용이며 모든 CREDIT은 현금 가치 없는 가상 테스트 포인트입니다.",
     scratchTitle: "도깨비 스크래치",
     scratchSubtitle: "잭팟 심볼 3개 맞추기",
     pickCard: "카드를 선택하세요.",
@@ -573,6 +601,12 @@ const i18n = {
     tagLayout: "레이아웃 깨짐",
     tagSound: "사운드 문제",
     tagTelegram: "텔레그램 문제",
+    tagKakao: "카카오 브라우저 문제",
+    tagSoundNotWorking: "사운드 안 나옴",
+    tagScreenCutOff: "화면 잘림",
+    tagButtonHidden: "버튼 숨김",
+    tagSelectTake: "SELECT/TAKE 혼란",
+    tagAutoPlayIssue: "오토 플레이 문제",
     noIssue: "이슈 없음",
     layoutIssue: "레이아웃 이슈",
     telegramIssue: "텔레그램 브라우저 이슈",
@@ -599,6 +633,12 @@ const feedbackTagTranslationKeys = {
   "Layout Broken": "tagLayout",
   "Sound Issue": "tagSound",
   "Telegram Issue": "tagTelegram",
+  "Kakao Browser Issue": "tagKakao",
+  "Sound Not Working": "tagSoundNotWorking",
+  "Screen Cut Off": "tagScreenCutOff",
+  "Button Hidden": "tagButtonHidden",
+  "Select/Take Confusing": "tagSelectTake",
+  "Auto Play Issue": "tagAutoPlayIssue",
 };
 
 const issueTypeTranslationKeys = {
@@ -606,6 +646,7 @@ const issueTypeTranslationKeys = {
   "Sound Issue": "tagSound",
   "Layout Issue": "layoutIssue",
   "Telegram Browser Issue": "telegramIssue",
+  "Kakao Browser Issue": "tagKakao",
   "Button / Touch Issue": "touchIssue",
   "Performance Issue": "performanceIssue",
   "Confusing UX": "confusingUx",
@@ -1474,6 +1515,47 @@ async function copyTestReport() {
   renderV7Panels();
 }
 
+function buildKakaoTestMessage() {
+  const feedback = els.feedbackText?.value.trim() || "";
+  const deviceNote = els.feedbackDeviceNote?.value.trim() || "";
+  const tags = state.selectedFeedbackTags.length ? state.selectedFeedbackTags.join(", ") : "None";
+
+  return [
+    "NEON HUNTER SPIN Kakao Test Report",
+    `Mode: ${state.testModeLabel}`,
+    `Test Session ID: ${state.testSessionId}`,
+    `Device/browser: ${deviceLabel()}`,
+    `Viewport size: ${window.innerWidth} x ${window.innerHeight}`,
+    `Sound state: ${soundStateLabel()}`,
+    `Total Spins: ${state.testStats.totalSpins}`,
+    `Selected feedback tags: ${tags}`,
+    `Written feedback: ${feedback || "None"}`,
+    `Device note: ${deviceNote || "None"}`,
+    "Free demo only. Virtual test points have no cash value.",
+  ].join("\n");
+}
+
+async function copyKakaoTestMessage() {
+  const report = buildKakaoTestMessage();
+  if (els.reportFallback) {
+    els.reportFallback.hidden = true;
+  }
+  setReportStatus("");
+
+  try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard unavailable");
+    }
+    await navigator.clipboard.writeText(report);
+    setReportStatus("Kakao test message copied. Please paste it into KakaoTalk.");
+    setHiddenMessage("Kakao test message copied. Please paste it into KakaoTalk.");
+  } catch {
+    showReportFallback(report);
+    setReportStatus("Clipboard unavailable. Copy the Kakao test message manually from this panel.");
+    setHiddenMessage("Copy the Kakao test message manually from the feedback panel.");
+  }
+}
+
 function buildShareMoment() {
   const trail = featureTrailProgress();
   const collection = symbolCollectionProgress();
@@ -1531,17 +1613,23 @@ async function copyShareMoment() {
 
 function deviceLabel() {
   const ua = navigator.userAgent || "";
+  const isKakao = isKakaoTalkInAppBrowser();
   const isTelegram = Boolean(window.Telegram?.WebApp) || /Telegram/i.test(ua);
   const isIphone = /iPhone|iPod/i.test(ua);
   const isAndroid = /Android/i.test(ua);
   const isChrome = /Chrome|CriOS/i.test(ua);
   const isSafari = /Safari/i.test(ua) && !isChrome;
 
+  if (isKakao) return "KakaoTalk In-App Browser";
   if (isTelegram) return "Telegram In-App Browser";
   if (isIphone && isSafari) return "iPhone Safari";
   if (isAndroid && isChrome) return "Android Chrome";
   if (!/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) return "Desktop Browser";
   return "Unknown";
+}
+
+function isKakaoTalkInAppBrowser() {
+  return /KAKAOTALK|KakaoTalk/i.test(navigator.userAgent || "");
 }
 
 function pwaStatusLabel() {
@@ -1604,9 +1692,10 @@ function toggleFeedbackTag(tag) {
 
 function initializeTelegramMode() {
   const telegramApp = window.Telegram?.WebApp;
-  state.testModeLabel = telegramApp ? t("telegramMode") : t("guestMode");
+  const kakaoApp = isKakaoTalkInAppBrowser();
+  state.testModeLabel = kakaoApp ? t("kakaoMode") : telegramApp ? t("telegramMode") : t("guestMode");
 
-  if (telegramApp) {
+  if (!kakaoApp && telegramApp) {
     try {
       telegramApp.ready?.();
       telegramApp.expand?.();
@@ -1617,7 +1706,8 @@ function initializeTelegramMode() {
 
   if (els.testModeBadge) {
     els.testModeBadge.textContent = state.testModeLabel;
-    els.testModeBadge.classList.toggle("telegram", Boolean(telegramApp));
+    els.testModeBadge.classList.toggle("kakao", kakaoApp);
+    els.testModeBadge.classList.toggle("telegram", !kakaoApp && Boolean(telegramApp));
   }
   updateTestInfoPanel();
 }
@@ -1658,6 +1748,7 @@ function applyLanguage(persist = false) {
   setTextContent(".guide-panel header p", t("gameGuide"));
   setTextContent(".guide-panel header h2", t("paytableRules"));
   setTextContent(".guide-intro", t("guideIntro"));
+  setTextContent(".kakao-test-note", t("kakaoTestNote"));
   setAllTextContent(".guide-section h3", [
     t("baseGame"),
     t("symbolsTitle"),
@@ -1676,8 +1767,12 @@ function applyLanguage(persist = false) {
     t("checklistSmooth"),
     t("checklistConfusing"),
   ]);
-  setTextContent(".guide-section .guide-note", t("useFeedback"));
-  setAllTextContent(".guide-panel > .guide-note", [t("originalIpNotice"), t("virtualCreditsNotice"), t("footer")]);
+  setTextContent(".tester-feedback-note", t("useFeedback"));
+  setTextContent(".bonus-gauge-note", t("bonusGaugeNote"));
+  setTextContent(".local-demo-note", t("localDemoNote"));
+  setTextContent(".original-ip-note", t("originalIpNotice"));
+  setTextContent(".virtual-credits-note", t("virtualCreditsNotice"));
+  setTextContent(".footer-safety-note", t("footer"));
   setTextContent("#scratchOverlay header p", t("scratchTitle"));
   setTextContent("#scratchOverlay header h2", t("scratchSubtitle"));
   setTextContent("#scratchMessage", t("pickCard"));
@@ -1692,6 +1787,7 @@ function applyLanguage(persist = false) {
   setTextContent("#reportPreview summary", t("previewReport"));
   setTextContent('label[for="reportFallbackText"]', t("manualCopy"));
   setTextContent("#copyTestReport", t("copyReport"));
+  setTextContent("#copyKakaoTestMessage", t("copyKakaoReport"));
   setTextContent("#feedbackSubmit", t("submitFeedback"));
   setTextContent("#testInfoPanel header strong", t("testInfo"));
   setAllTextContent("#testInfoPanel dt", [t("mode"), t("session"), t("viewport"), t("device"), t("pwa")]);
@@ -2446,6 +2542,16 @@ function canAutoSpin() {
   );
 }
 
+async function runAutoSpinStep() {
+  if (autoSpinInFlight) return;
+  autoSpinInFlight = true;
+  try {
+    await spin();
+  } finally {
+    autoSpinInFlight = false;
+  }
+}
+
 function toggleAutoSpin() {
   if (autoSpinTimer) {
     stopAutoSpin();
@@ -2458,6 +2564,9 @@ function toggleAutoSpin() {
   state.autoPlayStopRequested = false;
   setMessage("Auto Play started.");
   autoSpinTimer = setInterval(() => {
+    if (autoSpinInFlight) {
+      return;
+    }
     if (state.autoPlayStopRequested) {
       stopAutoSpin();
       setMessage("Auto Play stopped by player action.");
@@ -2468,9 +2577,9 @@ function toggleAutoSpin() {
       setMessage("Auto Play stopped by bonus or stop condition.");
       return;
     }
-    spin();
+    runAutoSpinStep();
   }, 2600);
-  spin();
+  runAutoSpinStep();
   updateUi();
 }
 
@@ -2841,6 +2950,8 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
     const containsScatter = reelSymbols.some((symbol) => symbol?.isScatter);
     const containsBonus = reelSymbols.some((symbol) => symbol?.isBonus);
 
+    // Eligibility is intentionally a UX layer: only active, winning, non-feature reels can be selected.
+    // Scatter reels are locked only when this same result is entering the scatter/free-game flow.
     if (index >= activeReelCount) {
       setRevealReelState(reel, "reel-select-inactive", "FEATURE LOCKED");
       return;
@@ -2867,6 +2978,7 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
 
   if (!selectableReels.length) {
     clearSelectableReelStates();
+    setHiddenMessage("No eligible reveal reels. Current win will be taken automatically.", true);
     return;
   }
 
@@ -2883,9 +2995,9 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
   els.reelWindow.classList.add("selectable-reel-mode");
   els.reelWindow.classList.toggle("single-selectable-reel", selectableReels.length === 1);
   if (selectableReels.length === 1) {
-    showTeaseOverlay("Only one reel is available.", "Tap SELECT to respin, or TAKE the win.", true);
+    showTeaseOverlay("Only one reel is available.", "SELECT a glowing reel or TAKE your current win.", true);
   } else {
-    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT to respin, or TAKE the win.", true);
+    showTeaseOverlay("Choose One Neon Reel", "SELECT a glowing reel or TAKE your current win.", true);
   }
 }
 
@@ -3601,7 +3713,7 @@ function updateSoundButtonUi() {
   els.soundButton.classList.toggle("unlocked", soundReady);
   els.soundButton.classList.toggle("needs-unlock", state.sound && !state.audioUnlocked);
   if (els.soundButtonText) {
-    els.soundButtonText.textContent = state.sound ? "SOUND ON" : "SOUND OFF";
+    els.soundButtonText.textContent = state.sound ? (soundReady ? "SOUND ON" : t("soundTap")) : "SOUND OFF";
   }
 }
 
@@ -3613,8 +3725,8 @@ async function unlockAudioForUserGesture() {
   }
   setHiddenMessage(
     state.language === "ko"
-      ? "아이폰에서 오디오가 막히면 사운드 버튼을 누른 뒤 SPIN을 다시 누르세요."
-      : "Tap Sound ON, then tap SPIN again if your iPhone blocks audio.",
+      ? "사운드를 켜려면 한 번 탭하세요."
+      : "Tap once to enable sound.",
   );
   return false;
 }
@@ -4732,6 +4844,7 @@ els.openFeedbackPanel?.addEventListener("click", openFeedbackModal);
 els.feedbackCancel.addEventListener("click", closeFeedbackModal);
 els.feedbackSubmit.addEventListener("click", submitFeedback);
 els.copyTestReport.addEventListener("click", copyTestReport);
+els.copyKakaoTestMessage.addEventListener("click", copyKakaoTestMessage);
 els.copyShareMoment.addEventListener("click", copyShareMoment);
 els.feedbackOverlay.addEventListener("click", (event) => {
   if (event.target === els.feedbackOverlay) {

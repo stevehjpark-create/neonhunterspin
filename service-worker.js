@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v7-auto-take-select";
+const CACHE_NAME = "neon-hunter-spin-v9-kakao-inapp-test";
 const CORE_ASSETS = [
   "./",
   "./index.html",

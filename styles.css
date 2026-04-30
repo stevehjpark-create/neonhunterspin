@@ -274,6 +274,17 @@ button:disabled {
   box-shadow: 0 0 16px rgba(156, 109, 255, 0.22);
 }
 
+.test-mode-badge.kakao {
+  color: #1c1300;
+  border-color: rgba(255, 224, 70, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 239, 119, 0.95), rgba(248, 205, 44, 0.88)),
+    #f8dd2f;
+  box-shadow:
+    0 0 16px rgba(255, 224, 70, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--gold);
@@ -5748,6 +5759,38 @@ h1 {
   box-shadow:
     0 4px 0 rgba(25, 14, 50, 0.82),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+@supports (height: 100svh) {
+  .intro-overlay,
+  .feedback-overlay,
+  .guide-overlay {
+    min-height: 100svh;
+  }
+
+  .feedback-panel,
+  .guide-panel,
+  .intro-modal {
+    max-height: calc(100svh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 430px) {
+  .feedback-panel,
+  .guide-panel {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .feedback-tags {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feedback-tags button {
+    min-height: 36px;
+    padding-inline: 8px;
+    font-size: 0.62rem;
+  }
 }
 
 .daily-demo-button:disabled {

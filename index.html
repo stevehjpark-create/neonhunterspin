@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v7-auto-take-select" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v9-kakao-inapp-test" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -386,6 +386,12 @@
             <button type="button" data-feedback-tag="Layout Broken">Layout Broken</button>
             <button type="button" data-feedback-tag="Sound Issue">Sound Issue</button>
             <button type="button" data-feedback-tag="Telegram Issue">Telegram Issue</button>
+            <button type="button" data-feedback-tag="Kakao Browser Issue">Kakao Browser Issue</button>
+            <button type="button" data-feedback-tag="Sound Not Working">Sound Not Working</button>
+            <button type="button" data-feedback-tag="Screen Cut Off">Screen Cut Off</button>
+            <button type="button" data-feedback-tag="Button Hidden">Button Hidden</button>
+            <button type="button" data-feedback-tag="Select/Take Confusing">Select/Take Confusing</button>
+            <button type="button" data-feedback-tag="Auto Play Issue">Auto Play Issue</button>
           </div>
           <div id="selectedFeedbackTags" class="selected-feedback-tags" aria-live="polite">No tags selected</div>
         </div>
@@ -395,6 +401,7 @@
           <option value="Sound Issue">Sound Issue</option>
           <option value="Layout Issue">Layout Issue</option>
           <option value="Telegram Browser Issue">Telegram Browser Issue</option>
+          <option value="Kakao Browser Issue">Kakao Browser Issue</option>
           <option value="Button / Touch Issue">Button / Touch Issue</option>
           <option value="Performance Issue">Performance Issue</option>
           <option value="Confusing UX">Confusing UX</option>
@@ -424,6 +431,7 @@
         <p id="reportStatus" class="report-status" aria-live="polite"></p>
         <div class="feedback-actions">
           <button id="copyTestReport" class="secondary-action" type="button">Copy Test Report</button>
+          <button id="copyKakaoTestMessage" class="secondary-action" type="button">Copy Kakao Test Message</button>
           <button id="feedbackSubmit" type="button">Submit Feedback</button>
         </div>
       </section>
@@ -442,6 +450,7 @@
         </header>
 
         <p class="guide-intro">Spin through a neon Korean fantasy stage. Unlock free games, dokkaebi bonus features, and virtual jackpot moments. Demo credits have no cash value.</p>
+        <p class="guide-note kakao-test-note">KakaoTalk Test: Please test whether START DEMO, SPIN, SOUND ON/OFF, SELECT, TAKE, Auto Play, and Feedback work correctly inside KakaoTalk's in-app browser. This is a free demo test only. All credits are virtual test points with no cash value.</p>
 
         <div class="guide-section">
           <h3>Base Game</h3>
@@ -517,6 +526,7 @@
             <article><span>4x3</span><strong>Dokkaebi Scratch</strong><p>The second dokkaebi bursts gems into a 4x3 scratch board. Match 3 MINI, MINOR, MAJOR, or GRAND symbols to collect the jackpot.</p></article>
             <article><span><img src="assets/symbols/icon/wild.png" alt="" /></span><strong>Dokkaebi Expand</strong><p>The third dokkaebi bursts gems to expand reels 2-4 randomly from 5 to 10 rows for 5 bonus games.</p></article>
           </div>
+          <p class="guide-note bonus-gauge-note">Bonus chest progress is a visual test meter. Feature triggers may occur before the gauge reaches 100.</p>
         </div>
 
         <div class="guide-section">
@@ -528,7 +538,7 @@
             <li>Did the game run smoothly on your phone?</li>
             <li>Did anything feel confusing?</li>
           </ul>
-          <p class="guide-note">Please use the Feedback button after testing.</p>
+          <p class="guide-note tester-feedback-note">Please use the Feedback button after testing.</p>
         </div>
 
         <div class="guide-section">
@@ -567,12 +577,12 @@
         <div class="guide-section">
           <h3>Local Demo Summary</h3>
           <div id="guideLocalDemoSummary" class="session-summary-grid"></div>
-          <p class="guide-note">For testing only. No personal data sent.</p>
+          <p class="guide-note local-demo-note">For testing only. No personal data sent.</p>
         </div>
 
-        <p class="guide-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
-        <p class="guide-note">All credits are virtual test points with no cash value.</p>
-        <p class="guide-note">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</p>
+        <p class="guide-note original-ip-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
+        <p class="guide-note virtual-credits-note">All credits are virtual test points with no cash value.</p>
+        <p class="guide-note footer-safety-note">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</p>
       </section>
     </div>
 
@@ -592,6 +602,6 @@
 
     <div id="achievementToast" class="achievement-toast" aria-live="polite" aria-hidden="true"></div>
 
-    <script src="script.js?v=neon-hunter-spin-v7-auto-take-select"></script>
+    <script src="script.js?v=neon-hunter-spin-v9-kakao-inapp-test"></script>
   </body>
 </html>

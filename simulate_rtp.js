@@ -54,6 +54,9 @@ const chestTriggerBands = [
   [0.58, 0.75],
   [0.72, 0.9],
 ];
+// Selected Reel Reveal is a free presentation choice after qualifying wins.
+// These reserves keep the EV-aware SELECT policy near target RTP while raising volatility;
+// re-run simulator checks before changing bet levels, reveal eligibility, or paytable values.
 const selectedRevealRtpReserveByBet = new Map([
   [8, 0.13],
   [16, 0.131],
@@ -675,7 +678,8 @@ console.log(`selected_reveal_policy=${selectedRevealPolicy}`);
 if (selectedRevealPolicy === "ev") {
   console.log(`selected_reveal_ev_samples=${selectedRevealEvSamples}`);
 }
-console.log(`selected_reveal_rtp_reserve=${[...selectedRevealRtpReserveByBet.entries()].map(([bet, reserve]) => `${bet}:${(reserve * 100).toFixed(1)}pp`).join("|")}`);
+console.log(`selected_reveal_rtp_reserve_by_bet_pp=${[...selectedRevealRtpReserveByBet.entries()].map(([bet, reserve]) => `${bet}:${(reserve * 100).toFixed(1)}pp`).join("|")}`);
+console.log(`note=Selected Reel Reveal reserve is for local RTP sanity checks; validate again before production math changes.`);
 console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand,avg_retrigger_count,avg_max_multiplier,p99_freegame_total_win,selected_reveal_offers,selected_reveal_takes,selected_reveal_selects,avg_selected_reveal_delta");
 
 for (const { bet, activeReels } of betLevels) {
