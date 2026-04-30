@@ -27,6 +27,10 @@ const reelWeights = [
 const reelCount = 5;
 const visibleRows = 3;
 const paidSpins = Number(process.env.PAID_SPINS || 1_000_000);
+const simulationSeed = Number(process.env.SEED || 0);
+if (Number.isFinite(simulationSeed) && simulationSeed > 0) {
+  Math.random = seededRandom(simulationSeed);
+}
 const betLevels = [
   { bet: 8, activeReels: 3 },
   { bet: 16, activeReels: 3 },
@@ -59,6 +63,14 @@ const jackpotConfig = {
   MAJOR: { start: 5000, max: 12000, contribution: 0.008 },
   GRAND: { start: 10000, max: 25000, contribution: 0.004 },
 };
+
+function seededRandom(seed) {
+  let value = seed >>> 0;
+  return () => {
+    value = (value * 1664525 + 1013904223) >>> 0;
+    return value / 0x100000000;
+  };
+}
 const paytable = {
   bar: { 3: 0.05, 4: 0.5, 5: 8 },
   A: { 3: 0.05, 4: 0.5, 5: 8 },

@@ -43,6 +43,10 @@ This project does not include:
 ├── manifest.json
 ├── service-worker.js
 ├── simulate_rtp.js
+├── docs/
+│   ├── telegram-limited-test-checklist.md
+│   ├── release-qa-2026-04-30.md
+│   └── prompts/
 ├── assets/
 │   ├── share/
 │   │   ├── telegram-preview.png
@@ -53,7 +57,13 @@ This project does not include:
 
 ## Local Preview
 
-Because this is a static app, you can open `index.html` directly in a browser.
+Use a local server for testing. Do not open `index.html` directly with a `file://` URL, because browser security and service-worker behavior can block scripts, assets, or local paths.
+
+If the Codex preview server is running, open:
+
+```text
+http://127.0.0.1:4173/
+```
 
 For a closer Netlify-like local test, run a simple static server from the project folder:
 
@@ -272,6 +282,7 @@ Added:
 - Symbol Collection based on actual reel results.
 - Copy Share Moment for manual Telegram test sharing.
 - Local Demo Summary using only local test stats.
+- Dokkaebi Ascension retrigger presentation and multiplier tracking for free-game retriggers.
 
 Safety:
 
@@ -304,6 +315,20 @@ For a shorter smoke run:
 ```bash
 PAID_SPINS=100000 node simulate_rtp.js
 ```
+
+For repeatable local checks, add a deterministic seed:
+
+```bash
+SEED=20260430 PAID_SPINS=100000 node simulate_rtp.js
+```
+
+## Prompt Archive
+
+Large implementation prompts are stored under `docs/prompts/`:
+
+- `docs/prompts/ux-improvement-prompt.md`
+- `docs/prompts/sound-design-prompt.md`
+- `docs/prompts/retrigger-improvement-prompt.md`
 
 ## Suggested Branch Name
 

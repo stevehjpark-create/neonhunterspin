@@ -87,6 +87,13 @@ Go / No-Go Criteria:
 11. Confirm Safe Demo Notice remains visible.
 12. Report any layout, sound, or Telegram browser issue.
 
+Additional v7 Ascension check:
+
+1. Trigger or debug-start Free Games.
+2. If a retrigger occurs during Free Games, confirm the meter shows an Ascension multiplier such as `x2`.
+3. Confirm the multiplier applies only during Free Games and resets after the bonus ends.
+4. Confirm the final Free Games total is paid to the credit meter once at the end.
+
 Go / No-Go Criteria:
 
 - No console errors.
@@ -105,6 +112,7 @@ Go / No-Go Criteria:
 ## 1. Pre-Test Checklist
 
 - Open the latest Netlify URL.
+- For local testing, open `http://127.0.0.1:4173/` or a local static server URL, not a direct `file://` path.
 - Confirm the page title is NEON HUNTER SPIN.
 - Confirm the visible mode label shows Telegram Test Mode or Guest Demo Mode.
 - Confirm the footer safety notice is visible.
