@@ -325,6 +325,12 @@ For repeatable local checks, add a deterministic seed:
 SEED=20260430 PAID_SPINS=100000 node simulate_rtp.js
 ```
 
+Selected Reel Reveal is tuned for an EV-aware SELECT player. The local simulator defaults to `SELECT_POLICY=ev` and applies a bet-level base RTP reserve so the free SELECT feature stays in the game while overall RTP remains near target in the SELECT scenario. TAKE-only checks can be run with:
+
+```bash
+SEED=20260430 PAID_SPINS=100000 SELECT_POLICY=take node simulate_rtp.js
+```
+
 ## Prompt Archive
 
 Large implementation prompts are stored under `docs/prompts/`:

@@ -52,6 +52,18 @@ const ascensionAdjustedFreeRtp = bonusFreeSpinTargetRtp / ascensionAverageMultip
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
 const highBetChestReserveRelief = 0.006;
+const chestTriggerBands = [
+  [0.45, 0.6],
+  [0.58, 0.75],
+  [0.72, 0.9],
+];
+const selectedRevealRtpReserveByBet = new Map([
+  [8, 0.13],
+  [16, 0.131],
+  [40, 0.207],
+  [88, 0.176],
+  [176, 0.1935],
+]);
 const demoStartCredits = 10_000;
 const creditOdometerCentsPerSecond = 50;
 const maxDisplayAmount = 99_999_999.99;
@@ -63,7 +75,6 @@ const testStatsStorageKey = "neonHunterSpinTestStats";
 const testerMissionStorageKey = "neonHunterSpinTesterMission";
 const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const languageStorageKey = "neonHunterSpinLanguage";
-const soundVolumeStorageKey = "neonHunterSpinSoundVolume";
 const featureTrailStorageKey = "neonHunterSpinFeatureTrail";
 const achievementStorageKey = "neonHunterSpinAchievements";
 const symbolCollectionStorageKey = "neonHunterSpinSymbolCollection";
@@ -163,7 +174,6 @@ const state = {
   scratchPickLimit: scratchCardCount,
   spinning: false,
   sound: true,
-  soundVolume: loadSoundVolume(),
   audioUnlocked: false,
   currentOverlay: null,
   selectedReelReveal: null,
@@ -208,8 +218,6 @@ const els = {
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
   soundButtonText: document.querySelector("#soundButton span"),
-  soundVolume: document.querySelector("#soundVolume"),
-  soundVolumeValue: document.querySelector("#soundVolumeValue"),
   languageSelect: document.querySelector("#languageSelect"),
   testModeBadge: document.querySelector("#testModeBadge"),
   testInfoToggle: document.querySelector("#testInfoToggle"),
@@ -675,12 +683,6 @@ function safeLocalStorageSet(key, value) {
   } catch {
     // Telegram and private browsers may restrict storage; the game should still run.
   }
-}
-
-function loadSoundVolume() {
-  const stored = Number(safeLocalStorageGet(soundVolumeStorageKey));
-  if (!Number.isFinite(stored)) return 0.8;
-  return Math.min(1, Math.max(0, stored / 100));
 }
 
 function localDateKey(date = new Date()) {
@@ -1790,9 +1792,11 @@ function createJackpotState(label) {
 }
 
 function createChest(index) {
+  const [minTarget, maxTarget] = chestTriggerBands[Math.floor(Math.random() * chestTriggerBands.length)];
   return {
     progress: 0.16 + Math.random() * 0.05,
-    threshold: 0.45 + Math.random() * 0.45,
+    threshold: minTarget + Math.random() * (maxTarget - minTarget),
+    targetBand: [minTarget, maxTarget],
     gems: createChestGems(index),
     gemKey: `${index}-${Math.random().toString(36).slice(2)}`,
     index,
@@ -2472,7 +2476,8 @@ function toggleAutoSpin() {
 
 function updateChestUi(triggeredIndex = -1) {
   state.chests.forEach((chest, index) => {
-    const openStep = Math.min(100, Math.max(0, Math.floor(chest.progress * 100)));
+    const target = Math.max(0.01, chest.threshold || 1);
+    const openStep = Math.min(100, Math.max(0, Math.floor((chest.progress / target) * 100)));
     const open = openStep / 100;
     els.chestCards[index].style.setProperty("--open", open.toFixed(3));
     els.chestCards[index].style.setProperty("--gold-level", open.toFixed(3));
@@ -2596,8 +2601,12 @@ function bonusRtpContribution(activeReelCount = state.selectedReels, spinBet = c
   return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureReserveForBet(spinBet);
 }
 
+function selectedRevealRtpReserve(spinBet = currentBet()) {
+  return selectedRevealRtpReserveByBet.get(spinBet) || 0;
+}
+
 function baseGameTargetRtp() {
-  return Math.max(0, state.selectedTotalRtp - bonusRtpContribution());
+  return Math.max(0, state.selectedTotalRtp - bonusRtpContribution() - selectedRevealRtpReserve());
 }
 
 function expectedBonusFreeSpins() {
@@ -3164,7 +3173,7 @@ function advanceChests() {
   const increments = [0.018, 0.014, 0.012];
 
   state.chests.forEach((chest, index) => {
-    chest.progress = Math.min(0.96, chest.progress + increments[index] + Math.random() * 0.012);
+    chest.progress = Math.min(chest.threshold, chest.progress + increments[index] + Math.random() * 0.012);
   });
 }
 
@@ -3244,7 +3253,7 @@ async function handleChestBonus(index) {
 
   state.spinning = true;
   setHiddenMessage("Dokkaebi gem burst feature reveal in progress");
-  state.chests[index].progress = 1;
+  state.chests[index].progress = state.chests[index].threshold;
   updateChestUi(index);
   playBonusStartSound();
   updateUi();
@@ -3457,7 +3466,7 @@ function createSyntheticIR(context, seconds = 1.2, damping = 0.35) {
 }
 
 function getMasterGainTarget() {
-  return state.sound ? state.soundVolume : 0.0001;
+  return state.sound ? 1 : 0.0001;
 }
 
 function getMasterBus() {
@@ -3540,28 +3549,6 @@ function rampMasterGain(target, duration = 0.06) {
   bus.masterGain.gain.linearRampToValueAtTime(safeTarget, now + duration);
 }
 
-function updateSoundVolumeUi() {
-  const volumePercent = Math.round(state.soundVolume * 100);
-  if (els.soundVolume) {
-    els.soundVolume.value = String(volumePercent);
-  }
-  if (els.soundVolumeValue) {
-    els.soundVolumeValue.textContent = `VOL ${volumePercent}`;
-  }
-}
-
-function setSoundVolumeFromInput(value, persist = true) {
-  const volumePercent = Math.min(100, Math.max(0, Number(value) || 0));
-  state.soundVolume = volumePercent / 100;
-  if (persist) {
-    safeLocalStorageSet(soundVolumeStorageKey, String(volumePercent));
-  }
-  updateSoundVolumeUi();
-  if (state.sound) {
-    rampMasterGain(state.soundVolume, 0.06);
-  }
-}
-
 function setSoundEnabled(enabled, fadeSeconds = 0.25) {
   state.sound = Boolean(enabled);
   clearTimeout(masterFadeTimer);
@@ -3573,7 +3560,7 @@ function setSoundEnabled(enabled, fadeSeconds = 0.25) {
     }, fadeSeconds * 1000 + 20);
     return;
   }
-  rampMasterGain(state.soundVolume, fadeSeconds);
+  rampMasterGain(1, fadeSeconds);
 }
 
 async function unlockAudio() {
@@ -3592,7 +3579,7 @@ async function unlockAudio() {
     source.start(0);
     state.audioUnlocked = context.state === "running";
     if (state.audioUnlocked && state.sound) {
-      rampMasterGain(state.soundVolume, 0.06);
+      rampMasterGain(1, 0.06);
     }
     updateSoundButtonUi();
     return state.audioUnlocked;
@@ -3615,7 +3602,7 @@ function updateSoundButtonUi() {
   els.soundButton.classList.toggle("unlocked", soundReady);
   els.soundButton.classList.toggle("needs-unlock", state.sound && !state.audioUnlocked);
   if (els.soundButtonText) {
-    els.soundButtonText.textContent = soundLabel;
+    els.soundButtonText.textContent = state.sound ? "SOUND ON" : "SOUND OFF";
   }
 }
 
@@ -4751,9 +4738,6 @@ els.feedbackText.addEventListener("input", renderReportPreview);
 els.reportPreview.addEventListener("toggle", renderReportPreview);
 els.testInfoToggle.addEventListener("click", () => setTestInfoOpen(!testInfoOpen()));
 els.testInfoClose.addEventListener("click", () => setTestInfoOpen(false));
-els.soundVolume?.addEventListener("input", () => {
-  setSoundVolumeFromInput(els.soundVolume.value);
-});
 els.soundButton.addEventListener("click", async () => {
   if (state.sound && !state.audioUnlocked) {
     const unlocked = await unlockAudio();
@@ -4848,7 +4832,6 @@ addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();
 renderSelectedFeedbackTags();
 renderV7Panels();
-updateSoundVolumeUi();
 updateUi();
 primeMissionBonusState();
 maybeShowIntroModal();

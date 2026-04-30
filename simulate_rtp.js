@@ -49,6 +49,18 @@ const ascensionAdjustedFreeRtp = bonusFreeSpinTargetRtp / ascensionAverageMultip
 const targetBonusTriggerRate = 0.01;
 const chestFeatureRtpReserve = 0.044;
 const highBetChestReserveRelief = 0.006;
+const chestTriggerBands = [
+  [0.45, 0.6],
+  [0.58, 0.75],
+  [0.72, 0.9],
+];
+const selectedRevealRtpReserveByBet = new Map([
+  [8, 0.13],
+  [16, 0.131],
+  [40, 0.207],
+  [88, 0.176],
+  [176, 0.1935],
+]);
 const jackpotPriority = ["GRAND", "MAJOR", "MINOR", "MINI"];
 const denomTargets = [
   ["1¢", 1, 0.88],
@@ -160,8 +172,12 @@ function bonusRtpContribution(activeReelCount, spinBet) {
   return targetBonusTriggerRate * expectedBonusFreeSpins() * bonusFreeSpinTargetRtp + chestFeatureReserveForBet(spinBet);
 }
 
+function selectedRevealRtpReserve(spinBet) {
+  return selectedRevealRtpReserveByBet.get(spinBet) || 0;
+}
+
 function baseGameTargetRtp(targetRtp, activeReelCount, spinBet) {
-  return Math.max(0, targetRtp - bonusRtpContribution(activeReelCount, spinBet));
+  return Math.max(0, targetRtp - bonusRtpContribution(activeReelCount, spinBet) - selectedRevealRtpReserve(spinBet));
 }
 
 function rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, targetRtp, spinBet, rowCounts = Array(reelCount).fill(visibleRows)) {
@@ -389,9 +405,11 @@ function resolveSelectedReelReveal(grid, originalWin, selectableReels, rowCounts
 }
 
 function createChest(index) {
+  const [minTarget, maxTarget] = chestTriggerBands[Math.floor(Math.random() * chestTriggerBands.length)];
   return {
     progress: 0.16 + Math.random() * 0.05,
-    threshold: 0.45 + Math.random() * 0.45,
+    threshold: minTarget + Math.random() * (maxTarget - minTarget),
+    targetBand: [minTarget, maxTarget],
     index,
   };
 }
@@ -442,7 +460,7 @@ function advanceChests(state) {
   const increments = [0.018, 0.014, 0.012];
 
   state.chests.forEach((chest, index) => {
-    chest.progress = Math.min(0.96, chest.progress + increments[index] + Math.random() * 0.012);
+    chest.progress = Math.min(chest.threshold, chest.progress + increments[index] + Math.random() * 0.012);
   });
 }
 
@@ -479,7 +497,7 @@ function drawScratchPrize(state) {
 }
 
 function handleChestBonus(state, index, stats) {
-  state.chests[index].progress = 1;
+  state.chests[index].progress = state.chests[index].threshold;
 
   if (index === 0) {
     state.freeSpinMultiplier = 1;
@@ -657,6 +675,7 @@ console.log(`selected_reveal_policy=${selectedRevealPolicy}`);
 if (selectedRevealPolicy === "ev") {
   console.log(`selected_reveal_ev_samples=${selectedRevealEvSamples}`);
 }
+console.log(`selected_reveal_rtp_reserve=${[...selectedRevealRtpReserveByBet.entries()].map(([bet, reserve]) => `${bet}:${(reserve * 100).toFixed(1)}pp`).join("|")}`);
 console.log("bet_level,active_reels,ways,denom,target_rtp,sim_rtp,diff_pp,bonus_triggers,free_spins,expanded_spins,scratch,mini,minor,major,grand,avg_retrigger_count,avg_max_multiplier,p99_freegame_total_win,selected_reveal_offers,selected_reveal_takes,selected_reveal_selects,avg_selected_reveal_delta");
 
 for (const { bet, activeReels } of betLevels) {
