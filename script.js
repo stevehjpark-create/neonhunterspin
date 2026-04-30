@@ -274,6 +274,9 @@ const els = {
   testerMissionList: document.querySelector("#testerMissionList"),
   guideMissionProgress: document.querySelector("#guideMissionProgress"),
   guideMissionList: document.querySelector("#guideMissionList"),
+  openTrailPanel: document.querySelector("#openTrailPanel"),
+  openTestInfoPanel: document.querySelector("#openTestInfoPanel"),
+  openFeedbackPanel: document.querySelector("#openFeedbackPanel"),
   engagementPanel: document.querySelector("#engagementPanel"),
   featureTrailProgress: document.querySelector("#featureTrailProgress"),
   featureTrailList: document.querySelector("#featureTrailList"),
@@ -1181,6 +1184,12 @@ function renderV7Panels() {
     if (element) element.innerHTML = summaryMarkup;
   });
   renderReportPreview();
+}
+
+function openTrailPanel() {
+  if (!els.engagementPanel) return;
+  els.engagementPanel.open = true;
+  els.engagementPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function generateTestSessionId() {
@@ -4152,6 +4161,9 @@ els.introOverlay.addEventListener("click", (event) => {
   }
 });
 els.feedbackButton.addEventListener("click", openFeedbackModal);
+els.openTrailPanel?.addEventListener("click", openTrailPanel);
+els.openTestInfoPanel?.addEventListener("click", () => setTestInfoOpen(true));
+els.openFeedbackPanel?.addEventListener("click", openFeedbackModal);
 els.feedbackCancel.addEventListener("click", closeFeedbackModal);
 els.feedbackSubmit.addEventListener("click", submitFeedback);
 els.copyTestReport.addEventListener("click", copyTestReport);
