@@ -100,10 +100,10 @@
         </div>
 
         <div class="jackpot-strip" aria-label="Progressive jackpot values">
-          <div><span>MINI</span><strong id="miniJackpot">150.00 CREDIT</strong></div>
-          <div><span>MINOR</span><strong id="minorJackpot">500.00 CREDIT</strong></div>
-          <div><span>MAJOR</span><strong id="majorJackpot">5,000.00 CREDIT</strong></div>
-          <div><span>GRAND</span><strong id="grandJackpot">10,000.00 CREDIT</strong></div>
+          <div><span>MINI</span><strong id="miniJackpot">$1.50</strong></div>
+          <div><span>MINOR</span><strong id="minorJackpot">$5.00</strong></div>
+          <div><span>MAJOR</span><strong id="majorJackpot">$50.00</strong></div>
+          <div><span>GRAND</span><strong id="grandJackpot">$100.00</strong></div>
         </div>
 
         <div class="reel-window" aria-live="polite">
@@ -139,7 +139,7 @@
           </div>
           <div id="freeWinOverlay" class="free-win-overlay message-only" role="status" aria-hidden="true">
             <strong id="freeWinTitle">BIG WIN</strong>
-            <span id="freeWinTotal">0.00 CREDIT</span>
+            <span id="freeWinTotal">$0.00</span>
             <p id="freeWinCaption">Free Games Total Win</p>
           </div>
           <div id="teaseOverlay" class="tease-overlay" aria-hidden="true">
@@ -171,7 +171,7 @@
         <div class="meters" aria-label="Game meters">
           <div id="creditsMeter" class="meter meter-action" role="button" tabindex="0" aria-label="Toggle credit display">
             <span>Credit Meter</span>
-            <strong id="credits">0.00 CREDIT</strong>
+            <strong id="credits">$0.00</strong>
           </div>
           <div class="meter">
             <span>Total Bet</span>
@@ -187,7 +187,7 @@
           </div>
           <div class="meter">
             <span>Denom</span>
-            <strong id="denom">Unit x1</strong>
+            <strong id="denom">1¢</strong>
           </div>
           <div class="meter">
             <span>Game RTP</span>
@@ -249,15 +249,15 @@
           </div>
           <div class="option-group wide denom-picker" id="denomPicker">
             <span>Denomination</span>
-            <button id="denomToggle" class="denom-toggle" type="button" aria-expanded="false" aria-controls="denomOptions">Unit x1</button>
+            <button id="denomToggle" class="denom-toggle" type="button" aria-expanded="false" aria-controls="denomOptions">1¢</button>
             <div class="option-buttons denom-options" id="denomOptions" hidden>
-              <button type="button" data-denom="1">Unit x1</button>
-              <button type="button" data-denom="2">Unit x2</button>
-              <button type="button" data-denom="5">Unit x5</button>
-              <button type="button" data-denom="10">Unit x10</button>
-              <button type="button" data-denom="20">Unit x20</button>
-              <button type="button" data-denom="50">Unit x50</button>
-              <button type="button" data-denom="100">Unit x100</button>
+              <button type="button" data-denom="1">1¢</button>
+              <button type="button" data-denom="2">2¢</button>
+              <button type="button" data-denom="5">5¢</button>
+              <button type="button" data-denom="10">10¢</button>
+              <button type="button" data-denom="20">20¢</button>
+              <button type="button" data-denom="50">50¢</button>
+              <button type="button" data-denom="100">$1</button>
             </div>
           </div>
         </div>
@@ -419,7 +419,7 @@
               </div>
             </article>
             <article class="guide-card">
-              <span class="guide-image">Unit</span>
+              <span class="guide-image">1¢</span>
               <div>
                 <strong>Denom RTP</strong>
                 <p>Changing denomination applies that denom's configured target RTP.</p>

@@ -339,8 +339,8 @@ const i18n = {
     waysByBetDesc: "Bet level activates 3, 4, or 5 reels. Inactive reels are dimmed on the cabinet.",
     presetBet: "Preset Bet Levels",
     presetBetDesc: "8/16 play 27 ways, 40 plays 81 ways, and 88 or higher plays the full 243 ways.",
-    denomRtp: "Unit RTP",
-    denomRtpDesc: "Changing unit option applies that unit's configured target RTP.",
+    denomRtp: "Denom RTP",
+    denomRtpDesc: "Changing denomination applies that denom's configured target RTP.",
     symbolsTitle: "Symbols",
     bonusFeatures: "Bonus Features",
     testerChecklist: "Tester Checklist",
@@ -468,8 +468,8 @@ const i18n = {
     waysByBetDesc: "베팅 레벨에 따라 3, 4, 5개 릴이 활성화됩니다. 비활성 릴은 어둡게 표시됩니다.",
     presetBet: "프리셋 베팅 레벨",
     presetBetDesc: "8/16은 27 ways, 40은 81 ways, 88 이상은 전체 243 ways로 플레이합니다.",
-    denomRtp: "단위별 RTP",
-    denomRtpDesc: "단위 선택을 바꾸면 해당 단위에 설정된 목표 RTP가 적용됩니다.",
+    denomRtp: "데놈별 RTP",
+    denomRtpDesc: "데놈을 바꾸면 해당 데놈에 설정된 목표 RTP가 적용됩니다.",
     symbolsTitle: "심볼",
     bonusFeatures: "보너스 기능",
     testerChecklist: "테스터 체크리스트",
@@ -1487,13 +1487,30 @@ function convertCreditAmountForDenom(amount, oldDenomCents, newDenomCents) {
 }
 
 function preserveCashValueForDenomChange(oldDenomCents, newDenomCents) {
-  void oldDenomCents;
-  void newDenomCents;
-  // Credit-only display: changing the unit option must not change the player's credit balance.
+  state.credits = convertCreditAmountForDenom(state.credits, oldDenomCents, newDenomCents);
+  state.displayCredits = convertCreditAmountForDenom(
+    state.displayCredits,
+    oldDenomCents,
+    newDenomCents,
+  );
+  state.lastWin = convertCreditAmountForDenom(state.lastWin, oldDenomCents, newDenomCents);
+  state.freeSpinWinTotal = convertCreditAmountForDenom(
+    state.freeSpinWinTotal,
+    oldDenomCents,
+    newDenomCents,
+  );
 }
 
 function formatMoney(credits) {
-  return formatCreditAmount(credits);
+  const amount = (credits * state.selectedDenomCents) / 100;
+  if (amount > maxDisplayAmount) return cappedDisplayAmount;
+
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function formatCreditAmount(credits) {
@@ -1506,21 +1523,22 @@ function formatCreditAmount(credits) {
 }
 
 function formatDisplayAmount(credits) {
-  return formatCreditAmount(credits);
+  return formatMoney(credits);
 }
 
 function denomLabel(denomCents = state.selectedDenomCents) {
-  return `${t("unitLabel")} x${denomCents}`;
+  if (denomCents >= 100) return `$${denomCents / 100}`;
+  return `${denomCents}¢`;
 }
 
 function renderCredits() {
-  els.credits.textContent = formatCreditAmount(state.displayCredits);
-  els.creditsMeter.classList.add("credit-mode");
+  els.credits.textContent = formatMoney(state.displayCredits);
+  els.creditsMeter.classList.remove("credit-mode");
   els.creditsMeter.setAttribute(
     "aria-label",
     state.language === "ko"
-      ? "CREDIT 전용 표시가 활성화되어 있습니다."
-      : "Credit-only display is active.",
+      ? "데모 금액 표시가 달러 또는 센트 단위로 활성화되어 있습니다."
+      : "Demo amount display is active in dollars or cents.",
   );
 }
 
@@ -1542,8 +1560,8 @@ function setCredits(nextCredits, animate = false) {
   }
 
   const startedAt = performance.now();
-  const creditsToAnimate = Math.abs(nextValue - startValue);
-  const duration = Math.max(120, (creditsToAnimate / creditOdometerCentsPerSecond) * 1000);
+  const centsToAnimate = Math.abs(nextValue - startValue) * state.selectedDenomCents;
+  const duration = Math.max(120, (centsToAnimate / creditOdometerCentsPerSecond) * 1000);
   let lastStackSoundAt = 0;
   let stackSoundStep = 0;
 
@@ -1587,7 +1605,8 @@ function addCredits(amount, animate = true) {
 }
 
 function demoCreditAmountForCurrentDenom(baseCreditAmount) {
-  return baseCreditAmount;
+  const baseDenomCents = denomSteps[0];
+  return (baseCreditAmount * baseDenomCents) / state.selectedDenomCents;
 }
 
 function demoStartCreditAmountForCurrentDenom() {
@@ -2219,10 +2238,12 @@ function distributeAdjustedWin(details, rawWin, adjustedWin) {
 }
 
 function formatFormulaMoney(credits) {
-  return `${credits.toLocaleString("en-US", {
+  return (credits * state.selectedDenomCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })} CREDIT`;
+  });
 }
 
 function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
@@ -3468,14 +3489,20 @@ async function dropCredits() {
   }
 
   if (dropAmount > maxDropAmount) {
-    const maxDropText = formatCreditAmount(maxDropAmount);
+    const maxDropText = maxDropAmount.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const maxDropCredits = (maxDropAmount * 100) / state.selectedDenomCents;
     setHiddenMessage(`${t("dropLimit")} ${maxDropText}.`);
-    showReelAmountOverlay("DROP LIMIT", maxDropAmount, "Demo drop limit exceeded", false);
+    showReelAmountOverlay("DROP LIMIT", maxDropCredits, "Demo drop limit exceeded", false);
     updateUi();
     return;
   }
 
-  const creditsToAdd = dropAmount;
+  const creditsToAdd = (dropAmount * 100) / state.selectedDenomCents;
   addCredits(creditsToAdd, false);
   playDropSound();
   els.dropAmount.value = "";
@@ -3555,8 +3582,8 @@ function selectDenom(value) {
   switchJackpotBankForDenom(value);
   setMessage(
     state.language === "ko"
-      ? `${denomLabel(value)} 선택됨. CREDIT 잔액은 그대로 유지됩니다. 목표 RTP ${Math.round(state.selectedTotalRtp * 100)}%.`
-      : `${denomLabel(value)} selected. Credit balance stays unchanged. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%.`,
+      ? `${denomLabel(value)} 선택됨. 표시 금액은 보존됩니다. 목표 RTP ${Math.round(state.selectedTotalRtp * 100)}%.`
+      : `${denomLabel(value)} selected. Displayed balance is preserved. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%.`,
   );
   updateUi();
 }
@@ -3578,7 +3605,7 @@ function setupDebugHooks() {
     awardCash(amount = 100) {
       if (state.spinning || state.scratchActive) return false;
       const demoCreditAmount = Math.max(0, Number(amount) || 0);
-      setCredits(demoCreditAmount, false);
+      setCredits((demoCreditAmount * 100) / state.selectedDenomCents, false);
       setAmountMessage(state.credits, "debug demo credits loaded.");
       updateUi();
       return true;
@@ -3592,7 +3619,8 @@ function setupDebugHooks() {
     snapshot() {
       return {
         credits: state.credits,
-        unitOption: state.selectedDenomCents,
+        denomCents: state.selectedDenomCents,
+        displayValue: (state.credits * state.selectedDenomCents) / 100,
         bonusSpins: state.bonusSpins,
         expandedBonusSpins: state.expandedBonusSpins,
         jackpots: structuredClone(state.jackpots),
