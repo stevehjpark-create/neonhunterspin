@@ -166,6 +166,7 @@ const state = {
   soundVolume: loadSoundVolume(),
   audioUnlocked: false,
   currentOverlay: null,
+  selectedReelReveal: null,
   overlaySequenceId: 0,
   autoPlayStopRequested: false,
   testModeLabel: "Guest Demo Mode",
@@ -2718,6 +2719,7 @@ const selectableReelStateClasses = [
 ];
 
 function clearSelectableReelStates() {
+  state.selectedReelReveal = null;
   els.reelWindow.classList.remove("selectable-reel-mode", "single-selectable-reel");
   els.reels.forEach((reel) => {
     reel.classList.remove(...selectableReelStateClasses);
@@ -2798,6 +2800,10 @@ function setRevealReelState(reel, className, label, selectable = false) {
   }
 }
 
+function cloneGrid(grid) {
+  return grid.map((reel) => reel.slice());
+}
+
 function applySelectableReelRevealStates(grid, winDetails, activeReelCount, options = {}) {
   clearSelectableReelStates();
   if (!Array.isArray(grid) || !winDetails.length || options.bonusTriggered || options.isFreeSpin) {
@@ -2841,23 +2847,107 @@ function applySelectableReelRevealStates(grid, winDetails, activeReelCount, opti
     return;
   }
 
+  state.selectedReelReveal = {
+    grid: cloneGrid(grid),
+    bet: options.bet,
+    activeReelCount,
+    rowCounts: options.rowCounts?.slice() || Array(reelCount).fill(visibleRows),
+    originalWin: options.win || 0,
+  };
   els.reelWindow.classList.add("selectable-reel-mode");
   els.reelWindow.classList.toggle("single-selectable-reel", selectableReels.length === 1);
   if (selectableReels.length === 1) {
-    showTeaseOverlay("Only one reel is available.", "Tap SELECT to confirm the neon reel.", true);
+    showTeaseOverlay("Only one reel is available.", "Tap SELECT to respin that reel.", true);
   } else {
-    showTeaseOverlay("Choose One Neon Reel", "Selectable reels are marked SELECT.", true);
+    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT to respin one winning reel.", true);
   }
 }
 
-function confirmSelectableReel(reel) {
-  if (!reel?.classList.contains("reel-selectable")) return;
+async function confirmSelectableReel(reel) {
+  if (!reel?.classList.contains("reel-selectable") || !state.selectedReelReveal || state.spinning) return;
 
   reel.classList.remove("reel-select-confirm");
   void reel.offsetWidth;
   reel.classList.add("reel-select-confirm");
-  showTeaseOverlay("Neon Reel Selected", "Winning symbols stay highlighted until the next spin.", true);
-  setTimeout(() => reel.classList.remove("reel-select-confirm"), 760);
+  try {
+    await rerollSelectedReel(Number(reel.dataset.index));
+  } catch (error) {
+    console.error("Selected Reel respin failed", error);
+    clearSelectableReelStates();
+    state.spinning = false;
+    updateUi();
+  }
+}
+
+async function rerollSelectedReel(reelIndex) {
+  const reveal = state.selectedReelReveal;
+  if (!reveal || !Number.isInteger(reelIndex) || reelIndex < 0 || reelIndex >= reveal.activeReelCount) return;
+
+  stopAutoSpin();
+  settleCreditAnimation();
+  hideTeaseOverlay();
+  hideReelWinOverlay();
+  state.spinning = true;
+  updateUi();
+
+  const reel = els.reels[reelIndex];
+  const rowCount = reveal.rowCounts[reelIndex] || visibleRows;
+  const profile = {
+    intervalMs: 78,
+    animationDuration: 0.105,
+  };
+  reel.classList.add("spinning", "reel-reveal-spinning");
+  applyReelSpinProfile(reel, profile, false);
+  const ticker = startReelTicker(reel, reelIndex, rowCount, profile.intervalMs);
+  playSpinSound();
+  showTeaseOverlay("Neon Reel Respin", "Selected reel is updating the result.", true);
+
+  await wait(760);
+  clearInterval(ticker);
+  const nextReelResult = createReelResult(reelIndex, rowCount);
+  const nextGrid = cloneGrid(reveal.grid);
+  nextGrid[reelIndex] = nextReelResult;
+  stopReel(reel, nextReelResult, reelIndex);
+  reel.classList.remove("reel-reveal-spinning", "reel-select-confirm");
+  clearSelectableReelStates();
+  collectSymbolsFromResult(nextGrid);
+
+  const rawWin = calculateRawWin(nextGrid, reveal.bet, reveal.activeReelCount);
+  const updatedWin = rtpAdjustedWin(rawWin, reveal.activeReelCount, false, reveal.rowCounts);
+  const waysWinDetails = distributeAdjustedWin(
+    calculateWaysWinDetails(nextGrid, reveal.bet, reveal.activeReelCount),
+    rawWin,
+    updatedWin,
+  );
+  const waysWinFormulas = buildWaysWinFormulasFromDetails(waysWinDetails);
+  const creditDelta = updatedWin - reveal.originalWin;
+
+  state.lastWin = updatedWin;
+  setCredits(state.credits + creditDelta, creditDelta > 0);
+  clearWinningSymbolHighlights();
+
+  if (updatedWin > 0) {
+    applyWinningSymbolHighlights(nextGrid, waysWinDetails, reveal.activeReelCount);
+    const restoreOverlay = {
+      type: "amount",
+      title: "REVEAL RESULT",
+      amount: updatedWin,
+      caption: "Selected reel updated",
+      isWin: true,
+      captionAmount: null,
+    };
+    setMessage(`${formatDisplayAmount(updatedWin)} reveal result.`, true);
+    showReelWinOverlay("REVEAL RESULT", updatedWin, "Selected reel updated");
+    showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
+    els.machine.classList.add("celebrate");
+    playWinSound();
+  } else {
+    setHiddenMessage("");
+    showReelMessageOverlay("REVEAL COMPLETE", false);
+  }
+
+  state.spinning = false;
+  updateUi();
 }
 
 async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
@@ -4061,6 +4151,9 @@ async function spin() {
     applySelectableReelRevealStates(result, waysWinDetails, activeReelCount, {
       bonusTriggered,
       isFreeSpin,
+      bet,
+      rowCounts,
+      win,
     });
   }
   const freeSpinCurrentMultiplier = isFreeSpin ? state.freeSpinMultiplier : 1;

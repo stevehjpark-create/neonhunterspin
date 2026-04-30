@@ -160,6 +160,8 @@ Go / No-Go Criteria:
 - Jackpot moments remain clearly virtual demo events.
 - Test Stats update after spins, wins, bonus triggers, free-game triggers, and feedback submission.
 - On a normal ways win, selectable winning reels show SELECT while non-winning, scatter, bonus, and inactive reels stay visually locked.
+- Tapping SELECT respins only that reel, updates the displayed result, and removes the SELECT opportunity.
+- Spins with no win do not show any SELECT or reel-respin opportunity.
 
 ## 6. Safety Copy Checklist
 
@@ -192,7 +194,8 @@ Go criteria:
 - Feedback submits to console.
 - Safety notice is visible.
 - PWA does not break loading.
-- Selectable Reel labels are readable and do not change payouts, reel results, or bonus behavior.
+- Selectable Reel labels are readable, and the optional selected-reel respin updates only the selected reel/result.
+- Selected Reel respin is available only after a win and cannot be repeated on the updated result.
 
 No-Go criteria:
 

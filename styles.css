@@ -3383,7 +3383,20 @@ h1 {
   animation: selectableReelConfirm 0.72s ease-out;
 }
 
+.reel.reel-reveal-spinning {
+  outline: 2px solid rgba(160, 224, 255, 0.9);
+  outline-offset: -2px;
+  filter: saturate(1.2) brightness(1.08);
+  box-shadow:
+    0 12px 0 rgba(1, 2, 4, 0.92),
+    0 20px 26px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(160, 224, 255, 0.6),
+    0 0 40px rgba(156, 109, 255, 0.52),
+    inset 0 0 24px rgba(160, 224, 255, 0.14);
+}
+
 .reel.reel-selectable::after,
+.reel.reel-reveal-spinning::after,
 .reel.reel-locked::after,
 .reel.reel-scatter-locked::after,
 .reel.reel-bonus-locked::after,
@@ -3412,6 +3425,16 @@ h1 {
     0 0 12px rgba(255, 206, 85, 0.72),
     0 0 22px rgba(156, 109, 255, 0.46);
   animation: selectLabelPulse 0.95s ease-in-out infinite;
+}
+
+.reel.reel-reveal-spinning::after {
+  content: "RESPIN";
+  color: #081520;
+  background: linear-gradient(180deg, #d7f3ff, #7ed6ff);
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  box-shadow:
+    0 0 12px rgba(160, 224, 255, 0.72),
+    0 0 22px rgba(156, 109, 255, 0.46);
 }
 
 .reel.reel-locked,
@@ -5969,6 +5992,7 @@ h1 {
 
 @media (max-width: 430px) {
   .reel.reel-selectable::after,
+  .reel.reel-reveal-spinning::after,
   .reel.reel-locked::after,
   .reel.reel-scatter-locked::after,
   .reel.reel-bonus-locked::after,
@@ -5984,7 +6008,8 @@ h1 {
   .reel.reel-selectable,
   .reel.reel-selectable::before,
   .reel.reel-selectable::after,
-  .reel.reel-select-confirm {
+  .reel.reel-select-confirm,
+  .reel.reel-reveal-spinning::after {
     animation: none;
   }
 }
