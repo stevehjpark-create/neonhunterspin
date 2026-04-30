@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v6-report-export-fix" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v6-language-credit" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -40,6 +40,13 @@
             <h1 id="game-title">NEON HUNTER SPIN</h1>
           </div>
           <div class="top-actions">
+            <label class="language-picker" for="languageSelect">
+              <span>Language</span>
+              <select id="languageSelect" aria-label="Language selection">
+                <option value="en">English</option>
+                <option value="ko">한국어</option>
+              </select>
+            </label>
             <span id="testModeBadge" class="test-mode-badge" aria-live="polite">Guest Demo Mode</span>
             <button id="guideButton" class="icon-button" type="button" aria-label="Open paytable and game rules">
               <span aria-hidden="true">?</span>
@@ -93,10 +100,10 @@
         </div>
 
         <div class="jackpot-strip" aria-label="Progressive jackpot values">
-          <div><span>MINI</span><strong id="miniJackpot">$3.00</strong></div>
-          <div><span>MINOR</span><strong id="minorJackpot">$10.00</strong></div>
-          <div><span>MAJOR</span><strong id="majorJackpot">$50.00</strong></div>
-          <div><span>GRAND</span><strong id="grandJackpot">$100.00</strong></div>
+          <div><span>MINI</span><strong id="miniJackpot">150.00 CREDIT</strong></div>
+          <div><span>MINOR</span><strong id="minorJackpot">500.00 CREDIT</strong></div>
+          <div><span>MAJOR</span><strong id="majorJackpot">5,000.00 CREDIT</strong></div>
+          <div><span>GRAND</span><strong id="grandJackpot">10,000.00 CREDIT</strong></div>
         </div>
 
         <div class="reel-window" aria-live="polite">
@@ -132,7 +139,7 @@
           </div>
           <div id="freeWinOverlay" class="free-win-overlay message-only" role="status" aria-hidden="true">
             <strong id="freeWinTitle">BIG WIN</strong>
-            <span id="freeWinTotal">$0.00</span>
+            <span id="freeWinTotal">0.00 CREDIT</span>
             <p id="freeWinCaption">Free Games Total Win</p>
           </div>
           <div id="teaseOverlay" class="tease-overlay" aria-hidden="true">
@@ -164,7 +171,7 @@
         <div class="meters" aria-label="Game meters">
           <div id="creditsMeter" class="meter meter-action" role="button" tabindex="0" aria-label="Toggle credit display">
             <span>Credit Meter</span>
-            <strong id="credits">$0.00</strong>
+            <strong id="credits">0.00 CREDIT</strong>
           </div>
           <div class="meter">
             <span>Total Bet</span>
@@ -180,7 +187,7 @@
           </div>
           <div class="meter">
             <span>Denom</span>
-            <strong id="denom">$0.01</strong>
+            <strong id="denom">Unit x1</strong>
           </div>
           <div class="meter">
             <span>Game RTP</span>
@@ -242,15 +249,15 @@
           </div>
           <div class="option-group wide denom-picker" id="denomPicker">
             <span>Denomination</span>
-            <button id="denomToggle" class="denom-toggle" type="button" aria-expanded="false" aria-controls="denomOptions">1¢</button>
+            <button id="denomToggle" class="denom-toggle" type="button" aria-expanded="false" aria-controls="denomOptions">Unit x1</button>
             <div class="option-buttons denom-options" id="denomOptions" hidden>
-              <button type="button" data-denom="1">1¢</button>
-              <button type="button" data-denom="2">2¢</button>
-              <button type="button" data-denom="5">5¢</button>
-              <button type="button" data-denom="10">10¢</button>
-              <button type="button" data-denom="20">20¢</button>
-              <button type="button" data-denom="50">50¢</button>
-              <button type="button" data-denom="100">$1</button>
+              <button type="button" data-denom="1">Unit x1</button>
+              <button type="button" data-denom="2">Unit x2</button>
+              <button type="button" data-denom="5">Unit x5</button>
+              <button type="button" data-denom="10">Unit x10</button>
+              <button type="button" data-denom="20">Unit x20</button>
+              <button type="button" data-denom="50">Unit x50</button>
+              <button type="button" data-denom="100">Unit x100</button>
             </div>
           </div>
         </div>
@@ -342,15 +349,15 @@
         </div>
         <label for="feedbackIssueType">Issue type</label>
         <select id="feedbackIssueType" class="feedback-select">
-          <option>No Issue</option>
-          <option>Sound Issue</option>
-          <option>Layout Issue</option>
-          <option>Telegram Browser Issue</option>
-          <option>Button / Touch Issue</option>
-          <option>Performance Issue</option>
-          <option>Confusing UX</option>
-          <option>Bonus / Game Flow Feedback</option>
-          <option>Other</option>
+          <option value="No Issue">No Issue</option>
+          <option value="Sound Issue">Sound Issue</option>
+          <option value="Layout Issue">Layout Issue</option>
+          <option value="Telegram Browser Issue">Telegram Browser Issue</option>
+          <option value="Button / Touch Issue">Button / Touch Issue</option>
+          <option value="Performance Issue">Performance Issue</option>
+          <option value="Confusing UX">Confusing UX</option>
+          <option value="Bonus / Game Flow Feedback">Bonus / Game Flow Feedback</option>
+          <option value="Other">Other</option>
         </select>
         <label for="feedbackDeviceNote">Device note</label>
         <input
@@ -412,7 +419,7 @@
               </div>
             </article>
             <article class="guide-card">
-              <span class="guide-image">1¢</span>
+              <span class="guide-image">Unit</span>
               <div>
                 <strong>Denom RTP</strong>
                 <p>Changing denomination applies that denom's configured target RTP.</p>
@@ -518,6 +525,6 @@
       </section>
     </div>
 
-    <script src="script.js?v=neon-hunter-spin-v6-report-export-fix"></script>
+    <script src="script.js?v=neon-hunter-spin-v6-language-credit"></script>
   </body>
 </html>

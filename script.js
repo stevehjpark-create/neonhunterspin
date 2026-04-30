@@ -60,6 +60,7 @@ const testSessionStorageKey = "neonHunterSpinTestSessionId";
 const testStatsStorageKey = "neonHunterSpinTestStats";
 const testerMissionStorageKey = "neonHunterSpinTesterMission";
 const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
+const languageStorageKey = "neonHunterSpinLanguage";
 const serviceWorkerPath = "service-worker.js";
 const appVersion = "v6";
 const dailyDemoCredits = 2_000;
@@ -102,7 +103,8 @@ const paytable = {
 const state = {
   credits: 0,
   displayCredits: 0,
-  showCreditsAsCredits: false,
+  showCreditsAsCredits: true,
+  language: determineInitialLanguage(),
   betIndex: 1,
   selectedReels: reelsByBetIndex[1],
   selectedMultiplier: 1,
@@ -163,6 +165,7 @@ const els = {
   cashOut: document.querySelector("#cashOut"),
   soundButton: document.querySelector("#soundButton"),
   soundButtonText: document.querySelector("#soundButton span"),
+  languageSelect: document.querySelector("#languageSelect"),
   testModeBadge: document.querySelector("#testModeBadge"),
   testInfoToggle: document.querySelector("#testInfoToggle"),
   testInfoPanel: document.querySelector("#testInfoPanel"),
@@ -248,6 +251,333 @@ let cabinetPulseTimer;
 let missionBonusReady = false;
 let missionBonusTooltipTimer;
 let missionPanelPulseTimer;
+
+const i18n = {
+  en: {
+    languageLabel: "Language",
+    guestMode: "Guest Demo Mode",
+    telegramMode: "Telegram Test Mode",
+    eyebrow: "Korean Fantasy Social Slot Demo",
+    marqueeLeft: "Korean Fantasy x K-pop Neon Casino",
+    marqueeRight: "No Real-Money Play",
+    guideButtonLabel: "Open paytable and game rules",
+    soundOn: "Sound ON",
+    soundOff: "Sound OFF",
+    soundLocked: "Sound Locked",
+    soundOnAria: "Sound is on. Tap to turn sound off",
+    soundOffAria: "Sound is off. Tap to turn sound on",
+    soundLockedAria: "Sound is on but locked. Tap to unlock audio",
+    startDemo: "START DEMO WITH 10,000 CREDITS",
+    startDemoShort: "START DEMO",
+    dailyDemo: "Claim Daily Demo Credits",
+    dropPlaceholder: "Demo",
+    zeroCreditSubtext: "Virtual test points only",
+    messageStart: "Press START DEMO to load virtual test credits.",
+    footer: "Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.",
+    creditMeter: "Credit Meter",
+    totalBet: "Total Bet",
+    ways: "Ways",
+    betMultiplier: "Bet Multiplier",
+    denom: "Denom",
+    denomOption: "Denomination",
+    gameRtp: "Game RTP",
+    lastWin: "Last Win",
+    freeGames: "Free Games",
+    spin: "SPIN",
+    freeGame: "FREE GAME",
+    megaSpin: "MEGA SPIN",
+    stopAuto: "STOP AUTO",
+    autoPlay: "AUTO PLAY",
+    maxBet: "MAX BET",
+    clear: "CLEAR",
+    testerMission: "Tester Mission",
+    dailyAvailable: "Daily demo credits are virtual test points for testing only.",
+    dailyClaimed: "Daily demo credits already claimed today.",
+    testInfo: "Test Info",
+    closeTestInfo: "Close test info",
+    mode: "Mode",
+    session: "Session",
+    viewport: "Viewport",
+    device: "Device",
+    pwa: "PWA",
+    loading: "Loading",
+    unknown: "Unknown",
+    browserMode: "Browser Mode",
+    standaloneMode: "Standalone Mode",
+    feedback: "Feedback",
+    closeFeedback: "Close feedback",
+    limitedFeedback: "Limited Test Feedback",
+    testSession: "Test Session",
+    localStats: "Local test stats",
+    sessionSummary: "Session Summary",
+    quickTags: "Quick feedback tags",
+    noTags: "No tags selected",
+    selected: "Selected",
+    issueType: "Issue type",
+    deviceNote: "Device note",
+    deviceNotePlaceholder: "Example: iPhone 14 / Telegram browser / screen issue",
+    privacyNote: "Do not include name, email, phone number, or other personal data.",
+    feedbackPrompt: "Tell us what felt good, confusing, or broken.",
+    feedbackPlaceholder: "Type feedback here...",
+    feedbackInstruction: "After testing, tap Copy Test Report and paste it into the Telegram test group.",
+    previewReport: "Preview Test Report",
+    manualCopy: "Copy this test report manually",
+    copyReport: "Copy Test Report",
+    submitFeedback: "Submit Feedback",
+    introCheckStart: "✓ Tap START DEMO First",
+    introCheckCredits: "✓ Free Demo Credits",
+    introCheckMoney: "✓ No Real Money",
+    introCheckPayout: "✓ No Payout",
+    introCheckMobile: "✓ Mobile Optimized",
+    introNote: "Load virtual test points first,\nthen tap SPIN to start the demo.",
+    gameGuide: "Game Guide",
+    paytableRules: "Paytable & Rules",
+    guideIntro:
+      "Spin through a neon Korean fantasy stage. Unlock free games, dokkaebi bonus features, and virtual jackpot moments. Demo credits have no cash value.",
+    baseGame: "Base Game",
+    waysByBet: "Ways By Bet Level",
+    waysByBetDesc: "Bet level activates 3, 4, or 5 reels. Inactive reels are dimmed on the cabinet.",
+    presetBet: "Preset Bet Levels",
+    presetBetDesc: "8/16 play 27 ways, 40 plays 81 ways, and 88 or higher plays the full 243 ways.",
+    denomRtp: "Unit RTP",
+    denomRtpDesc: "Changing unit option applies that unit's configured target RTP.",
+    symbolsTitle: "Symbols",
+    bonusFeatures: "Bonus Features",
+    testerChecklist: "Tester Checklist",
+    checklistStart: "Was it clear how to start?",
+    checklistSpin: "Was the SPIN button easy to use?",
+    checklistBonus: "Did the bonus moments feel exciting?",
+    checklistSmooth: "Did the game run smoothly on your phone?",
+    checklistConfusing: "Did anything feel confusing?",
+    useFeedback: "Please use the Feedback button after testing.",
+    testStats: "Test Stats",
+    originalIpNotice:
+      "This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.",
+    virtualCreditsNotice: "All credits are virtual test points with no cash value.",
+    scratchTitle: "Dokkaebi Scratch",
+    scratchSubtitle: "Match 3 Jackpot Symbols",
+    pickCard: "Pick a card.",
+    unitLabel: "Unit",
+    completedSuffix: "completed",
+    tagEasy: "Easy to Start",
+    tagConfusing: "Confusing",
+    tagFunBonus: "Fun Bonus",
+    tagSlow: "Too Slow",
+    tagTap: "Button Hard to Tap",
+    tagLayout: "Layout Broken",
+    tagSound: "Sound Issue",
+    tagTelegram: "Telegram Issue",
+    noIssue: "No Issue",
+    layoutIssue: "Layout Issue",
+    telegramIssue: "Telegram Browser Issue",
+    touchIssue: "Button / Touch Issue",
+    performanceIssue: "Performance Issue",
+    confusingUx: "Confusing UX",
+    bonusFlow: "Bonus / Game Flow Feedback",
+    other: "Other",
+    dropLimit: "Demo DROP limit exceeded. Maximum DROP is",
+    enterDrop: "Enter a demo credit amount.",
+    demoLoaded: "Demo credits loaded. Tap SPIN to start the demo.",
+    tapSpin: "Tap SPIN to start the demo.",
+    dailyLoaded: "Daily demo credits loaded",
+    feedbackSubmitted: "Feedback submitted for this limited test.",
+  },
+  ko: {
+    languageLabel: "언어",
+    guestMode: "게스트 데모 모드",
+    telegramMode: "텔레그램 테스트 모드",
+    eyebrow: "한국 판타지 소셜 슬롯 데모",
+    marqueeLeft: "한국 판타지 x K-pop 네온 카지노",
+    marqueeRight: "실제 금전 플레이 없음",
+    guideButtonLabel: "배당표와 게임 안내 열기",
+    soundOn: "사운드 켜짐",
+    soundOff: "사운드 꺼짐",
+    soundLocked: "사운드 잠김",
+    soundOnAria: "사운드가 켜져 있습니다. 끄려면 누르세요",
+    soundOffAria: "사운드가 꺼져 있습니다. 켜려면 누르세요",
+    soundLockedAria: "사운드가 켜져 있지만 잠겨 있습니다. 오디오를 해제하려면 누르세요",
+    startDemo: "10,000 CREDIT으로 데모 시작",
+    startDemoShort: "데모 시작",
+    dailyDemo: "일일 데모 CREDIT 받기",
+    dropPlaceholder: "CREDIT",
+    zeroCreditSubtext: "현금 가치 없는 가상 테스트 포인트",
+    messageStart: "START DEMO를 눌러 가상 테스트 CREDIT을 불러오세요.",
+    footer: "데모 전용 - 실제 금전 베팅, 지급, 외부 보상, 암호화폐, 토큰 자산 없음.",
+    creditMeter: "보유 CREDIT",
+    totalBet: "총 베팅",
+    ways: "WAYS",
+    betMultiplier: "배수",
+    denom: "단위",
+    denomOption: "단위 선택",
+    gameRtp: "게임 RTP",
+    lastWin: "최근 당첨",
+    freeGames: "프리 게임",
+    spin: "스핀",
+    freeGame: "프리 게임",
+    megaSpin: "메가 스핀",
+    stopAuto: "오토 중지",
+    autoPlay: "오토 플레이",
+    maxBet: "맥스 베팅",
+    clear: "초기화",
+    testerMission: "테스터 미션",
+    dailyAvailable: "일일 데모 CREDIT은 테스트 전용 가상 포인트입니다.",
+    dailyClaimed: "오늘의 일일 데모 CREDIT은 이미 받았습니다.",
+    testInfo: "테스트 정보",
+    closeTestInfo: "테스트 정보 닫기",
+    mode: "모드",
+    session: "세션",
+    viewport: "화면",
+    device: "기기",
+    pwa: "PWA",
+    loading: "불러오는 중",
+    unknown: "알 수 없음",
+    browserMode: "브라우저 모드",
+    standaloneMode: "독립 실행 모드",
+    feedback: "피드백",
+    closeFeedback: "피드백 닫기",
+    limitedFeedback: "제한 테스트 피드백",
+    testSession: "테스트 세션",
+    localStats: "로컬 테스트 통계",
+    sessionSummary: "세션 요약",
+    quickTags: "빠른 피드백 태그",
+    noTags: "선택된 태그 없음",
+    selected: "선택됨",
+    issueType: "이슈 유형",
+    deviceNote: "기기 메모",
+    deviceNotePlaceholder: "예: iPhone 14 / 텔레그램 브라우저 / 화면 문제",
+    privacyNote: "이름, 이메일, 전화번호 등 개인정보를 입력하지 마세요.",
+    feedbackPrompt: "좋았던 점, 헷갈린 점, 깨진 부분을 알려주세요.",
+    feedbackPlaceholder: "피드백을 입력하세요...",
+    feedbackInstruction: "테스트 후 Copy Test Report를 눌러 텔레그램 테스트방에 붙여넣어 주세요.",
+    previewReport: "테스트 리포트 미리보기",
+    manualCopy: "이 테스트 리포트를 직접 복사하세요",
+    copyReport: "테스트 리포트 복사",
+    submitFeedback: "피드백 제출",
+    introCheckStart: "✓ 먼저 START DEMO 누르기",
+    introCheckCredits: "✓ 무료 데모 CREDIT",
+    introCheckMoney: "✓ 실제 금전 없음",
+    introCheckPayout: "✓ 지급 없음",
+    introCheckMobile: "✓ 모바일 최적화",
+    introNote: "먼저 가상 테스트 포인트를 불러온 뒤\nSPIN을 눌러 데모를 시작하세요.",
+    gameGuide: "게임 안내",
+    paytableRules: "배당표 및 규칙",
+    guideIntro:
+      "네온 한국 판타지 스테이지에서 스핀하세요. 프리 게임, 도깨비 보너스, 가상 잭팟 순간을 확인할 수 있습니다. 데모 CREDIT은 현금 가치가 없습니다.",
+    baseGame: "베이스 게임",
+    waysByBet: "베팅 레벨별 WAYS",
+    waysByBetDesc: "베팅 레벨에 따라 3, 4, 5개 릴이 활성화됩니다. 비활성 릴은 어둡게 표시됩니다.",
+    presetBet: "프리셋 베팅 레벨",
+    presetBetDesc: "8/16은 27 ways, 40은 81 ways, 88 이상은 전체 243 ways로 플레이합니다.",
+    denomRtp: "단위별 RTP",
+    denomRtpDesc: "단위 선택을 바꾸면 해당 단위에 설정된 목표 RTP가 적용됩니다.",
+    symbolsTitle: "심볼",
+    bonusFeatures: "보너스 기능",
+    testerChecklist: "테스터 체크리스트",
+    checklistStart: "시작 방법이 명확했나요?",
+    checklistSpin: "SPIN 버튼을 누르기 쉬웠나요?",
+    checklistBonus: "보너스 순간이 흥미롭게 느껴졌나요?",
+    checklistSmooth: "휴대폰에서 부드럽게 실행됐나요?",
+    checklistConfusing: "헷갈리는 부분이 있었나요?",
+    useFeedback: "테스트 후 Feedback 버튼을 사용해 주세요.",
+    testStats: "테스트 통계",
+    originalIpNotice:
+      "이 데모는 독창적인 K-pop 판타지 슬롯 데모입니다. 기존 영화, 게임, 음악 자산의 저작권 캐릭터, 로고, 장면, 공식 에셋을 사용하지 않습니다.",
+    virtualCreditsNotice: "모든 CREDIT은 현금 가치가 없는 가상 테스트 포인트입니다.",
+    scratchTitle: "도깨비 스크래치",
+    scratchSubtitle: "잭팟 심볼 3개 맞추기",
+    pickCard: "카드를 선택하세요.",
+    unitLabel: "단위",
+    completedSuffix: "완료",
+    tagEasy: "시작 쉬움",
+    tagConfusing: "헷갈림",
+    tagFunBonus: "보너스 재미있음",
+    tagSlow: "너무 느림",
+    tagTap: "버튼 누르기 어려움",
+    tagLayout: "레이아웃 깨짐",
+    tagSound: "사운드 문제",
+    tagTelegram: "텔레그램 문제",
+    noIssue: "이슈 없음",
+    layoutIssue: "레이아웃 이슈",
+    telegramIssue: "텔레그램 브라우저 이슈",
+    touchIssue: "버튼 / 터치 이슈",
+    performanceIssue: "성능 이슈",
+    confusingUx: "헷갈리는 UX",
+    bonusFlow: "보너스 / 게임 흐름 피드백",
+    other: "기타",
+    dropLimit: "데모 DROP 한도 초과. 최대 DROP은",
+    enterDrop: "데모 CREDIT 수량을 입력하세요.",
+    demoLoaded: "데모 CREDIT이 로드되었습니다. SPIN을 눌러 시작하세요.",
+    tapSpin: "SPIN을 눌러 데모를 시작하세요.",
+    dailyLoaded: "일일 데모 CREDIT 로드 완료",
+    feedbackSubmitted: "제한 테스트 피드백이 제출되었습니다.",
+  },
+};
+
+const feedbackTagTranslationKeys = {
+  "Easy to Start": "tagEasy",
+  Confusing: "tagConfusing",
+  "Fun Bonus": "tagFunBonus",
+  "Too Slow": "tagSlow",
+  "Button Hard to Tap": "tagTap",
+  "Layout Broken": "tagLayout",
+  "Sound Issue": "tagSound",
+  "Telegram Issue": "tagTelegram",
+};
+
+const issueTypeTranslationKeys = {
+  "No Issue": "noIssue",
+  "Sound Issue": "tagSound",
+  "Layout Issue": "layoutIssue",
+  "Telegram Browser Issue": "telegramIssue",
+  "Button / Touch Issue": "touchIssue",
+  "Performance Issue": "performanceIssue",
+  "Confusing UX": "confusingUx",
+  "Bonus / Game Flow Feedback": "bonusFlow",
+  Other: "other",
+};
+
+function t(key) {
+  return i18n[state.language]?.[key] || i18n.en[key] || key;
+}
+
+function determineInitialLanguage() {
+  const stored = safeLocalStorageGet(languageStorageKey);
+  if (stored === "ko" || stored === "en") return stored;
+  return /^ko\b/i.test(navigator.language || "") ? "ko" : "en";
+}
+
+function setTextContent(selector, text) {
+  const element = document.querySelector(selector);
+  if (element) element.textContent = text;
+}
+
+function setAllTextContent(selector, values) {
+  document.querySelectorAll(selector).forEach((element, index) => {
+    if (values[index] !== undefined) element.textContent = values[index];
+  });
+}
+
+function translatedTag(tag) {
+  return t(feedbackTagTranslationKeys[tag] || tag);
+}
+
+function missionLabel(mission) {
+  const koLabels = {
+    startDemo: "데모 시작하기",
+    spin20: "20회 스핀하기",
+    tryBetLevels: "베팅 레벨 2개 이상 시도",
+    tryDenoms: "단위 옵션 2개 이상 시도",
+    openGuide: "가이드 열기",
+    openTestInfo: "테스트 정보 패널 열기",
+    submitFeedback: "피드백 제출",
+    observeEvent: "당첨, 보너스, 프리 게임, 니어미스 중 하나 이상 관찰",
+  };
+  return state.language === "ko" ? koLabels[mission.id] || mission.label : mission.label;
+}
+
+function progressLabel(count, total) {
+  return `${count} / ${total} ${t("completedSuffix")}`;
+}
 
 function createDefaultTestStats() {
   const now = new Date().toISOString();
@@ -335,7 +665,7 @@ function markTesterMissionComplete(id) {
   saveTesterMission();
   renderTesterMission();
   if (missionProgress().completed === testerMissionDefinitions.length) {
-    setHiddenMessage("Test checklist completed.");
+    setHiddenMessage(state.language === "ko" ? "테스트 체크리스트 완료." : "Test checklist completed.");
   }
 }
 
@@ -368,7 +698,7 @@ function missionProgress() {
   return {
     completed: count,
     total: testerMissionDefinitions.length,
-    label: `${count} / ${testerMissionDefinitions.length} completed`,
+    label: progressLabel(count, testerMissionDefinitions.length),
   };
 }
 
@@ -427,7 +757,10 @@ function flashMissionItems(missionIds) {
 }
 
 function showMissionBonusTooltip(totalBonusCredits) {
-  const text = `Mission bonus +${formatCreditAmount(totalBonusCredits)}`;
+  const text =
+    state.language === "ko"
+      ? `미션 보너스 +${formatCreditAmount(totalBonusCredits)}`
+      : `Mission bonus +${formatCreditAmount(totalBonusCredits)}`;
   [els.testerMissionProgress, els.guideMissionProgress].forEach((progressElement) => {
     if (!progressElement) return;
     const container = progressElement.parentElement;
@@ -463,13 +796,27 @@ function pulseMissionPanels() {
 function showMissionBonusFeedback(missionIds, totalBonusCredits) {
   flashMissionItems(missionIds);
   showMissionBonusTooltip(totalBonusCredits);
-  setHiddenMessage("Mission demo credits loaded. Virtual test points only.", true);
+  setHiddenMessage(
+    state.language === "ko"
+      ? "미션 데모 CREDIT이 로드되었습니다. 가상 테스트 포인트 전용입니다."
+      : "Mission demo credits loaded. Virtual test points only.",
+    true,
+  );
 
   const progress = missionProgress();
   if (progress.completed === progress.total) {
     pulseMissionPanels();
-    showReelMessageOverlay("Test checklist completed", true);
-    setTimeout(() => setHiddenMessage("Test checklist completed. Virtual test points only.", true), 1900);
+    showReelMessageOverlay(state.language === "ko" ? "테스트 체크리스트 완료" : "Test checklist completed", true);
+    setTimeout(
+      () =>
+        setHiddenMessage(
+          state.language === "ko"
+            ? "테스트 체크리스트 완료. 가상 테스트 포인트 전용입니다."
+            : "Test checklist completed. Virtual test points only.",
+          true,
+        ),
+      1900,
+    );
   }
 }
 
@@ -481,7 +828,7 @@ function renderTesterMission() {
   const markup = testerMissionDefinitions
     .map((mission) => {
       const done = Boolean(completed[mission.id]);
-      return `<li class="${done ? "complete" : ""}" data-mission-id="${mission.id}"><span>${done ? "✓" : "○"}</span>${mission.label}</li>`;
+      return `<li class="${done ? "complete" : ""}" data-mission-id="${mission.id}"><span>${done ? "✓" : "○"}</span>${missionLabel(mission)}</li>`;
     })
     .join("");
 
@@ -562,10 +909,10 @@ function incrementTestCounter(key, amount = 1) {
 }
 
 function formatTestTimestamp(value) {
-  if (!value) return "Not set";
+  if (!value) return state.language === "ko" ? "설정 안 됨" : "Not set";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Not set";
-  return date.toLocaleString("en-US", {
+  if (Number.isNaN(date.getTime())) return state.language === "ko" ? "설정 안 됨" : "Not set";
+  return date.toLocaleString(state.language === "ko" ? "ko-KR" : "en-US", {
     month: "short",
     day: "2-digit",
     hour: "2-digit",
@@ -581,18 +928,18 @@ function spinsPerFeedbackLabel() {
 
 function renderTestStats() {
   if (els.feedbackSession) {
-    els.feedbackSession.textContent = `Test Session: ${state.testSessionId}`;
+    els.feedbackSession.textContent = `${t("testSession")}: ${state.testSessionId}`;
   }
 
   const rows = [
-    ["Total Spins", state.testStats.totalSpins],
-    ["Total Wins", state.testStats.totalWins],
-    ["Bonus Triggers", state.testStats.totalBonusTriggers],
-    ["Free Game Triggers", state.testStats.totalFreeGameTriggers],
-    ["Feedback Submitted", state.testStats.totalFeedbackSubmitted],
-    ["Spins / Feedback", spinsPerFeedbackLabel()],
-    ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
-    ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
+    [state.language === "ko" ? "총 스핀" : "Total Spins", state.testStats.totalSpins],
+    [state.language === "ko" ? "총 당첨" : "Total Wins", state.testStats.totalWins],
+    [state.language === "ko" ? "보너스 발생" : "Bonus Triggers", state.testStats.totalBonusTriggers],
+    [state.language === "ko" ? "프리 게임 발생" : "Free Game Triggers", state.testStats.totalFreeGameTriggers],
+    [state.language === "ko" ? "피드백 제출" : "Feedback Submitted", state.testStats.totalFeedbackSubmitted],
+    [state.language === "ko" ? "피드백당 스핀" : "Spins / Feedback", spinsPerFeedbackLabel()],
+    [state.language === "ko" ? "첫 방문" : "First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
+    [state.language === "ko" ? "최근 방문" : "Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
   ];
   const markup = rows
     .map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`)
@@ -609,8 +956,8 @@ function renderTestStats() {
 
 function soundStateLabel() {
   if (typeof state.sound !== "boolean") return "Unknown";
-  if (!state.sound) return "Sound OFF";
-  return state.audioUnlocked ? "Sound ON" : "Sound Locked";
+  if (!state.sound) return t("soundOff");
+  return state.audioUnlocked ? t("soundOn") : t("soundLocked");
 }
 
 function hapticSupportLabel() {
@@ -628,16 +975,16 @@ function selectedIssueType() {
 function sessionSummaryRows() {
   const progress = missionProgress();
   return [
-    ["Test Session ID", state.testSessionId],
-    ["Mode", state.testModeLabel],
-    ["Total Spins", state.testStats.totalSpins],
-    ["Total Wins", state.testStats.totalWins],
-    ["Bonus Triggers", state.testStats.totalBonusTriggers],
-    ["Free Game Triggers", state.testStats.totalFreeGameTriggers],
-    ["Feedback Submitted", state.testStats.totalFeedbackSubmitted],
-    ["First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
-    ["Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
-    ["Tester Mission", progress.label],
+    [state.language === "ko" ? "테스트 세션 ID" : "Test Session ID", state.testSessionId],
+    [t("mode"), state.testModeLabel],
+    [state.language === "ko" ? "총 스핀" : "Total Spins", state.testStats.totalSpins],
+    [state.language === "ko" ? "총 당첨" : "Total Wins", state.testStats.totalWins],
+    [state.language === "ko" ? "보너스 발생" : "Bonus Triggers", state.testStats.totalBonusTriggers],
+    [state.language === "ko" ? "프리 게임 발생" : "Free Game Triggers", state.testStats.totalFreeGameTriggers],
+    [state.language === "ko" ? "피드백 제출" : "Feedback Submitted", state.testStats.totalFeedbackSubmitted],
+    [state.language === "ko" ? "첫 방문" : "First Visit", formatTestTimestamp(state.testStats.firstVisitAt)],
+    [state.language === "ko" ? "최근 방문" : "Last Visit", formatTestTimestamp(state.testStats.lastVisitAt)],
+    [t("testerMission"), progress.label],
   ];
 }
 
@@ -658,8 +1005,8 @@ function updateDailyDemoCreditUi() {
   }
   if (els.dailyDemoStatus) {
     els.dailyDemoStatus.textContent = claimedToday
-      ? "Daily demo credits already claimed today."
-      : "Daily demo credits are virtual test points for testing only.";
+      ? t("dailyClaimed")
+      : t("dailyAvailable");
   }
 }
 
@@ -770,7 +1117,7 @@ function deviceLabel() {
 function pwaStatusLabel() {
   const standalone =
     window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone;
-  return standalone ? "Standalone Mode" : "Browser Mode";
+  return standalone ? t("standaloneMode") : t("browserMode");
 }
 
 function updateTestInfoPanel() {
@@ -812,8 +1159,8 @@ function renderSelectedFeedbackTags() {
 
   if (!els.selectedFeedbackTags) return;
   els.selectedFeedbackTags.textContent = state.selectedFeedbackTags.length
-    ? `Selected: ${state.selectedFeedbackTags.join(", ")}`
-    : "No tags selected";
+    ? `${t("selected")}: ${state.selectedFeedbackTags.map(translatedTag).join(", ")}`
+    : t("noTags");
 }
 
 function toggleFeedbackTag(tag) {
@@ -827,7 +1174,7 @@ function toggleFeedbackTag(tag) {
 
 function initializeTelegramMode() {
   const telegramApp = window.Telegram?.WebApp;
-  state.testModeLabel = telegramApp ? "Telegram Test Mode" : "Guest Demo Mode";
+  state.testModeLabel = telegramApp ? t("telegramMode") : t("guestMode");
 
   if (telegramApp) {
     try {
@@ -843,6 +1190,135 @@ function initializeTelegramMode() {
     els.testModeBadge.classList.toggle("telegram", Boolean(telegramApp));
   }
   updateTestInfoPanel();
+}
+
+function applyLanguage(persist = false) {
+  document.documentElement.lang = state.language;
+  if (persist) {
+    safeLocalStorageSet(languageStorageKey, state.language);
+  }
+  if (els.languageSelect) {
+    els.languageSelect.value = state.language;
+  }
+
+  setTextContent(".language-picker span", t("languageLabel"));
+  setTextContent(".eyebrow", t("eyebrow"));
+  setAllTextContent(".cabinet-marquee span", [t("marqueeLeft"), t("marqueeRight")]);
+  setTextContent(".zero-credit-button", t("startDemo"));
+  setTextContent(".zero-credit-cta span", t("zeroCreditSubtext"));
+  setTextContent("#startDemoButton", t("startDemo"));
+  setTextContent("#dailyDemoButton", t("dailyDemo"));
+  setTextContent("#dropButton", "DROP");
+  setTextContent("#maxBet", t("maxBet"));
+  setTextContent("#cashOut", t("clear"));
+  setTextContent("#feedbackButton", t("feedback"));
+  setTextContent("#testInfoToggle", t("testInfo"));
+  setTextContent(".app-footer", t("footer"));
+  setTextContent(".intro-kicker", t("eyebrow"));
+  setAllTextContent(".intro-checklist li", [
+    t("introCheckStart"),
+    t("introCheckCredits"),
+    t("introCheckMoney"),
+    t("introCheckPayout"),
+    t("introCheckMobile"),
+  ]);
+  setTextContent(".intro-note", t("introNote"));
+  setTextContent("#introStartButton", t("startDemoShort"));
+  setTextContent(".tester-mission-header span", t("testerMission"));
+  setTextContent(".guide-panel header p", t("gameGuide"));
+  setTextContent(".guide-panel header h2", t("paytableRules"));
+  setTextContent(".guide-intro", t("guideIntro"));
+  setAllTextContent(".guide-section h3", [
+    t("baseGame"),
+    t("symbolsTitle"),
+    t("bonusFeatures"),
+    t("testerChecklist"),
+    t("testStats"),
+    t("sessionSummary"),
+    t("testerMission"),
+  ]);
+  setAllTextContent(".guide-cards strong", [t("waysByBet"), t("presetBet"), t("denomRtp")]);
+  setAllTextContent(".guide-cards p", [t("waysByBetDesc"), t("presetBetDesc"), t("denomRtpDesc")]);
+  setAllTextContent(".tester-checklist li", [
+    t("checklistStart"),
+    t("checklistSpin"),
+    t("checklistBonus"),
+    t("checklistSmooth"),
+    t("checklistConfusing"),
+  ]);
+  setTextContent(".guide-section .guide-note", t("useFeedback"));
+  setAllTextContent(".guide-panel > .guide-note", [t("originalIpNotice"), t("virtualCreditsNotice"), t("footer")]);
+  setTextContent("#scratchOverlay header p", t("scratchTitle"));
+  setTextContent("#scratchOverlay header h2", t("scratchSubtitle"));
+  setTextContent("#scratchMessage", t("pickCard"));
+  setTextContent("#feedbackOverlay header p", t("limitedFeedback"));
+  setTextContent(".session-summary-section h3", t("sessionSummary"));
+  setTextContent(".feedback-tag-group p", t("quickTags"));
+  setTextContent('label[for="feedbackIssueType"]', t("issueType"));
+  setTextContent('label[for="feedbackDeviceNote"]', t("deviceNote"));
+  setTextContent(".privacy-note", t("privacyNote"));
+  setTextContent('label[for="feedbackText"]', t("feedbackPrompt"));
+  setTextContent(".feedback-instruction", t("feedbackInstruction"));
+  setTextContent("#reportPreview summary", t("previewReport"));
+  setTextContent('label[for="reportFallbackText"]', t("manualCopy"));
+  setTextContent("#copyTestReport", t("copyReport"));
+  setTextContent("#feedbackSubmit", t("submitFeedback"));
+  setTextContent("#testInfoPanel header strong", t("testInfo"));
+  setAllTextContent("#testInfoPanel dt", [t("mode"), t("session"), t("viewport"), t("device"), t("pwa")]);
+
+  document.querySelectorAll(".meter span").forEach((element, index) => {
+    const labels = [
+      t("creditMeter"),
+      t("totalBet"),
+      t("ways"),
+      t("betMultiplier"),
+      t("denom"),
+      t("gameRtp"),
+      t("lastWin"),
+      t("freeGames"),
+    ];
+    if (labels[index]) element.textContent = labels[index];
+  });
+
+  document.querySelectorAll(".option-group > span").forEach((element, index) => {
+    const labels = [t("betMultiplier"), state.language === "ko" ? "베팅 레벨" : "Bet Level", t("denomOption")];
+    if (labels[index]) element.textContent = labels[index];
+  });
+
+  if (els.dropAmount) {
+    els.dropAmount.placeholder = t("dropPlaceholder");
+  }
+  if (els.guideButton) {
+    els.guideButton.setAttribute("aria-label", t("guideButtonLabel"));
+  }
+  if (els.feedbackCancel) {
+    els.feedbackCancel.setAttribute("aria-label", t("closeFeedback"));
+  }
+  if (els.testInfoClose) {
+    els.testInfoClose.setAttribute("aria-label", t("closeTestInfo"));
+  }
+  if (els.feedbackDeviceNote) {
+    els.feedbackDeviceNote.placeholder = t("deviceNotePlaceholder");
+  }
+  if (els.feedbackText) {
+    els.feedbackText.placeholder = t("feedbackPlaceholder");
+  }
+  els.feedbackTagButtons.forEach((button) => {
+    button.textContent = translatedTag(button.dataset.feedbackTag);
+  });
+  document.querySelectorAll("#feedbackIssueType option").forEach((option) => {
+    option.textContent = t(issueTypeTranslationKeys[option.value] || option.value);
+  });
+  els.denomOptions.forEach((button) => {
+    button.textContent = denomLabel(Number(button.dataset.denom));
+  });
+
+  initializeTelegramMode();
+  renderTestStats();
+  renderSelectedFeedbackTags();
+  renderTesterMission();
+  updateUi();
+  renderReportPreview();
 }
 
 function createInitialChests() {
@@ -1011,30 +1487,13 @@ function convertCreditAmountForDenom(amount, oldDenomCents, newDenomCents) {
 }
 
 function preserveCashValueForDenomChange(oldDenomCents, newDenomCents) {
-  state.credits = convertCreditAmountForDenom(state.credits, oldDenomCents, newDenomCents);
-  state.displayCredits = convertCreditAmountForDenom(
-    state.displayCredits,
-    oldDenomCents,
-    newDenomCents,
-  );
-  state.lastWin = convertCreditAmountForDenom(state.lastWin, oldDenomCents, newDenomCents);
-  state.freeSpinWinTotal = convertCreditAmountForDenom(
-    state.freeSpinWinTotal,
-    oldDenomCents,
-    newDenomCents,
-  );
+  void oldDenomCents;
+  void newDenomCents;
+  // Credit-only display: changing the unit option must not change the player's credit balance.
 }
 
 function formatMoney(credits) {
-  const amount = (credits * state.selectedDenomCents) / 100;
-  if (amount > maxDisplayAmount) return cappedDisplayAmount;
-
-  return amount.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatCreditAmount(credits);
 }
 
 function formatCreditAmount(credits) {
@@ -1047,24 +1506,21 @@ function formatCreditAmount(credits) {
 }
 
 function formatDisplayAmount(credits) {
-  return state.showCreditsAsCredits ? formatCreditAmount(credits) : formatMoney(credits);
+  return formatCreditAmount(credits);
 }
 
 function denomLabel(denomCents = state.selectedDenomCents) {
-  if (denomCents >= 100) return `$${denomCents / 100}`;
-  return `${denomCents}¢`;
+  return `${t("unitLabel")} x${denomCents}`;
 }
 
 function renderCredits() {
-  els.credits.textContent = state.showCreditsAsCredits
-    ? formatCreditAmount(state.displayCredits)
-    : formatMoney(state.displayCredits);
-  els.creditsMeter.classList.toggle("credit-mode", state.showCreditsAsCredits);
+  els.credits.textContent = formatCreditAmount(state.displayCredits);
+  els.creditsMeter.classList.add("credit-mode");
   els.creditsMeter.setAttribute(
     "aria-label",
-    state.showCreditsAsCredits
-      ? "Credit display active. Press to show currency-style value."
-      : "Currency-style value active. Press to show credits.",
+    state.language === "ko"
+      ? "CREDIT 전용 표시가 활성화되어 있습니다."
+      : "Credit-only display is active.",
   );
 }
 
@@ -1086,8 +1542,8 @@ function setCredits(nextCredits, animate = false) {
   }
 
   const startedAt = performance.now();
-  const centsToAnimate = Math.abs(nextValue - startValue) * state.selectedDenomCents;
-  const duration = Math.max(120, (centsToAnimate / creditOdometerCentsPerSecond) * 1000);
+  const creditsToAnimate = Math.abs(nextValue - startValue);
+  const duration = Math.max(120, (creditsToAnimate / creditOdometerCentsPerSecond) * 1000);
   let lastStackSoundAt = 0;
   let stackSoundStep = 0;
 
@@ -1131,8 +1587,7 @@ function addCredits(amount, animate = true) {
 }
 
 function demoCreditAmountForCurrentDenom(baseCreditAmount) {
-  const baseDenomCents = denomSteps[0];
-  return (baseCreditAmount * baseDenomCents) / state.selectedDenomCents;
+  return baseCreditAmount;
 }
 
 function demoStartCreditAmountForCurrentDenom() {
@@ -1162,12 +1617,12 @@ function updateUi() {
   els.bet.textContent = formatDisplayAmount(currentBet());
   els.ways.textContent = activeWays();
   els.multiplier.textContent = `x${state.selectedMultiplier}`;
-  els.denom.textContent = formatDisplayAmount(1);
+  els.denom.textContent = denomLabel();
   els.rtp.textContent = `${Math.round(state.selectedTotalRtp * 100)}%`;
   els.lastWin.textContent = formatDisplayAmount(state.lastWin);
   els.bonusSpins.textContent = state.bonusSpins + state.expandedBonusSpins;
   els.spinButton.textContent =
-    state.expandedBonusSpins > 0 ? "MEGA SPIN" : state.bonusSpins > 0 ? "FREE GAME" : "SPIN";
+    state.expandedBonusSpins > 0 ? t("megaSpin") : state.bonusSpins > 0 ? t("freeGame") : t("spin");
   els.spinButton.disabled =
     state.scratchActive ||
     state.spinning ||
@@ -1177,7 +1632,7 @@ function updateUi() {
   els.maxBet.disabled = state.spinning || bonusModeActive();
   els.autoSpin.disabled = state.spinning || bonusModeActive() || state.scratchActive;
   els.autoSpin.classList.toggle("active", Boolean(autoSpinTimer));
-  els.autoSpin.textContent = autoSpinTimer ? "STOP AUTO" : "AUTO PLAY";
+  els.autoSpin.textContent = autoSpinTimer ? t("stopAuto") : t("autoPlay");
   els.startDemoButton.disabled = state.spinning || state.scratchActive;
   els.dropAmount.disabled = state.spinning || state.scratchActive;
   els.dropButton.disabled = state.spinning || state.scratchActive;
@@ -1240,7 +1695,7 @@ function setAmountMessage(amount, caption, isWin = false, captionAmount = null) 
 }
 
 function splitMessageAmount(text) {
-  const amountMatch = text.match(/\$\d[\d,]*(?:\.\d{2})?|\d[\d,]*(?:\.\d{2})?\s*CREDIT/);
+  const amountMatch = text.match(/\d[\d,]*(?:\.\d{2})?\s*CREDIT/);
   if (!amountMatch) {
     return { amountText: "", caption: text };
   }
@@ -1403,8 +1858,8 @@ function finishIntroStart() {
   if (state.credits <= 0) {
     startDemoCredits();
   } else {
-    setHiddenMessage("Tap SPIN to start the demo.", true);
-    showReelMessageOverlay("Tap SPIN to start the demo.", true);
+    setHiddenMessage(t("tapSpin"), true);
+    showReelMessageOverlay(t("tapSpin"), true);
   }
 }
 
@@ -1414,12 +1869,12 @@ function showDemoCreditsLoadedMessage() {
     demoMessageTimer = null;
   }
 
-  setHiddenMessage("Demo credits loaded. Tap SPIN to start the demo.", true);
+  setHiddenMessage(t("demoLoaded"), true);
   state.overlaySequenceId += 1;
   const sequenceId = state.overlaySequenceId;
   state.currentOverlay = {
     type: "message",
-    text: "Demo credits loaded. Tap SPIN to start the demo.",
+    text: t("demoLoaded"),
     isWin: true,
   };
   els.freeWinOverlay.classList.add("demo-loaded-pop");
@@ -1509,7 +1964,7 @@ function submitFeedback() {
   renderReportPreview();
   renderTestStats();
   closeFeedbackModal();
-  setHiddenMessage("Feedback submitted for this limited test.");
+  setHiddenMessage(t("feedbackSubmitted"));
 }
 
 function canAutoSpin() {
@@ -1764,19 +2219,10 @@ function distributeAdjustedWin(details, rawWin, adjustedWin) {
 }
 
 function formatFormulaMoney(credits) {
-  const cents = credits * state.selectedDenomCents;
-  if (cents < 100) {
-    const roundedCents = Number(cents.toFixed(cents < 1 ? 3 : 2));
-    const unit = Math.abs(roundedCents) === 1 ? "cent" : "cents";
-    return `${roundedCents.toLocaleString("en-US", { maximumFractionDigits: 3 })} ${unit}`;
-  }
-
-  return (cents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  return `${credits.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })} CREDIT`;
 }
 
 function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
@@ -2251,10 +2697,10 @@ async function unlockAudio() {
 function updateSoundButtonUi() {
   if (!els.soundButton) return;
   const soundReady = state.sound && state.audioUnlocked;
-  const soundLabel = state.sound ? (soundReady ? "Sound ON" : "Tap Sound") : "Sound OFF";
+  const soundLabel = state.sound ? (soundReady ? t("soundOn") : t("soundLocked")) : t("soundOff");
   els.soundButton.setAttribute(
     "aria-label",
-    state.sound ? "Sound is on. Tap to test or turn sound off" : "Sound is off. Tap to turn sound on",
+    state.sound ? (soundReady ? t("soundOnAria") : t("soundLockedAria")) : t("soundOffAria"),
   );
   els.soundButton.classList.toggle("active", state.sound);
   els.soundButton.classList.toggle("unlocked", soundReady);
@@ -2270,7 +2716,11 @@ async function unlockAudioForUserGesture() {
   if (unlocked) {
     return true;
   }
-  setHiddenMessage("Tap Sound ON, then tap SPIN again if your iPhone blocks audio.");
+  setHiddenMessage(
+    state.language === "ko"
+      ? "아이폰에서 오디오가 막히면 사운드 버튼을 누른 뒤 SPIN을 다시 누르세요."
+      : "Tap Sound ON, then tap SPIN again if your iPhone blocks audio.",
+  );
   return false;
 }
 
@@ -3012,30 +3462,24 @@ async function dropCredits() {
   await unlockAudioForUserGesture();
   const dropAmount = Number(els.dropAmount.value);
   if (!Number.isFinite(dropAmount) || dropAmount <= 0) {
-    setMessage("Enter a demo credit amount.");
+    setMessage(t("enterDrop"));
     updateUi();
     return;
   }
 
   if (dropAmount > maxDropAmount) {
-    const maxDropText = maxDropAmount.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    const maxDropCredits = (maxDropAmount * 100) / state.selectedDenomCents;
-    setHiddenMessage(`Demo DROP limit exceeded. Maximum DROP is ${maxDropText}.`);
-    showReelAmountOverlay("DROP LIMIT", maxDropCredits, "Demo drop limit exceeded", false);
+    const maxDropText = formatCreditAmount(maxDropAmount);
+    setHiddenMessage(`${t("dropLimit")} ${maxDropText}.`);
+    showReelAmountOverlay("DROP LIMIT", maxDropAmount, "Demo drop limit exceeded", false);
     updateUi();
     return;
   }
 
-  const creditsToAdd = (dropAmount * 100) / state.selectedDenomCents;
+  const creditsToAdd = dropAmount;
   addCredits(creditsToAdd, false);
   playDropSound();
   els.dropAmount.value = "";
-  setAmountMessage(creditsToAdd, "demo credits loaded. Press SPIN.");
+  setAmountMessage(creditsToAdd, state.language === "ko" ? "데모 CREDIT 로드 완료. SPIN을 누르세요." : "demo credits loaded. Press SPIN.");
   updateUi();
 }
 
@@ -3055,9 +3499,9 @@ async function claimDailyDemoCredits() {
   await unlockAudioForUserGesture();
   const today = localDateKey();
   if (safeLocalStorageGet(dailyDemoCreditStorageKey) === today) {
-    setHiddenMessage("Daily demo credits already claimed today.");
+    setHiddenMessage(t("dailyClaimed"));
     if (els.dailyDemoStatus) {
-      els.dailyDemoStatus.textContent = "Daily demo credits already claimed today.";
+      els.dailyDemoStatus.textContent = t("dailyClaimed");
     }
     updateUi();
     return;
@@ -3065,8 +3509,8 @@ async function claimDailyDemoCredits() {
 
   safeLocalStorageSet(dailyDemoCreditStorageKey, today);
   addCredits(demoCreditAmountForCurrentDenom(dailyDemoCredits), false);
-  setHiddenMessage("Daily demo credits loaded. Virtual test points only.");
-  showReelMessageOverlay("Daily demo credits loaded", true);
+  setHiddenMessage(state.language === "ko" ? "일일 데모 CREDIT 로드 완료. 가상 테스트 포인트 전용입니다." : "Daily demo credits loaded. Virtual test points only.");
+  showReelMessageOverlay(t("dailyLoaded"), true);
   updateUi();
 }
 
@@ -3081,7 +3525,7 @@ async function cashOut() {
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
   state.freeSpinWinTotal = 0;
-  setAmountMessage(cashOutAmount, "virtual credits cleared. Credit meter reset to zero.");
+  setAmountMessage(cashOutAmount, state.language === "ko" ? "가상 CREDIT 초기화 완료. 보유 CREDIT이 0으로 리셋되었습니다." : "virtual credits cleared. Credit meter reset to zero.");
   updateUi();
 }
 
@@ -3091,7 +3535,7 @@ function selectMultiplier(value) {
   state.selectedMultiplier = value;
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
-  setMessage(`Multiplier x${value} selected. Press SPIN.`);
+  setMessage(state.language === "ko" ? `배수 x${value} 선택됨. SPIN을 누르세요.` : `Multiplier x${value} selected. Press SPIN.`);
   updateUi();
 }
 
@@ -3110,7 +3554,9 @@ function selectDenom(value) {
   state.expandedBonusSpins = 0;
   switchJackpotBankForDenom(value);
   setMessage(
-    `Denomination ${denomLabel(value)} selected. Credit meter and jackpot meter preserved for this denom. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%.`,
+    state.language === "ko"
+      ? `${denomLabel(value)} 선택됨. CREDIT 잔액은 그대로 유지됩니다. 목표 RTP ${Math.round(state.selectedTotalRtp * 100)}%.`
+      : `${denomLabel(value)} selected. Credit balance stays unchanged. Target RTP locked at ${Math.round(state.selectedTotalRtp * 100)}%.`,
   );
   updateUi();
 }
@@ -3132,7 +3578,7 @@ function setupDebugHooks() {
     awardCash(amount = 100) {
       if (state.spinning || state.scratchActive) return false;
       const demoCreditAmount = Math.max(0, Number(amount) || 0);
-      setCredits((demoCreditAmount * 100) / state.selectedDenomCents, false);
+      setCredits(demoCreditAmount, false);
       setAmountMessage(state.credits, "debug demo credits loaded.");
       updateUi();
       return true;
@@ -3146,8 +3592,7 @@ function setupDebugHooks() {
     snapshot() {
       return {
         credits: state.credits,
-        denomCents: state.selectedDenomCents,
-        cashValue: (state.credits * state.selectedDenomCents) / 100,
+        unitOption: state.selectedDenomCents,
         bonusSpins: state.bonusSpins,
         expandedBonusSpins: state.expandedBonusSpins,
         jackpots: structuredClone(state.jackpots),
@@ -3182,17 +3627,22 @@ els.dropAmount.addEventListener("keydown", (event) => {
 });
 els.cashOut.addEventListener("click", cashOut);
 els.creditsMeter.addEventListener("click", () => {
-  state.showCreditsAsCredits = !state.showCreditsAsCredits;
   updateUi();
   renderReelOverlay();
 });
 els.creditsMeter.addEventListener("keydown", (event) => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
-    state.showCreditsAsCredits = !state.showCreditsAsCredits;
     updateUi();
     renderReelOverlay();
   }
+});
+els.languageSelect.addEventListener("change", () => {
+  state.language = els.languageSelect.value === "ko" ? "ko" : "en";
+  applyLanguage(true);
+  setHiddenMessage(
+    state.language === "ko" ? "한국어 표시로 전환되었습니다." : "Language changed to English.",
+  );
 });
 els.multiplierOptions.forEach((button) => {
   button.addEventListener("click", () => selectMultiplier(Number(button.dataset.multiplier)));
@@ -3252,9 +3702,13 @@ els.soundButton.addEventListener("click", async () => {
     const unlocked = await unlockAudio();
     if (unlocked) {
       playSoundToggleSound();
-      setHiddenMessage("Sound ON.");
+      setHiddenMessage(`${t("soundOn")}.`);
     } else {
-      setHiddenMessage("iPhone audio is still blocked. Check silent mode and tap Sound again.");
+      setHiddenMessage(
+        state.language === "ko"
+          ? "아이폰 오디오가 아직 차단되어 있습니다. 무음 모드를 확인하고 사운드를 다시 눌러주세요."
+          : "iPhone audio is still blocked. Check silent mode and tap Sound again.",
+      );
     }
     updateUi();
     return;
@@ -3263,11 +3717,17 @@ els.soundButton.addEventListener("click", async () => {
   state.sound = !state.sound;
   if (!state.sound) {
     state.audioUnlocked = false;
-    setHiddenMessage("Sound OFF.");
+    setHiddenMessage(`${t("soundOff")}.`);
   } else {
     const unlocked = await unlockAudio();
     playSoundToggleSound();
-    setHiddenMessage(unlocked ? "Sound ON." : "Tap Sound again if your iPhone blocks audio.");
+    setHiddenMessage(
+      unlocked
+        ? `${t("soundOn")}.`
+        : state.language === "ko"
+          ? "아이폰에서 오디오가 막히면 사운드를 다시 눌러주세요."
+          : "Tap Sound again if your iPhone blocks audio.",
+    );
   }
   updateUi();
 });
@@ -3324,8 +3784,8 @@ document.addEventListener("keydown", (event) => {
 
 initializeReels();
 setupDebugHooks();
-setHiddenMessage(els.message.textContent);
-initializeTelegramMode();
+applyLanguage(false);
+setHiddenMessage(t("messageStart"));
 addMissionNumberValue("betLevelsTried", state.betIndex);
 addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();

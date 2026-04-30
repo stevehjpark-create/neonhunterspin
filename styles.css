@@ -211,6 +211,45 @@ button:disabled {
   gap: 8px;
 }
 
+.language-picker {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  border: 1px solid rgba(156, 109, 255, 0.36);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(0, 0, 0, 0.16)),
+    rgba(15, 17, 27, 0.78);
+  box-shadow: 0 0 14px rgba(156, 109, 255, 0.16);
+}
+
+.language-picker span {
+  color: rgba(247, 242, 232, 0.72);
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.language-picker select {
+  min-height: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(5, 7, 14, 0.72);
+  color: #fff2b6;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 950;
+  outline: none;
+}
+
+.language-picker select:focus {
+  box-shadow: 0 0 0 2px rgba(255, 206, 85, 0.24);
+}
+
 .test-mode-badge {
   min-height: 32px;
   display: inline-grid;
@@ -5198,6 +5237,21 @@ h1 {
     min-height: 28px;
     padding: 5px 8px;
     font-size: 0.58rem;
+  }
+
+  .language-picker {
+    min-height: 28px;
+    padding: 3px 6px;
+  }
+
+  .language-picker span {
+    display: none;
+  }
+
+  .language-picker select {
+    min-height: 22px;
+    padding-inline: 7px;
+    font-size: 0.62rem;
   }
 
   .app-footer {
