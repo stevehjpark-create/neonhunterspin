@@ -2669,16 +2669,6 @@ function buildWaysWinFormulasFromDetails(details) {
   });
 }
 
-function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
-  return buildWaysWinFormulasFromDetails(
-    distributeAdjustedWin(
-      calculateWaysWinDetails(grid, bet, activeReelCount),
-      rawWin,
-      adjustedWin,
-    ),
-  );
-}
-
 function clearWinningSymbolHighlights() {
   els.reelWindow.classList.remove("has-winning-symbols");
   els.reels.forEach((reel) => {
