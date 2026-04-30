@@ -2476,8 +2476,7 @@ function toggleAutoSpin() {
 
 function updateChestUi(triggeredIndex = -1) {
   state.chests.forEach((chest, index) => {
-    const target = Math.max(0.01, chest.threshold || 1);
-    const openStep = Math.min(100, Math.max(0, Math.floor((chest.progress / target) * 100)));
+    const openStep = Math.min(100, Math.max(0, Math.floor(chest.progress * 100)));
     const open = openStep / 100;
     els.chestCards[index].style.setProperty("--open", open.toFixed(3));
     els.chestCards[index].style.setProperty("--gold-level", open.toFixed(3));

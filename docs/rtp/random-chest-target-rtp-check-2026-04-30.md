@@ -4,7 +4,7 @@
 
 The Dokkaebi chest meters still display `0/100` to `100/100`, but each reset now creates a hidden target inside a random band.
 
-When chest progress reaches that hidden target, the visible meter reaches `100/100`. This prevents the player-facing meter from reaching 100 without being ready.
+When chest progress reaches that hidden target, the feature can hit before the visible meter is full. For example, if the hidden target is `63%`, the chest can burst around `63/100`.
 
 ## Target Bands
 
@@ -16,7 +16,7 @@ Each reset randomly chooses one band:
 | Middle | 58% - 75% |
 | Late | 72% - 90% |
 
-The bands keep the average hit timing close to the earlier model while making each chest reset feel less predictable.
+The bands keep the average hit timing close to the earlier model while making each chest reset feel less predictable. The player-facing meter now shows raw progress, so early hits are visible instead of being converted to `100/100`.
 
 ## 100k RTP Check
 
