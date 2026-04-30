@@ -2659,18 +2659,70 @@ function formatFormulaMoney(credits) {
   });
 }
 
-function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
-  return distributeAdjustedWin(
-    calculateWaysWinDetails(grid, bet, activeReelCount),
-    rawWin,
-    adjustedWin,
-  ).map((detail) => {
+function buildWaysWinFormulasFromDetails(details) {
+  return details.map((detail) => {
     const unitAmount = detail.amount / detail.ways;
     return {
       formula: `${detail.counts.join("x")} WAYS x ${formatFormulaMoney(unitAmount)} = ${formatFormulaMoney(detail.amount)}`,
       caption: `${detail.symbolName} · ${detail.matchedReels} reels · ${detail.ways} ways`,
     };
   });
+}
+
+function buildWaysWinFormulas(grid, bet, activeReelCount, rawWin, adjustedWin) {
+  return buildWaysWinFormulasFromDetails(
+    distributeAdjustedWin(
+      calculateWaysWinDetails(grid, bet, activeReelCount),
+      rawWin,
+      adjustedWin,
+    ),
+  );
+}
+
+function clearWinningSymbolHighlights() {
+  els.reelWindow.classList.remove("has-winning-symbols");
+  els.reels.forEach((reel) => {
+    reel.querySelectorAll(".ways-win-symbol").forEach((cell) => {
+      cell.classList.remove("ways-win-symbol", "ways-win-symbol-wild");
+      cell.removeAttribute("data-win-label");
+    });
+  });
+}
+
+function applyWinningSymbolHighlights(grid, winDetails, activeReelCount) {
+  clearWinningSymbolHighlights();
+  if (!Array.isArray(grid) || !winDetails.length) return;
+
+  const labels = new Map();
+  winDetails.forEach((detail) => {
+    for (let reelIndex = 0; reelIndex < detail.matchedReels && reelIndex < activeReelCount; reelIndex += 1) {
+      const reelSymbols = grid[reelIndex] || [];
+      reelSymbols.forEach((symbol, rowIndex) => {
+        if (symbol.id !== detail.symbol && !symbol.isWild) return;
+        const key = `${reelIndex}:${rowIndex}`;
+        const existing = labels.get(key);
+        const nextLabel = `${detail.symbolName} ${detail.matchedReels} reels`;
+        labels.set(key, existing ? `${existing} / ${nextLabel}` : nextLabel);
+      });
+    }
+  });
+
+  labels.forEach((label, key) => {
+    const [reelIndex, rowIndex] = key.split(":");
+    const cell = els.reels[Number(reelIndex)]?.querySelector(
+      `.symbol-cell[data-row-index="${rowIndex}"]`,
+    );
+    if (!cell) return;
+    cell.classList.add("ways-win-symbol");
+    if (cell.dataset.symbol === wildSymbol.id) {
+      cell.classList.add("ways-win-symbol-wild");
+    }
+    cell.dataset.winLabel = label;
+  });
+
+  if (labels.size) {
+    els.reelWindow.classList.add("has-winning-symbols");
+  }
 }
 
 async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
@@ -3384,11 +3436,14 @@ function symbolFromValue(value) {
 function renderReel(reel, symbolsForReel) {
   reel.innerHTML = "";
   reel.style.gridTemplateRows = `repeat(${symbolsForReel.length}, 1fr)`;
-  symbolsForReel.forEach((value) => {
+  const reelIndex = Number(reel.dataset.index);
+  symbolsForReel.forEach((value, rowIndex) => {
     const symbol = symbolFromValue(value);
     const cell = document.createElement("span");
     cell.className = `symbol-cell symbol-card ${symbol.className}`;
     cell.dataset.symbol = symbol.id;
+    cell.dataset.reelIndex = String(reelIndex);
+    cell.dataset.rowIndex = String(rowIndex);
     cell.setAttribute("aria-label", symbol.name);
     cell.style.setProperty("--symbol-delay", `${randomBetween(0, 1.8).toFixed(2)}s`);
     cell.style.setProperty("--symbol-drift", `${randomBetween(1.5, 3.8).toFixed(2)}px`);
@@ -3645,6 +3700,7 @@ async function spin() {
   }
 
   incrementTestCounter("totalSpins");
+  clearWinningSymbolHighlights();
   hideReelWinOverlay();
   hideTeaseOverlay();
   const bet = currentBet();
@@ -3714,9 +3770,15 @@ async function spin() {
   }
   const rawWin = calculateRawWin(result, bet, activeReelCount);
   const win = rtpAdjustedWin(rawWin, activeReelCount, isFreeSpin, rowCounts);
-  const waysWinFormulas = buildWaysWinFormulas(result, bet, activeReelCount, rawWin, win);
+  const waysWinDetails = distributeAdjustedWin(
+    calculateWaysWinDetails(result, bet, activeReelCount),
+    rawWin,
+    win,
+  );
+  const waysWinFormulas = buildWaysWinFormulasFromDetails(waysWinDetails);
   if (win > 0) {
     incrementTestCounter("totalWins");
+    applyWinningSymbolHighlights(result, waysWinDetails, activeReelCount);
   }
   if (isFreeSpin) {
     state.freeSpinWinTotal += win;
