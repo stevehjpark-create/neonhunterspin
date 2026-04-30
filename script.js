@@ -1370,7 +1370,7 @@ function renderSessionSummary() {
 function updateDailyDemoCreditUi() {
   const claimedToday = safeLocalStorageGet(dailyDemoCreditStorageKey) === localDateKey();
   if (els.dailyDemoButton) {
-    els.dailyDemoButton.disabled = state.spinning || state.scratchActive || claimedToday;
+    els.dailyDemoButton.disabled = selectedReelRevealPending() || state.spinning || state.scratchActive || claimedToday;
   }
   if (els.dailyDemoStatus) {
     els.dailyDemoStatus.textContent = claimedToday
@@ -2045,6 +2045,10 @@ function activeWays() {
   return visibleRows ** state.selectedReels;
 }
 
+function selectedReelRevealPending() {
+  return Boolean(state.selectedReelReveal);
+}
+
 function denomPickerOpen() {
   return !els.denomOptions[0]?.parentElement.hidden;
 }
@@ -2060,6 +2064,7 @@ function setDenomPickerOpen(open) {
 }
 
 function updateUi() {
+  const revealPending = selectedReelRevealPending();
   renderCredits();
   els.bet.textContent = formatDisplayAmount(currentBet());
   els.ways.textContent = activeWays();
@@ -2072,30 +2077,39 @@ function updateUi() {
     state.freeSpinMultiplier > 1 ? `${totalBonusSpins} x${state.freeSpinMultiplier}` : totalBonusSpins;
   els.bonusSpins.classList.toggle("ascension-active", state.freeSpinMultiplier > 1);
   els.spinButton.textContent =
-    state.expandedBonusSpins > 0 ? t("megaSpin") : state.bonusSpins > 0 ? t("freeGame") : t("spin");
+    revealPending
+      ? "SELECT REEL"
+      : state.expandedBonusSpins > 0
+        ? t("megaSpin")
+        : state.bonusSpins > 0
+          ? t("freeGame")
+          : t("spin");
   els.spinButton.disabled =
+    revealPending ||
     state.scratchActive ||
     state.spinning ||
     (!bonusModeActive() && state.credits < currentBet());
-  els.decreaseBet.disabled = state.spinning || bonusModeActive() || state.betIndex === 0;
-  els.increaseBet.disabled = state.spinning || bonusModeActive() || state.betIndex === betSteps.length - 1;
-  els.maxBet.disabled = state.spinning || bonusModeActive();
-  els.autoSpin.disabled = state.spinning || bonusModeActive() || state.scratchActive;
+  els.decreaseBet.disabled = revealPending || state.spinning || bonusModeActive() || state.betIndex === 0;
+  els.increaseBet.disabled = revealPending || state.spinning || bonusModeActive() || state.betIndex === betSteps.length - 1;
+  els.maxBet.disabled = revealPending || state.spinning || bonusModeActive();
+  els.autoSpin.disabled = revealPending || state.spinning || bonusModeActive() || state.scratchActive;
   els.autoSpin.classList.toggle("active", Boolean(autoSpinTimer));
   els.autoSpin.textContent = autoSpinTimer ? t("stopAuto") : t("autoPlay");
-  els.startDemoButton.disabled = state.spinning || state.scratchActive;
-  els.dropAmount.disabled = state.spinning || state.scratchActive;
-  els.dropButton.disabled = state.spinning || state.scratchActive;
-  els.cashOut.disabled = state.spinning || state.scratchActive || state.credits <= 0;
+  els.startDemoButton.disabled = revealPending || state.spinning || state.scratchActive;
+  els.dropAmount.disabled = revealPending || state.spinning || state.scratchActive;
+  els.dropButton.disabled = revealPending || state.spinning || state.scratchActive;
+  els.cashOut.disabled = revealPending || state.spinning || state.scratchActive || state.credits <= 0;
   updateDailyDemoCreditUi();
   els.denomToggle.textContent = denomLabel();
-  els.denomToggle.disabled = state.spinning || bonusModeActive() || state.scratchActive;
+  els.denomToggle.disabled = revealPending || state.spinning || bonusModeActive() || state.scratchActive;
   if (els.denomToggle.disabled) {
     setDenomPickerOpen(false);
   }
   updateSoundButtonUi();
   els.reelWindow.classList.toggle("bonus-mode", bonusModeActive());
   els.reelWindow.classList.toggle("expanded-mode", state.expandedBonusSpins > 0);
+  els.reelWindow.classList.toggle("reveal-pending", revealPending);
+  els.machine.classList.toggle("reveal-pending", revealPending);
   updateChestUi();
   updateJackpotUi();
   els.multiplierOptions.forEach((button) => {
@@ -2103,21 +2117,22 @@ function updateUi() {
       "active",
       Number(button.dataset.multiplier) === state.selectedMultiplier,
     );
-    button.disabled = state.spinning || bonusModeActive();
+    button.disabled = revealPending || state.spinning || bonusModeActive();
   });
   els.betOptions.forEach((button) => {
     button.classList.toggle("active", Number(button.dataset.betIndex) === state.betIndex);
-    button.disabled = state.spinning || bonusModeActive();
+    button.disabled = revealPending || state.spinning || bonusModeActive();
   });
   els.denomOptions.forEach((button) => {
     button.classList.toggle("active", Number(button.dataset.denom) === state.selectedDenomCents);
-    button.disabled = state.spinning || bonusModeActive();
+    button.disabled = revealPending || state.spinning || bonusModeActive();
   });
   els.reels.forEach((reel, index) => {
     reel.classList.toggle("inactive", index >= state.selectedReels);
   });
   const shouldShowZeroCreditCta =
     state.credits <= 0 &&
+    !revealPending &&
     !state.spinning &&
     !state.scratchActive &&
     !bonusModeActive() &&
@@ -2925,13 +2940,13 @@ async function rerollSelectedReel(reelIndex) {
     updatedWin,
   );
   const waysWinFormulas = buildWaysWinFormulasFromDetails(waysWinDetails);
-  const creditDelta = updatedWin - reveal.originalWin;
 
   state.lastWin = updatedWin;
-  setCredits(state.credits + creditDelta, creditDelta > 0);
+  addCredits(updatedWin, updatedWin > 0);
   clearWinningSymbolHighlights();
 
   if (updatedWin > 0) {
+    incrementTestCounter("totalWins");
     applyWinningSymbolHighlights(nextGrid, waysWinDetails, reveal.activeReelCount);
     const restoreOverlay = {
       type: "amount",
@@ -4063,6 +4078,10 @@ async function spin() {
   if (state.spinning || state.scratchActive) {
     return;
   }
+  if (selectedReelRevealPending()) {
+    showTeaseOverlay("Choose One Neon Reel", "Tap SELECT before the next spin.", true);
+    return;
+  }
 
   triggerHaptic("spin");
   await unlockAudioForUserGesture();
@@ -4150,8 +4169,8 @@ async function spin() {
     win,
   );
   const waysWinFormulas = buildWaysWinFormulasFromDetails(waysWinDetails);
+  let selectedReelRevealPendingThisSpin = false;
   if (win > 0) {
-    incrementTestCounter("totalWins");
     applyWinningSymbolHighlights(result, waysWinDetails, activeReelCount);
     applySelectableReelRevealStates(result, waysWinDetails, activeReelCount, {
       bonusTriggered,
@@ -4161,12 +4180,18 @@ async function spin() {
       win,
       scatterBonusTriggered: bonusTriggered,
     });
+    selectedReelRevealPendingThisSpin = selectedReelRevealPending();
+    if (!selectedReelRevealPendingThisSpin) {
+      incrementTestCounter("totalWins");
+    }
   }
   const freeSpinCurrentMultiplier = isFreeSpin ? state.freeSpinMultiplier : 1;
   const multipliedWin = isFreeSpin ? win * freeSpinCurrentMultiplier : win;
   if (isFreeSpin) {
     state.freeSpinWinTotal += multipliedWin;
     state.lastWin = state.freeSpinWinTotal;
+  } else if (selectedReelRevealPendingThisSpin) {
+    state.lastWin = 0;
   } else {
     state.lastWin = win;
     addCredits(win, true);
@@ -4301,6 +4326,8 @@ async function spin() {
     showWaysWinFormulaSequence(waysWinFormulas, restoreOverlay);
     els.machine.classList.add("celebrate");
     playWinSound();
+  } else if (selectedReelRevealPendingThisSpin && win > 0) {
+    setHiddenMessage("Choose one neon reel to lock in the result.");
   } else if (win > 0) {
     const title = winPresentationTitle(win, bet);
     const restoreOverlay = {
@@ -4368,7 +4395,7 @@ async function spin() {
 }
 
 function changeBet(direction) {
-  if (state.spinning || bonusModeActive()) return;
+  if (state.spinning || bonusModeActive() || selectedReelRevealPending()) return;
   stopAutoSpin();
   state.bonusSpins = 0;
   state.expandedBonusSpins = 0;
@@ -4381,7 +4408,7 @@ function changeBet(direction) {
 }
 
 function selectBetLevel(index) {
-  if (state.spinning || bonusModeActive()) return;
+  if (state.spinning || bonusModeActive() || selectedReelRevealPending()) return;
   stopAutoSpin();
   state.betIndex = Math.min(betSteps.length - 1, Math.max(0, index));
   addMissionNumberValue("betLevelsTried", state.betIndex);
@@ -4396,7 +4423,7 @@ function selectBetLevel(index) {
 }
 
 async function dropCredits() {
-  if (state.spinning || state.scratchActive) return;
+  if (state.spinning || state.scratchActive || selectedReelRevealPending()) return;
   stopAutoSpin();
   await unlockAudioForUserGesture();
   const dropAmount = Number(els.dropAmount.value);
@@ -4433,7 +4460,7 @@ async function dropCredits() {
 }
 
 async function startDemoCredits() {
-  if (state.spinning || state.scratchActive) return;
+  if (state.spinning || state.scratchActive || selectedReelRevealPending()) return;
   stopAutoSpin();
   await unlockAudioForUserGesture();
   addCredits(demoStartCreditAmountForCurrentDenom(), false);
@@ -4448,7 +4475,7 @@ async function startDemoCredits() {
 }
 
 async function claimDailyDemoCredits() {
-  if (state.spinning || state.scratchActive) return;
+  if (state.spinning || state.scratchActive || selectedReelRevealPending()) return;
   stopAutoSpin();
   await unlockAudioForUserGesture();
   const today = localDateKey();
@@ -4473,7 +4500,7 @@ async function claimDailyDemoCredits() {
 }
 
 async function cashOut() {
-  if (state.spinning || state.scratchActive) return;
+  if (state.spinning || state.scratchActive || selectedReelRevealPending()) return;
   stopAutoSpin();
   await unlockAudioForUserGesture();
   const cashOutAmount = state.credits;
@@ -4489,7 +4516,7 @@ async function cashOut() {
 }
 
 function selectMultiplier(value) {
-  if (state.spinning || bonusModeActive()) return;
+  if (state.spinning || bonusModeActive() || selectedReelRevealPending()) return;
   stopAutoSpin();
   state.selectedMultiplier = value;
   state.bonusSpins = 0;
@@ -4500,7 +4527,7 @@ function selectMultiplier(value) {
 }
 
 function selectDenom(value) {
-  if (state.spinning || bonusModeActive()) return;
+  if (state.spinning || bonusModeActive() || selectedReelRevealPending()) return;
   stopAutoSpin();
   settleCreditAnimation();
   setDenomPickerOpen(false);

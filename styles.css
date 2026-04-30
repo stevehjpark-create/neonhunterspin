@@ -1829,6 +1829,20 @@ h1 {
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.22);
 }
 
+.machine.reveal-pending .spin-button:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  color: #fff5c8;
+  background:
+    linear-gradient(180deg, rgba(90, 46, 158, 0.98), rgba(48, 22, 97, 0.98));
+  box-shadow:
+    0 9px 0 rgba(23, 9, 44, 0.92),
+    0 0 22px rgba(156, 109, 255, 0.38),
+    inset 0 0 18px rgba(255, 206, 85, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  text-shadow: 0 0 10px rgba(255, 206, 85, 0.32);
+}
+
 .quick-actions {
   display: grid;
   grid-template-columns: minmax(96px, 1.2fr) repeat(4, 1fr);
