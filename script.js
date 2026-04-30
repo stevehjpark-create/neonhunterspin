@@ -2948,7 +2948,7 @@ async function rerollSelectedReel(reelIndex) {
     playWinSound();
   } else {
     setHiddenMessage("");
-    showReelMessageOverlay("REVEAL COMPLETE", false);
+    showReelMessageOverlay("NEXT SPIN READY", false);
   }
 
   state.spinning = false;
