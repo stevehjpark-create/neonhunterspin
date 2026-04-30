@@ -4835,6 +4835,191 @@ h1 {
   margin-top: 10px;
 }
 
+.v7-engagement-panel {
+  margin-top: 10px;
+  min-width: 0;
+  border: 1px solid rgba(156, 109, 255, 0.28);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 206, 85, 0.12), transparent 36%),
+    radial-gradient(circle at 100% 0, rgba(156, 109, 255, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.v7-engagement-panel summary {
+  min-height: 46px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.v7-engagement-panel summary span {
+  color: #ffd96b;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.v7-engagement-panel summary strong {
+  color: #fff6cc;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-align: right;
+}
+
+.engagement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0 10px 10px;
+}
+
+.engagement-card,
+.share-moment-box {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(5, 7, 14, 0.46);
+  padding: 10px;
+}
+
+.engagement-card h3 {
+  margin: 0;
+  color: #ffd96b;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.compact-list {
+  grid-template-columns: 1fr;
+}
+
+.badge-grid,
+.symbol-collection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge-grid span,
+.symbol-collection-grid span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(247, 242, 232, 0.7);
+  padding: 5px 8px;
+  font-size: 0.64rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.badge-grid span.complete,
+.symbol-collection-grid span.complete {
+  border-color: rgba(90, 255, 185, 0.26);
+  background:
+    linear-gradient(180deg, rgba(90, 255, 185, 0.14), rgba(156, 109, 255, 0.1)),
+    rgba(255, 255, 255, 0.06);
+  color: #eafff6;
+  box-shadow: 0 0 14px rgba(90, 255, 185, 0.08);
+}
+
+.engagement-note {
+  margin: 0;
+  color: rgba(247, 242, 232, 0.62);
+  font-size: 0.66rem;
+  font-weight: 820;
+  line-height: 1.25;
+}
+
+.share-moment-box {
+  margin: 0 10px 10px;
+}
+
+.share-moment-box .secondary-action {
+  justify-self: start;
+}
+
+.achievement-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 80;
+  width: min(92vw, 360px);
+  transform: translate(-50%, 16px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255, 206, 85, 0.46);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 206, 85, 0.3), transparent 42%),
+    linear-gradient(180deg, rgba(58, 22, 96, 0.96), rgba(15, 10, 28, 0.98));
+  color: #fff6cc;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.42),
+    0 0 24px rgba(156, 109, 255, 0.28);
+  padding: 12px 14px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 950;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.achievement-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.machine.hold-show {
+  animation: holdCabinetGlow 1.6s ease;
+}
+
+.symbol-cell.hold-symbol {
+  border-color: rgba(255, 206, 85, 0.85);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 246, 204, 0.22),
+    0 0 22px rgba(255, 206, 85, 0.56),
+    0 0 36px rgba(156, 109, 255, 0.32);
+}
+
+.symbol-cell.hold-show-pulse {
+  animation: holdSymbolPulse 0.34s ease;
+}
+
+@keyframes holdCabinetGlow {
+  0%,
+  100% {
+    filter: none;
+  }
+  35%,
+  70% {
+    filter: drop-shadow(0 0 18px rgba(255, 206, 85, 0.34)) drop-shadow(0 0 28px rgba(156, 109, 255, 0.26));
+  }
+}
+
+@keyframes holdSymbolPulse {
+  0%,
+  100% {
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    transform: translateZ(0) scale(1.08);
+  }
+}
+
 .tester-mission-header {
   display: flex;
   justify-content: space-between;
@@ -5307,13 +5492,23 @@ h1 {
   }
 
   .tester-mission-list,
-  .session-summary-grid {
+  .session-summary-grid,
+  .engagement-grid {
     grid-template-columns: 1fr;
   }
 
   .tester-mission-list li {
     min-height: 30px;
     font-size: 0.66rem;
+  }
+
+  .v7-engagement-panel summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .share-moment-box .secondary-action {
+    width: 100%;
   }
 
   .feedback-actions {

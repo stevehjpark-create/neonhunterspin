@@ -258,6 +258,37 @@ Safety:
 - All credits are virtual test points with no cash value.
 - Test reports remain local-only unless the tester manually copies and sends them.
 
+## v7 Local Gamification and Share Moment Release
+
+Version: `neon-hunter-spin-v7`
+
+Purpose: Safe local-only gamification and Telegram share testing.
+
+Added:
+
+- NEON HUNTER TRAIL for local test milestones.
+- Hold & Win-style Dokkaebi Bonus Show presentation.
+- Session Achievements as cosmetic milestones.
+- Symbol Collection based on actual reel results.
+- Copy Share Moment for manual Telegram test sharing.
+- Local Demo Summary using only local test stats.
+
+Safety:
+
+- No real-money betting.
+- No payout.
+- No cash-out.
+- No external reward.
+- No gift card.
+- No cryptocurrency.
+- No token asset.
+- No NFT.
+- No wallet.
+- No payment.
+- No backend login.
+- All credits are virtual test points with no cash value.
+- Trail, achievements, collection, and share moments are cosmetic/local-only test features.
+
 ## RTP Simulation
 
 `simulate_rtp.js` is a local math verification helper. It is not required for Netlify deployment.

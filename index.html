@@ -29,7 +29,7 @@
     />
     <meta name="twitter:image" content="/assets/share/telegram-preview.png" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v6-language-credit" />
+    <link rel="stylesheet" href="styles.css?v=neon-hunter-spin-v7-local-show" />
   </head>
   <body>
     <main class="app" aria-labelledby="game-title">
@@ -272,6 +272,42 @@
           </div>
           <ol id="testerMissionList" class="tester-mission-list"></ol>
         </section>
+
+        <details class="v7-engagement-panel" id="engagementPanel">
+          <summary>
+            <span>NEON HUNTER TRAIL</span>
+            <strong id="featureTrailProgress">0 / 8 completed</strong>
+          </summary>
+          <div class="engagement-grid">
+            <section class="engagement-card">
+              <h3>Feature Trail</h3>
+              <ol id="featureTrailList" class="tester-mission-list compact-list"></ol>
+              <p id="featureTrailStatus" class="engagement-note">Trail progress is local only. No cash value.</p>
+            </section>
+            <section class="engagement-card">
+              <h3>Session Achievements</h3>
+              <div id="achievementList" class="badge-grid"></div>
+            </section>
+            <section class="engagement-card">
+              <h3>Symbol Collection</h3>
+              <p id="symbolCollectionProgress" class="mission-progress-note">0 / 0 completed</p>
+              <div id="symbolCollectionList" class="symbol-collection-grid"></div>
+            </section>
+            <section class="engagement-card">
+              <h3>Local Demo Summary</h3>
+              <div id="localDemoSummary" class="session-summary-grid"></div>
+              <p class="engagement-note">For testing only. No personal data sent.</p>
+            </section>
+          </div>
+          <div class="share-moment-box">
+            <button id="copyShareMoment" class="secondary-action" type="button">Copy Share Moment</button>
+            <p id="shareMomentStatus" class="report-status" aria-live="polite"></p>
+            <div id="shareMomentFallback" class="report-fallback" hidden>
+              <label for="shareMomentFallbackText">Copy this share moment manually</label>
+              <textarea id="shareMomentFallbackText" rows="6" readonly></textarea>
+            </div>
+          </div>
+        </details>
       </section>
 
       <footer class="app-footer">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</footer>
@@ -505,6 +541,29 @@
           <ol id="guideMissionList" class="tester-mission-list guide-mission-list"></ol>
         </div>
 
+        <div class="guide-section">
+          <h3>NEON HUNTER TRAIL</h3>
+          <p id="guideFeatureTrailProgress" class="mission-progress-note">0 / 8 completed</p>
+          <ol id="guideFeatureTrailList" class="tester-mission-list guide-mission-list"></ol>
+        </div>
+
+        <div class="guide-section">
+          <h3>Session Achievements</h3>
+          <div id="guideAchievementList" class="badge-grid"></div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Symbol Collection</h3>
+          <p id="guideSymbolCollectionProgress" class="mission-progress-note">0 / 0 completed</p>
+          <div id="guideSymbolCollectionList" class="symbol-collection-grid"></div>
+        </div>
+
+        <div class="guide-section">
+          <h3>Local Demo Summary</h3>
+          <div id="guideLocalDemoSummary" class="session-summary-grid"></div>
+          <p class="guide-note">For testing only. No personal data sent.</p>
+        </div>
+
         <p class="guide-note">This is an original K-pop fantasy slot demo. It does not use copyrighted characters, logos, scenes, or official assets from any existing film, game, or music property.</p>
         <p class="guide-note">All credits are virtual test points with no cash value.</p>
         <p class="guide-note">Demo Only - No real-money wagering, payout, external rewards, cryptocurrency, or token assets.</p>
@@ -525,6 +584,8 @@
       </section>
     </div>
 
-    <script src="script.js?v=neon-hunter-spin-v6-language-credit"></script>
+    <div id="achievementToast" class="achievement-toast" aria-live="polite" aria-hidden="true"></div>
+
+    <script src="script.js?v=neon-hunter-spin-v7-local-show"></script>
   </body>
 </html>

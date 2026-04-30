@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v6-language-credit";
+const CACHE_NAME = "neon-hunter-spin-v7-local-gamification";
 const CORE_ASSETS = [
   "./",
   "./index.html",

@@ -61,8 +61,11 @@ const testStatsStorageKey = "neonHunterSpinTestStats";
 const testerMissionStorageKey = "neonHunterSpinTesterMission";
 const dailyDemoCreditStorageKey = "neonHunterSpinDailyDemoCreditDate";
 const languageStorageKey = "neonHunterSpinLanguage";
+const featureTrailStorageKey = "neonHunterSpinFeatureTrail";
+const achievementStorageKey = "neonHunterSpinAchievements";
+const symbolCollectionStorageKey = "neonHunterSpinSymbolCollection";
 const serviceWorkerPath = "service-worker.js";
-const appVersion = "v6";
+const appVersion = "v7";
 const dailyDemoCredits = 2_000;
 const missionBonusDemoCredits = 100;
 const feedbackTagOptions = [
@@ -84,6 +87,36 @@ const testerMissionDefinitions = [
   { id: "openTestInfo", label: "Open the Test Info panel" },
   { id: "submitFeedback", label: "Submit feedback" },
   { id: "observeEvent", label: "Observe at least one win, bonus, free game, or near-miss event" },
+];
+const featureTrailDefinitions = [
+  { id: "startDemo", label: "Start the demo" },
+  { id: "spin10", label: "Spin 10 times" },
+  { id: "spin30", label: "Spin 30 times" },
+  { id: "win3", label: "Trigger 3 win events" },
+  { id: "scatterTease2", label: "See 2 Scatter / Free Game tease events" },
+  { id: "bonusTease2", label: "See 2 Bonus tease events" },
+  { id: "openFeedback", label: "Open Feedback" },
+  { id: "copyReport", label: "Complete Session Summary / Copy Test Report" },
+];
+const achievementDefinitions = [
+  { id: "firstSpin", label: "First Spin" },
+  { id: "tenSpins", label: "10 Spins" },
+  { id: "firstWin", label: "First Win" },
+  { id: "firstScatterTease", label: "First Scatter Tease" },
+  { id: "firstBonusTease", label: "First Bonus Tease" },
+  { id: "firstFreeGame", label: "First Free Game" },
+  { id: "firstDokkaebiBonus", label: "First Dokkaebi Bonus" },
+  { id: "feedbackSubmitted", label: "Feedback Submitted" },
+];
+const symbolCollectionDefinitions = [
+  { id: "wild", label: "WILD", symbolIds: ["wild"] },
+  { id: "scatter", label: "SCATTER", symbolIds: ["scatter"] },
+  { id: "bonus", label: "Dokkaebi / Bonus", symbolIds: ["bonus"] },
+  { id: "crown", label: "GAT", symbolIds: ["crown"] },
+  { id: "diamond", label: "LANTERN", symbolIds: ["diamond"] },
+  { id: "seven", label: "7", symbolIds: ["seven"] },
+  { id: "bar", label: "SAMTAEGEUK", symbolIds: ["bar"] },
+  { id: "rankGroup", label: "Hangul ranks", symbolIds: ["A", "K", "Q", "J", "ten"] },
 ];
 const jackpotConfig = {
   MINI: { start: 150, max: 300, contribution: 0.0065 },
@@ -133,6 +166,9 @@ const state = {
   testSessionId: "",
   testStats: createDefaultTestStats(),
   testerMission: loadTesterMission(),
+  featureTrail: loadFeatureTrail(),
+  achievements: loadAchievements(),
+  symbolCollection: loadSymbolCollection(),
   selectedFeedbackTags: [],
 };
 
@@ -238,6 +274,25 @@ const els = {
   testerMissionList: document.querySelector("#testerMissionList"),
   guideMissionProgress: document.querySelector("#guideMissionProgress"),
   guideMissionList: document.querySelector("#guideMissionList"),
+  engagementPanel: document.querySelector("#engagementPanel"),
+  featureTrailProgress: document.querySelector("#featureTrailProgress"),
+  featureTrailList: document.querySelector("#featureTrailList"),
+  featureTrailStatus: document.querySelector("#featureTrailStatus"),
+  guideFeatureTrailProgress: document.querySelector("#guideFeatureTrailProgress"),
+  guideFeatureTrailList: document.querySelector("#guideFeatureTrailList"),
+  achievementList: document.querySelector("#achievementList"),
+  guideAchievementList: document.querySelector("#guideAchievementList"),
+  symbolCollectionProgress: document.querySelector("#symbolCollectionProgress"),
+  guideSymbolCollectionProgress: document.querySelector("#guideSymbolCollectionProgress"),
+  symbolCollectionList: document.querySelector("#symbolCollectionList"),
+  guideSymbolCollectionList: document.querySelector("#guideSymbolCollectionList"),
+  localDemoSummary: document.querySelector("#localDemoSummary"),
+  guideLocalDemoSummary: document.querySelector("#guideLocalDemoSummary"),
+  copyShareMoment: document.querySelector("#copyShareMoment"),
+  shareMomentStatus: document.querySelector("#shareMomentStatus"),
+  shareMomentFallback: document.querySelector("#shareMomentFallback"),
+  shareMomentFallbackText: document.querySelector("#shareMomentFallbackText"),
+  achievementToast: document.querySelector("#achievementToast"),
   dailyDemoButton: document.querySelector("#dailyDemoButton"),
   dailyDemoStatus: document.querySelector("#dailyDemoStatus"),
 };
@@ -251,6 +306,7 @@ let cabinetPulseTimer;
 let missionBonusReady = false;
 let missionBonusTooltipTimer;
 let missionPanelPulseTimer;
+let achievementToastTimer;
 
 const i18n = {
   en: {
@@ -653,6 +709,108 @@ function loadTesterMission() {
   };
 }
 
+function createDefaultFeatureTrail() {
+  return {
+    completed: {},
+    scatterTeases: 0,
+    bonusTeases: 0,
+    copiedReport: false,
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}
+
+function loadFeatureTrail() {
+  const defaults = createDefaultFeatureTrail();
+  const stored = safeLocalStorageGet(featureTrailStorageKey);
+  let parsed = {};
+
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch {
+      parsed = {};
+    }
+  }
+
+  return {
+    ...defaults,
+    ...parsed,
+    completed: { ...(parsed.completed || {}) },
+    scatterTeases: Math.max(0, Number(parsed.scatterTeases) || 0),
+    bonusTeases: Math.max(0, Number(parsed.bonusTeases) || 0),
+    copiedReport: Boolean(parsed.copiedReport),
+  };
+}
+
+function saveFeatureTrail() {
+  state.featureTrail.lastUpdatedAt = new Date().toISOString();
+  safeLocalStorageSet(featureTrailStorageKey, JSON.stringify(state.featureTrail));
+}
+
+function createDefaultAchievements() {
+  return {
+    completed: {},
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}
+
+function loadAchievements() {
+  const defaults = createDefaultAchievements();
+  const stored = safeLocalStorageGet(achievementStorageKey);
+  let parsed = {};
+
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch {
+      parsed = {};
+    }
+  }
+
+  return {
+    ...defaults,
+    ...parsed,
+    completed: { ...(parsed.completed || {}) },
+  };
+}
+
+function saveAchievements() {
+  state.achievements.lastUpdatedAt = new Date().toISOString();
+  safeLocalStorageSet(achievementStorageKey, JSON.stringify(state.achievements));
+}
+
+function createDefaultSymbolCollection() {
+  return {
+    seen: {},
+    lastUpdatedAt: new Date().toISOString(),
+  };
+}
+
+function loadSymbolCollection() {
+  const defaults = createDefaultSymbolCollection();
+  const stored = safeLocalStorageGet(symbolCollectionStorageKey);
+  let parsed = {};
+
+  if (stored) {
+    try {
+      parsed = JSON.parse(stored) || {};
+    } catch {
+      parsed = {};
+    }
+  }
+
+  return {
+    ...defaults,
+    ...parsed,
+    seen: { ...(parsed.seen || {}) },
+  };
+}
+
+function saveSymbolCollection() {
+  state.symbolCollection.lastUpdatedAt = new Date().toISOString();
+  safeLocalStorageSet(symbolCollectionStorageKey, JSON.stringify(state.symbolCollection));
+}
+
 function saveTesterMission() {
   state.testerMission.lastUpdatedAt = new Date().toISOString();
   safeLocalStorageSet(testerMissionStorageKey, JSON.stringify(state.testerMission));
@@ -842,6 +1000,189 @@ function renderTesterMission() {
   renderSessionSummary();
 }
 
+function featureTrailCompletionMap() {
+  const completed = { ...state.featureTrail.completed };
+  completed.startDemo = completed.startDemo || Boolean(state.testerMission.completed.startDemo);
+  completed.spin10 = state.testStats.totalSpins >= 10;
+  completed.spin30 = state.testStats.totalSpins >= 30;
+  completed.win3 = state.testStats.totalWins >= 3;
+  completed.scatterTease2 = state.featureTrail.scatterTeases >= 2;
+  completed.bonusTease2 = state.featureTrail.bonusTeases >= 2;
+  completed.openFeedback = completed.openFeedback || feedbackOpen();
+  completed.copyReport = completed.copyReport || state.featureTrail.copiedReport;
+  return completed;
+}
+
+function featureTrailProgress() {
+  const completed = featureTrailCompletionMap();
+  const count = featureTrailDefinitions.filter((step) => completed[step.id]).length;
+  return {
+    completed: count,
+    total: featureTrailDefinitions.length,
+    label: progressLabel(count, featureTrailDefinitions.length),
+  };
+}
+
+function markFeatureTrailComplete(id) {
+  if (!featureTrailDefinitions.some((step) => step.id === id)) return;
+  if (state.featureTrail.completed[id]) return;
+  state.featureTrail.completed[id] = true;
+  saveFeatureTrail();
+  renderV7Panels();
+}
+
+function recordFeatureTease(type) {
+  if (type === "scatter") {
+    state.featureTrail.scatterTeases += 1;
+    unlockAchievement("firstScatterTease");
+  }
+  if (type === "bonus") {
+    state.featureTrail.bonusTeases += 1;
+    unlockAchievement("firstBonusTease");
+  }
+  saveFeatureTrail();
+  renderV7Panels();
+}
+
+function unlockAchievement(id) {
+  if (!achievementDefinitions.some((achievement) => achievement.id === id)) return;
+  if (state.achievements.completed[id]) return;
+  state.achievements.completed[id] = true;
+  saveAchievements();
+  renderV7Panels();
+  showAchievementToast(achievementDefinitions.find((achievement) => achievement.id === id)?.label || id);
+}
+
+function showAchievementToast(label) {
+  if (!els.achievementToast) return;
+  clearTimeout(achievementToastTimer);
+  els.achievementToast.textContent = `Achievement unlocked: ${label}`;
+  els.achievementToast.classList.add("show");
+  els.achievementToast.setAttribute("aria-hidden", "false");
+  achievementToastTimer = setTimeout(() => {
+    els.achievementToast.classList.remove("show");
+    els.achievementToast.setAttribute("aria-hidden", "true");
+  }, 1900);
+}
+
+function updateAchievementRules() {
+  if (state.testStats.totalSpins >= 1) unlockAchievement("firstSpin");
+  if (state.testStats.totalSpins >= 10) unlockAchievement("tenSpins");
+  if (state.testStats.totalWins >= 1) unlockAchievement("firstWin");
+  if (state.testStats.totalFreeGameTriggers >= 1) unlockAchievement("firstFreeGame");
+  if (state.testStats.totalBonusTriggers >= 1) unlockAchievement("firstDokkaebiBonus");
+  if (state.testStats.totalFeedbackSubmitted >= 1) unlockAchievement("feedbackSubmitted");
+}
+
+function collectSymbolsFromResult(grid) {
+  if (!Array.isArray(grid)) return;
+  let changed = false;
+  const seenIds = new Set(grid.flat().map((symbol) => symbol?.id).filter(Boolean));
+  symbolCollectionDefinitions.forEach((item) => {
+    if (state.symbolCollection.seen[item.id]) return;
+    if (item.symbolIds.some((id) => seenIds.has(id))) {
+      state.symbolCollection.seen[item.id] = true;
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveSymbolCollection();
+    renderV7Panels();
+  }
+}
+
+function markSymbolCollectionBonusSeen() {
+  if (state.symbolCollection.seen.bonus) return;
+  state.symbolCollection.seen.bonus = true;
+  saveSymbolCollection();
+  renderV7Panels();
+}
+
+function symbolCollectionProgress() {
+  const count = symbolCollectionDefinitions.filter((item) => state.symbolCollection.seen[item.id]).length;
+  return {
+    completed: count,
+    total: symbolCollectionDefinitions.length,
+    label: progressLabel(count, symbolCollectionDefinitions.length),
+  };
+}
+
+function localDemoSummaryRows() {
+  const spins = state.testStats.totalSpins;
+  const bonuses = state.testStats.totalBonusTriggers + state.testStats.totalFreeGameTriggers;
+  const feedbackSubmitted = state.testStats.totalFeedbackSubmitted > 0;
+  const trail = featureTrailProgress();
+  const collection = symbolCollectionProgress();
+  let sessionType = "New Tester";
+  if (bonuses > 0) sessionType = "Bonus Explorer";
+  else if (spins >= 30 && !feedbackSubmitted) sessionType = "Fast Spinner";
+  else if (feedbackSubmitted || state.selectedFeedbackTags.length) sessionType = "Careful Tester";
+  const engagementSignal = spins >= 30 || trail.completed >= 6 ? "Strong" : spins >= 10 ? "Active" : "Early";
+
+  return [
+    ["Session Type", sessionType],
+    ["Engagement Signal", engagementSignal],
+    ["Feature Trail", trail.label],
+    ["Symbol Collection", collection.label],
+    ["Feedback Status", feedbackSubmitted ? "Submitted" : "Not Submitted"],
+  ];
+}
+
+function renderV7Panels() {
+  const trailCompleted = featureTrailCompletionMap();
+  const trailProgress = featureTrailProgress();
+  const trailMarkup = featureTrailDefinitions
+    .map((step) => {
+      const done = Boolean(trailCompleted[step.id]);
+      return `<li class="${done ? "complete" : ""}"><span>${done ? "✓" : "○"}</span>${step.label}</li>`;
+    })
+    .join("");
+  [els.featureTrailProgress, els.guideFeatureTrailProgress].forEach((element) => {
+    if (element) element.textContent = trailProgress.label;
+  });
+  [els.featureTrailList, els.guideFeatureTrailList].forEach((element) => {
+    if (element) element.innerHTML = trailMarkup;
+  });
+  if (els.featureTrailStatus) {
+    els.featureTrailStatus.textContent =
+      trailProgress.completed === trailProgress.total
+        ? "Hunter Trail Complete. Visual badge only. No cash value."
+        : "Trail progress is local only. No cash value.";
+  }
+
+  const achievementMarkup = achievementDefinitions
+    .map((achievement) => {
+      const done = Boolean(state.achievements.completed[achievement.id]);
+      return `<span class="${done ? "complete" : ""}">${done ? "✓ " : ""}${achievement.label}</span>`;
+    })
+    .join("");
+  [els.achievementList, els.guideAchievementList].forEach((element) => {
+    if (element) element.innerHTML = achievementMarkup;
+  });
+
+  const collectionProgress = symbolCollectionProgress();
+  const collectionMarkup = symbolCollectionDefinitions
+    .map((item) => {
+      const done = Boolean(state.symbolCollection.seen[item.id]);
+      return `<span class="${done ? "complete" : ""}">${done ? "✓ " : "○ "}${item.label}</span>`;
+    })
+    .join("");
+  [els.symbolCollectionProgress, els.guideSymbolCollectionProgress].forEach((element) => {
+    if (element) element.textContent = collectionProgress.label;
+  });
+  [els.symbolCollectionList, els.guideSymbolCollectionList].forEach((element) => {
+    if (element) element.innerHTML = collectionMarkup;
+  });
+
+  const summaryMarkup = localDemoSummaryRows()
+    .map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`)
+    .join("");
+  [els.localDemoSummary, els.guideLocalDemoSummary].forEach((element) => {
+    if (element) element.innerHTML = summaryMarkup;
+  });
+  renderReportPreview();
+}
+
 function generateTestSessionId() {
   const date = new Date();
   const datePart = [
@@ -906,6 +1247,8 @@ function incrementTestCounter(key, amount = 1) {
   state.testStats.lastVisitAt = new Date().toISOString();
   saveTestStats();
   renderTestStats();
+  updateAchievementRules();
+  renderV7Panels();
 }
 
 function formatTestTimestamp(value) {
@@ -952,6 +1295,7 @@ function renderTestStats() {
   });
   renderTesterMission();
   renderSessionSummary();
+  renderV7Panels();
 }
 
 function soundStateLabel() {
@@ -1096,6 +1440,65 @@ async function copyTestReport() {
     showReportFallback(report);
     setReportStatus("Clipboard unavailable. Copy the report manually from this panel.");
     setHiddenMessage("Copy the test report manually from the feedback panel.");
+  }
+  state.featureTrail.copiedReport = true;
+  saveFeatureTrail();
+  markFeatureTrailComplete("copyReport");
+  renderV7Panels();
+}
+
+function buildShareMoment() {
+  const trail = featureTrailProgress();
+  const collection = symbolCollectionProgress();
+  const tags = state.selectedFeedbackTags.length ? state.selectedFeedbackTags.join(", ") : "None";
+  const bonusSeen = state.testStats.totalBonusTriggers > 0 ? "Yes" : "No";
+  const freeGameSeen = state.testStats.totalFreeGameTriggers > 0 ? "Yes" : "No";
+
+  return [
+    "NEON HUNTER SPIN Test Moment",
+    `Mode: ${state.testModeLabel}`,
+    `Session Spins: ${state.testStats.totalSpins}`,
+    `Bonus Seen: ${bonusSeen}`,
+    `Free Game Seen: ${freeGameSeen}`,
+    `Favorite feedback tags: ${tags}`,
+    `Hunter Trail progress: ${trail.label}`,
+    `Symbol Collection progress: ${collection.label}`,
+    "Free demo only. Virtual test points have no cash value.",
+  ].join("\n");
+}
+
+function showShareMomentFallback(report) {
+  if (!els.shareMomentFallback || !els.shareMomentFallbackText) return;
+  els.shareMomentFallback.hidden = false;
+  els.shareMomentFallbackText.value = report;
+  els.shareMomentFallbackText.focus({ preventScroll: true });
+  els.shareMomentFallbackText.select();
+}
+
+function setShareMomentStatus(text) {
+  if (els.shareMomentStatus) {
+    els.shareMomentStatus.textContent = text;
+  }
+}
+
+async function copyShareMoment() {
+  const report = buildShareMoment();
+  if (els.shareMomentFallback) {
+    els.shareMomentFallback.hidden = true;
+  }
+  setShareMomentStatus("");
+
+  try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard unavailable");
+    }
+    await navigator.clipboard.writeText(report);
+    setShareMomentStatus("Share moment copied. Paste it into Telegram.");
+    setHiddenMessage("Share moment copied. Paste it into Telegram.");
+  } catch {
+    showShareMomentFallback(report);
+    setShareMomentStatus("Clipboard unavailable. Copy the share moment manually.");
+    setHiddenMessage("Copy the share moment manually from this panel.");
   }
 }
 
@@ -1930,6 +2333,7 @@ function feedbackOpen() {
 
 function openFeedbackModal() {
   stopAutoSpin();
+  markFeatureTrailComplete("openFeedback");
   renderTestStats();
   renderSelectedFeedbackTags();
   if (els.reportFallback) {
@@ -3089,6 +3493,34 @@ function showReelWinOverlay(title, amount, caption) {
   }
 }
 
+async function playDokkaebiHoldShow(grid) {
+  const featureIds = new Set(["scatter", "wild", "bonus"]);
+  const featureCells = els.reels.flatMap((reel) => [
+    ...reel.querySelectorAll(".symbol-cell"),
+  ]).filter((cell) => featureIds.has(cell.dataset.symbol));
+  if (!featureCells.length && !grid?.flat?.().some((symbol) => featureIds.has(symbol?.id))) return;
+
+  hideTeaseOverlay();
+  showReelMessageOverlay("DOKKAEBI HOLD SHOW", true);
+  els.machine.classList.add("hold-show");
+  els.reelWindow.classList.add("hold-show");
+  featureCells.forEach((cell) => cell.classList.add("hold-symbol"));
+
+  for (let pulse = 0; pulse < 3; pulse += 1) {
+    els.reelWindow.classList.remove("hold-show-pulse");
+    featureCells.forEach((cell) => cell.classList.remove("hold-show-pulse"));
+    void els.reelWindow.offsetWidth;
+    els.reelWindow.classList.add("hold-show-pulse");
+    featureCells.forEach((cell) => cell.classList.add("hold-show-pulse"));
+    playBellCluster(0, 4, 0.045);
+    await wait(330);
+  }
+
+  els.machine.classList.remove("hold-show");
+  els.reelWindow.classList.remove("hold-show", "hold-show-pulse");
+  featureCells.forEach((cell) => cell.classList.remove("hold-symbol", "hold-show-pulse"));
+}
+
 function showTeaseOverlay(title, caption, pulse = false) {
   if (teaseTimer) {
     clearTimeout(teaseTimer);
@@ -3220,6 +3652,7 @@ async function spin() {
   const result = Array.from({ length: reelCount }, (_, index) =>
     createReelResult(index, rowCounts[index]),
   );
+  collectSymbolsFromResult(result);
   const naturalBonusTriggered = isBonusTrigger(result, activeReelCount);
   const randomBonusTriggered = !naturalBonusTriggered && shouldAddRandomBonus(activeReelCount);
 
@@ -3314,9 +3747,12 @@ async function spin() {
   }
   if (bonusTriggered || chestTriggered >= 0) {
     incrementTestCounter("totalBonusTriggers");
+    markSymbolCollectionBonusSeen();
+    unlockAchievement("firstDokkaebiBonus");
   }
   if ((isFreeSpin && bonusTriggered) || chestTriggered === 0) {
     incrementTestCounter("totalFreeGameTriggers");
+    unlockAchievement("firstFreeGame");
   }
   if (bonusTriggered || chestTriggered >= 0) {
     triggerHaptic("bonus");
@@ -3325,6 +3761,10 @@ async function spin() {
   }
   if (bonusTriggered || chestTriggered >= 0 || state.bonusSpins > 0 || state.expandedBonusSpins > 0) {
     stopAutoSpin();
+  }
+
+  if (bonusTriggered || chestTriggered >= 0) {
+    await playDokkaebiHoldShow(result);
   }
 
   if (isFreeSpin && bonusTriggered && win > 0) {
@@ -3405,15 +3845,18 @@ async function spin() {
     els.machine.classList.add("celebrate");
     playWinSound();
   } else if (nearMissTriggered) {
+    recordFeatureTease("scatter");
     setHiddenMessage("");
     playNearMissEffects(activeReelCount);
     showTeaseOverlay("Almost Free Games...", "One more scatter lights the stage", true);
     playCloseCallSound();
   } else if (lockedTease) {
+    recordFeatureTease("bonus");
     setHiddenMessage("");
     showTeaseOverlay(lockedTease.title, lockedTease.caption, true);
     playCloseCallSound();
   } else if (!isFreeSpin && !bonusTriggered && bonusEnergyTotal >= 2) {
+    recordFeatureTease("bonus");
     setHiddenMessage("");
     showTeaseOverlay("Bonus Energy Rising...", "Dokkaebi gems are getting louder", true);
   } else if (state.bonusSpins > 0) {
@@ -3516,6 +3959,7 @@ async function startDemoCredits() {
   await unlockAudioForUserGesture();
   addCredits(demoStartCreditAmountForCurrentDenom(), false);
   markTesterMissionComplete("startDemo");
+  markFeatureTrailComplete("startDemo");
   showDemoCreditsLoadedMessage();
   updateUi();
 }
@@ -3711,6 +4155,7 @@ els.feedbackButton.addEventListener("click", openFeedbackModal);
 els.feedbackCancel.addEventListener("click", closeFeedbackModal);
 els.feedbackSubmit.addEventListener("click", submitFeedback);
 els.copyTestReport.addEventListener("click", copyTestReport);
+els.copyShareMoment.addEventListener("click", copyShareMoment);
 els.feedbackOverlay.addEventListener("click", (event) => {
   if (event.target === els.feedbackOverlay) {
     closeFeedbackModal();
@@ -3818,6 +4263,7 @@ addMissionNumberValue("betLevelsTried", state.betIndex);
 addMissionNumberValue("denomOptionsTried", state.selectedDenomCents);
 renderTestStats();
 renderSelectedFeedbackTags();
+renderV7Panels();
 updateUi();
 primeMissionBonusState();
 maybeShowIntroModal();

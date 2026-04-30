@@ -1,7 +1,7 @@
 # Telegram Limited Test Checklist
 
 Project: NEON HUNTER SPIN
-Version: neon-hunter-spin-v6
+Version: neon-hunter-spin-v7
 Purpose: limited Telegram testing for a free social slot demo.
 
 ## v4 Real-Device Test Focus
@@ -71,6 +71,36 @@ Go / No-Go Criteria:
 - Copy Test Report works or fallback textarea appears.
 - Safe Demo Notice remains visible.
 - No unsafe reward or monetary-system wording appears.
+
+## v7 Gamification & Share Moment Test
+
+1. Open game in Telegram.
+2. Start demo.
+3. Spin at least 30 times.
+4. Check NEON HUNTER TRAIL progress.
+5. Observe at least one teaser or bonus event.
+6. Check Symbol Collection.
+7. Unlock at least one Session Achievement.
+8. Open Local Demo Summary.
+9. Use Copy Share Moment.
+10. Paste copied text into Telegram test group.
+11. Confirm Safe Demo Notice remains visible.
+12. Report any layout, sound, or Telegram browser issue.
+
+Go / No-Go Criteria:
+
+- No console errors.
+- No horizontal overflow.
+- START DEMO works.
+- SPIN works.
+- Existing bonus and free game flows remain stable.
+- NEON HUNTER TRAIL updates without changing game math.
+- Session Achievements unlock as cosmetic milestones only.
+- Symbol Collection updates from reel results.
+- Copy Share Moment works or fallback textarea appears.
+- Local Demo Summary uses only local test data.
+- Safe Demo Notice remains visible.
+- No payment, payout, cash-out, prize, gift card, cryptocurrency, token asset, NFT, wallet, or external-value feature appears.
 
 ## 1. Pre-Test Checklist
 
