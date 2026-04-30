@@ -2708,7 +2708,29 @@ function buildWaysWinFormulasFromDetails(details) {
   });
 }
 
+const selectableReelStateClasses = [
+  "reel-selectable",
+  "reel-locked",
+  "reel-scatter-locked",
+  "reel-bonus-locked",
+  "reel-select-inactive",
+  "reel-select-confirm",
+];
+
+function clearSelectableReelStates() {
+  els.reelWindow.classList.remove("selectable-reel-mode", "single-selectable-reel");
+  els.reels.forEach((reel) => {
+    reel.classList.remove(...selectableReelStateClasses);
+    reel.removeAttribute("data-reveal-label");
+    reel.removeAttribute("role");
+    reel.removeAttribute("tabindex");
+    reel.removeAttribute("aria-disabled");
+    reel.removeAttribute("aria-label");
+  });
+}
+
 function clearWinningSymbolHighlights() {
+  clearSelectableReelStates();
   els.reelWindow.classList.remove("has-winning-symbols");
   els.reels.forEach((reel) => {
     reel.querySelectorAll(".ways-win-symbol").forEach((cell) => {
@@ -2752,6 +2774,90 @@ function applyWinningSymbolHighlights(grid, winDetails, activeReelCount) {
   if (labels.size) {
     els.reelWindow.classList.add("has-winning-symbols");
   }
+}
+
+function winningReelIndexesFromDetails(winDetails, activeReelCount) {
+  const indexes = new Set();
+  winDetails.forEach((detail) => {
+    for (let index = 0; index < detail.matchedReels && index < activeReelCount; index += 1) {
+      indexes.add(index);
+    }
+  });
+  return indexes;
+}
+
+function setRevealReelState(reel, className, label, selectable = false) {
+  reel.classList.add(className);
+  reel.dataset.revealLabel = label;
+  reel.setAttribute("aria-disabled", String(!selectable));
+  if (selectable) {
+    const reelNumber = Number(reel.dataset.index) + 1;
+    reel.setAttribute("role", "button");
+    reel.setAttribute("tabindex", "0");
+    reel.setAttribute("aria-label", `Selectable reel ${reelNumber}`);
+  }
+}
+
+function applySelectableReelRevealStates(grid, winDetails, activeReelCount, options = {}) {
+  clearSelectableReelStates();
+  if (!Array.isArray(grid) || !winDetails.length || options.bonusTriggered || options.isFreeSpin) {
+    return;
+  }
+
+  const winningReels = winningReelIndexesFromDetails(winDetails, activeReelCount);
+  const selectableReels = [];
+
+  els.reels.forEach((reel, index) => {
+    const reelSymbols = grid[index] || [];
+    const containsScatter = reelSymbols.some((symbol) => symbol?.isScatter);
+    const containsBonus = reelSymbols.some((symbol) => symbol?.isBonus);
+
+    if (index >= activeReelCount) {
+      setRevealReelState(reel, "reel-select-inactive", "FEATURE LOCKED");
+      return;
+    }
+
+    if (containsScatter) {
+      setRevealReelState(reel, "reel-scatter-locked", "SCATTER LOCKED");
+      return;
+    }
+
+    if (containsBonus) {
+      setRevealReelState(reel, "reel-bonus-locked", "BONUS LOCK");
+      return;
+    }
+
+    if (winningReels.has(index)) {
+      setRevealReelState(reel, "reel-selectable", "SELECT", true);
+      selectableReels.push(reel);
+      return;
+    }
+
+    setRevealReelState(reel, "reel-locked", "LOCKED");
+  });
+
+  if (!selectableReels.length) {
+    clearSelectableReelStates();
+    return;
+  }
+
+  els.reelWindow.classList.add("selectable-reel-mode");
+  els.reelWindow.classList.toggle("single-selectable-reel", selectableReels.length === 1);
+  if (selectableReels.length === 1) {
+    showTeaseOverlay("Only one reel is available.", "Tap SELECT to confirm the neon reel.", true);
+  } else {
+    showTeaseOverlay("Choose One Neon Reel", "Selectable reels are marked SELECT.", true);
+  }
+}
+
+function confirmSelectableReel(reel) {
+  if (!reel?.classList.contains("reel-selectable")) return;
+
+  reel.classList.remove("reel-select-confirm");
+  void reel.offsetWidth;
+  reel.classList.add("reel-select-confirm");
+  showTeaseOverlay("Neon Reel Selected", "Winning symbols stay highlighted until the next spin.", true);
+  setTimeout(() => reel.classList.remove("reel-select-confirm"), 760);
 }
 
 async function showWaysWinFormulaSequence(formulas, restoreOverlay) {
@@ -3952,6 +4058,10 @@ async function spin() {
   if (win > 0) {
     incrementTestCounter("totalWins");
     applyWinningSymbolHighlights(result, waysWinDetails, activeReelCount);
+    applySelectableReelRevealStates(result, waysWinDetails, activeReelCount, {
+      bonusTriggered,
+      isFreeSpin,
+    });
   }
   const freeSpinCurrentMultiplier = isFreeSpin ? state.freeSpinMultiplier : 1;
   const multipliedWin = isFreeSpin ? win * freeSpinCurrentMultiplier : win;
@@ -4415,6 +4525,16 @@ els.denomToggle.addEventListener("click", () => {
 });
 els.denomOptions.forEach((button) => {
   button.addEventListener("click", () => selectDenom(Number(button.dataset.denom)));
+});
+els.reels.forEach((reel) => {
+  reel.addEventListener("click", () => confirmSelectableReel(reel));
+  reel.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (!reel.classList.contains("reel-selectable")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    confirmSelectableReel(reel);
+  });
 });
 document.addEventListener("click", (event) => {
   if (!els.denomPicker.contains(event.target)) {

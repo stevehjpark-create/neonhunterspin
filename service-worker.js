@@ -1,4 +1,4 @@
-const CACHE_NAME = "neon-hunter-spin-v7-ascension-phase-1";
+const CACHE_NAME = "neon-hunter-spin-v7-selectable-reels";
 const CORE_ASSETS = [
   "./",
   "./index.html",

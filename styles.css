@@ -3333,6 +3333,195 @@ h1 {
     0 0 30px rgba(255, 206, 85, 0.34);
 }
 
+.reel-window.selectable-reel-mode .reel {
+  transition:
+    filter 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.reel.reel-selectable {
+  cursor: pointer;
+  outline: 2px solid rgba(255, 225, 115, 0.92);
+  outline-offset: -2px;
+  filter: saturate(1.18) brightness(1.08);
+  box-shadow:
+    0 12px 0 rgba(1, 2, 4, 0.92),
+    0 20px 26px rgba(0, 0, 0, 0.42),
+    0 0 0 2px rgba(156, 109, 255, 0.6),
+    0 0 18px rgba(255, 206, 85, 0.58),
+    0 0 34px rgba(156, 109, 255, 0.5),
+    inset 0 0 26px rgba(255, 206, 85, 0.14),
+    inset 0 2px 0 rgba(255, 255, 255, 0.24);
+  animation: selectableReelBreath 1.15s ease-in-out infinite;
+}
+
+.reel.reel-selectable::before {
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 236, 136, 0.2), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.28)),
+    radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(156, 109, 255, 0.22) 100%);
+  animation: selectFocusLighting 1.2s ease-in-out infinite;
+}
+
+.reel.reel-selectable:hover,
+.reel.reel-selectable:focus-visible {
+  animation-play-state: paused;
+  transform: translateY(-2px) scale(1.025);
+  outline-color: #fff1a6;
+  box-shadow:
+    0 12px 0 rgba(1, 2, 4, 0.92),
+    0 20px 26px rgba(0, 0, 0, 0.42),
+    0 0 0 3px rgba(255, 236, 136, 0.7),
+    0 0 26px rgba(255, 206, 85, 0.78),
+    0 0 48px rgba(156, 109, 255, 0.68),
+    inset 0 0 30px rgba(255, 206, 85, 0.2);
+}
+
+.reel.reel-select-confirm {
+  animation: selectableReelConfirm 0.72s ease-out;
+}
+
+.reel.reel-selectable::after,
+.reel.reel-locked::after,
+.reel.reel-scatter-locked::after,
+.reel.reel-bonus-locked::after,
+.reel.reel-select-inactive::after {
+  content: attr(data-reveal-label);
+  position: absolute;
+  inset: auto 6px 6px;
+  min-height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-size: clamp(0.48rem, 1.7vw, 0.66rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: uppercase;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.reel.reel-selectable::after {
+  color: #221405;
+  background: linear-gradient(180deg, #fff4b0, #ffb33f);
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  box-shadow:
+    0 0 12px rgba(255, 206, 85, 0.72),
+    0 0 22px rgba(156, 109, 255, 0.46);
+  animation: selectLabelPulse 0.95s ease-in-out infinite;
+}
+
+.reel.reel-locked,
+.reel.reel-scatter-locked,
+.reel.reel-bonus-locked,
+.reel.reel-select-inactive {
+  cursor: not-allowed;
+  filter: grayscale(0.48) saturate(0.72) brightness(0.68);
+}
+
+.reel.reel-locked .symbol-card,
+.reel.reel-scatter-locked .symbol-card,
+.reel.reel-bonus-locked .symbol-card,
+.reel.reel-select-inactive .symbol-card {
+  opacity: 0.56;
+}
+
+.reel.reel-locked::before,
+.reel.reel-select-inactive::before {
+  background:
+    linear-gradient(135deg, transparent 0 44%, rgba(0, 0, 0, 0.58) 45% 55%, transparent 56%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.58));
+  mix-blend-mode: normal;
+}
+
+.reel.reel-scatter-locked::before {
+  background:
+    linear-gradient(135deg, transparent 0 44%, rgba(255, 206, 85, 0.44) 45% 55%, transparent 56%),
+    radial-gradient(circle at 50% 18%, rgba(156, 109, 255, 0.26), transparent 36%),
+    linear-gradient(180deg, rgba(40, 13, 70, 0.28), rgba(0, 0, 0, 0.54));
+  mix-blend-mode: screen;
+}
+
+.reel.reel-bonus-locked::before {
+  background:
+    linear-gradient(135deg, transparent 0 44%, rgba(255, 118, 61, 0.42) 45% 55%, transparent 56%),
+    radial-gradient(circle at 50% 18%, rgba(255, 206, 85, 0.22), transparent 36%),
+    linear-gradient(180deg, rgba(70, 28, 10, 0.26), rgba(0, 0, 0, 0.56));
+  mix-blend-mode: screen;
+}
+
+.reel.reel-locked::after,
+.reel.reel-select-inactive::after {
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(0, 0, 0, 0.58);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.reel.reel-scatter-locked::after {
+  color: #fff4b0;
+  background: rgba(36, 14, 68, 0.78);
+  border: 1px solid rgba(255, 206, 85, 0.46);
+  box-shadow: 0 0 14px rgba(156, 109, 255, 0.4);
+}
+
+.reel.reel-bonus-locked::after {
+  color: #ffe1a2;
+  background: rgba(58, 21, 10, 0.78);
+  border: 1px solid rgba(255, 142, 61, 0.46);
+  box-shadow: 0 0 14px rgba(255, 142, 61, 0.3);
+}
+
+@keyframes selectableReelBreath {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.015);
+  }
+}
+
+@keyframes selectFocusLighting {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes selectLabelPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.12);
+  }
+}
+
+@keyframes selectableReelConfirm {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 0 4px rgba(255, 236, 136, 0.8),
+      0 0 42px rgba(255, 206, 85, 0.88),
+      0 0 72px rgba(156, 109, 255, 0.72);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @keyframes winningSymbolPulse {
   0%,
   100% {
@@ -5775,5 +5964,27 @@ h1 {
   .zero-credit-button {
     min-height: 50px;
     font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .reel.reel-selectable::after,
+  .reel.reel-locked::after,
+  .reel.reel-scatter-locked::after,
+  .reel.reel-bonus-locked::after,
+  .reel.reel-select-inactive::after {
+    inset: auto 3px 4px;
+    min-height: 21px;
+    border-radius: 6px;
+    font-size: 0.43rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel.reel-selectable,
+  .reel.reel-selectable::before,
+  .reel.reel-selectable::after,
+  .reel.reel-select-confirm {
+    animation: none;
   }
 }

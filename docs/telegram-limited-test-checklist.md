@@ -159,6 +159,7 @@ Go / No-Go Criteria:
 - Scratch bonus board appears as a 4x3 grid and can complete.
 - Jackpot moments remain clearly virtual demo events.
 - Test Stats update after spins, wins, bonus triggers, free-game triggers, and feedback submission.
+- On a normal ways win, selectable winning reels show SELECT while non-winning, scatter, bonus, and inactive reels stay visually locked.
 
 ## 6. Safety Copy Checklist
 
@@ -191,6 +192,7 @@ Go criteria:
 - Feedback submits to console.
 - Safety notice is visible.
 - PWA does not break loading.
+- Selectable Reel labels are readable and do not change payouts, reel results, or bonus behavior.
 
 No-Go criteria:
 

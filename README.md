@@ -283,6 +283,7 @@ Added:
 - Copy Share Moment for manual Telegram test sharing.
 - Local Demo Summary using only local test stats.
 - Dokkaebi Ascension retrigger presentation and multiplier tracking for free-game retriggers.
+- Selectable Reel visibility states that mark eligible winning reels with SELECT and lock scatter, bonus, inactive, or non-winning reels without changing game math.
 
 Safety:
 
