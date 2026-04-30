@@ -162,6 +162,7 @@ Go / No-Go Criteria:
 - On a normal ways win, selectable winning reels show SELECT while non-winning, scatter, bonus, and inactive reels stay visually locked.
 - Tapping SELECT respins only that reel, updates the displayed result, and removes the SELECT opportunity.
 - Spins with no win do not show any SELECT or reel-respin opportunity.
+- Scatter reels remain SCATTER LOCKED and cannot be selected or respun, including scatter bonus situations.
 
 ## 6. Safety Copy Checklist
 

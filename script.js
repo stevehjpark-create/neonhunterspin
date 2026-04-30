@@ -2882,6 +2882,10 @@ async function confirmSelectableReel(reel) {
 async function rerollSelectedReel(reelIndex) {
   const reveal = state.selectedReelReveal;
   if (!reveal || !Number.isInteger(reelIndex) || reelIndex < 0 || reelIndex >= reveal.activeReelCount) return;
+  if ((reveal.grid[reelIndex] || []).some((symbol) => symbol?.isScatter)) {
+    showTeaseOverlay("SCATTER LOCKED", "Scatter reels cannot be respun.", true);
+    return;
+  }
 
   stopAutoSpin();
   settleCreditAnimation();
